@@ -96,9 +96,9 @@ async function loadFechas() {
 }
 
 function formatFechaLabel(iso) {
-  // "2026-03-02" → "02/03/26"
+  // "2026-03-02" → "02/03/2026"
   const [y, m, d] = iso.split('-');
-  return `${d}/${m}/${y.slice(2)}`;
+  return `${d}/${m}/${y}`;
 }
 
 function toggleDatePicker() {
@@ -176,7 +176,7 @@ async function init() {
 
   // Si es una página de fecha histórica, mostrar banner
   if (fechaParam) {
-    document.title = `FCI Argentina — ${formatFechaLabel(fechaParam)}`;
+    document.title = `Dashboard CAFCI - ${formatFechaLabel(fechaParam)}`;
     const meta = document.getElementById('fecha-dato');
     meta.innerHTML = `<span style="color:var(--yellow);font-weight:600">📅 Histórico: ${formatFechaLabel(fechaParam)}</span>`;
   }
