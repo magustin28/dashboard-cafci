@@ -193,6 +193,8 @@ async function init() {
 
       TABS = [{ id: 'Todos', label: 'Todos' }];
       RAW  = [];
+      // Store API date globally for portfolio calculations
+      window.API_FECHA = data.fecha || null;
 
       const refFecha1 = refs.variacion_fecha1;
       const refFecha2 = refs.variacion_fecha2;
@@ -203,20 +205,22 @@ async function init() {
         TABS.push({ id: catNombre, label: catNombre });
         (cat.fondos || []).forEach((f) => {
           RAW.push([
-            f['Codigo CNV']                           || '',   // [0]  cod CNV
-            f['Fondo']                               || '',   // [1]  nombre
-            f['Moneda Fondo']                        || '',   // [2]  moneda
-            f['Clasificación_Región']                || '',   // [3]  región
-            f['Clasificación_Horizonte']             || '',   // [4]  horizonte
-            f[`Variacion cuotaparte %_${refFecha1}`] ?? null, // [5]  var diaria
-            f[`Variacion cuotaparte %_${refFecha2}`] ?? null, // [6]  var año
-            f[`Variacion cuotaparte %_${refFecha3}`] ?? null, // [7]  var 12m
-            null,                                             // [8]  unused
-            f['Patrimonio_Actual']                   ?? null, // [9]  patrimonio
-            null,                                             // [10] unused
-            f['Sociedad Gerente']                    || '',   // [11] gerente
-            catNombre,                                        // [12] categoría
-            f['Código CAFCI']                        || '',   // [13] código CAFCI
+            f['Codigo CNV']                              || '',   // [0]  cod CNV
+            f['Fondo']                                   || '',   // [1]  nombre
+            f['Moneda Fondo']                            || '',   // [2]  moneda
+            f['Clasificación_Región']                    || '',   // [3]  región
+            f['Clasificación_Horizonte']                 || '',   // [4]  horizonte
+            f[`Variacion cuotaparte %_${refFecha1}`]     ?? null, // [5]  var diaria (old - keep for main table)
+            f[`Variacion cuotaparte %_${refFecha2}`]     ?? null, // [6]  var año
+            f[`Variacion cuotaparte %_${refFecha3}`]     ?? null, // [7]  var 12m
+            null,                                                  // [8]  unused
+            f['Patrimonio_Actual']                       ?? null, // [9]  patrimonio
+            null,                                                  // [10] unused
+            f['Sociedad Gerente']                        || '',   // [11] gerente
+            catNombre,                                             // [12] categoría
+            f['Código CAFCI']                            || '',   // [13] código CAFCI
+            f['Valor (mil cuotapartes)_Actual']          ?? null, // [14] valor mil cuotapartes actual
+            f['Valor (mil cuotapartes)_Variac. %']       ?? null, // [15] variación % diaria del valor
           ]);
         });
       });
@@ -234,6 +238,20 @@ async function init() {
       hideLoader();
       applyAll();
       if (!fechaParam) loadFechas(); // solo en página principal
+
+      // Populate autocomplete datalist for portfolio modal
+      const datalist = document.getElementById('fondos-datalist');
+      if (datalist) {
+        datalist.innerHTML = RAW.map(r => `<option value="${(r[1]||'').replace(/"/g,'&quot;')}">`).join('');
+      }
+
+      // Update user menu header if logged in
+      const userData = typeof getUserData === 'function' ? getUserData() : null;
+      if (userData) {
+        const header = document.getElementById('user-menu-header');
+        if (header) header.innerHTML = `<strong>${userData.username}</strong>Dashboard CAFCI`;
+      }
+
       return; // éxito
 
     } catch (e) {
@@ -273,18 +291,26 @@ function getTabGroup(categoria) {
 // ── TABS ──────────────────────────────────────────────────────────
 function buildTabs() {
   const row = document.getElementById('tabs-row');
-  // Preserve btn-clear, remove only tab buttons
-  row.querySelectorAll('.tab').forEach(b => b.remove());
+  row.innerHTML = ''; // clear all tabs
 
-  const clearBtn = document.getElementById('btn-clear');
+  // 📊 Mi Portafolio (only if logged in)
+  const currentUser = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+  if (currentUser) {
+    const portCount = typeof getPortfolio === 'function' ? getPortfolio().length : 0;
+    const portBtn   = document.createElement('button');
+    portBtn.className = 'tab tab-port' + (activeTab === 'Mi Portafolio' ? ' active' : '');
+    portBtn.innerHTML = '📊 Mi Portafolio' + `<span class="tab-n">${portCount}</span>`;
+    portBtn.onclick = () => switchTab('Mi Portafolio');
+    row.appendChild(portBtn);
+  }
 
-  // ★ Favoritos FIRST
+  // ★ Favoritos
   const favCount = loadFavs().length;
   const favBtn   = document.createElement('button');
   favBtn.className = 'tab tab-fav' + (activeTab === 'Favoritos' ? ' active' : '');
   favBtn.innerHTML = '★ Favoritos' + `<span class="tab-n">${favCount}</span>`;
   favBtn.onclick = () => switchTab('Favoritos');
-  row.insertBefore(favBtn, clearBtn);
+  row.appendChild(favBtn);
 
   // Grouped tabs
   TAB_GROUPS.forEach((g) => {
@@ -295,20 +321,86 @@ function buildTabs() {
     btn.className = 'tab' + (g.id === activeTab ? ' active' : '');
     btn.innerHTML = g.label + `<span class="tab-n">${n.toLocaleString('es-AR')}</span>`;
     btn.onclick = () => switchTab(g.id);
-    row.insertBefore(btn, clearBtn);
+    row.appendChild(btn);
   });
 }
 
 function switchTab(id) {
   activeTab = id;
   page = 1;
+
+  // Toggle filter bar and thead visibility
+  const isPortfolio = id === 'Mi Portafolio';
+  document.getElementById('filter-bar').style.display = isPortfolio ? 'none' : '';
+  // btn-clear is now inside filter-bar, no need to toggle separately
+
+  // Switch thead
+  const theadRow = document.getElementById('thead-normal');
+  if (theadRow) {
+    if (isPortfolio) {
+      theadRow.innerHTML = `
+        <th style="width:56px">Acciones</th>
+        <th style="min-width:180px">Fondo</th>
+        <th style="width:70px">Moneda</th>
+        <th style="width:90px">Cuota-<br>partes</th>
+        <th style="width:100px">Precio<br>Promedio</th>
+        <th style="width:100px">Costo<br>Total</th>
+        <th style="width:100px">Valor<br>Actual</th>
+        <th style="width:80px">Rend.<br>%</th>
+        <th style="width:100px">Rendimiento<br>Importe</th>
+        <th style="width:80px">Var.<br>Diaria %</th>
+        <th style="width:72px">TNA</th>
+        <th style="width:72px">TEM</th>
+        <th style="width:72px">TEA</th>
+        <th style="width:44px">CAFCI</th>`;
+    } else {
+      theadRow.innerHTML = `
+        <th style="width:36px"></th>
+        <th style="min-width:240px" id="th-fondo" onclick="thSort('fondo')">Fondo <span class="sort-arrow">↕</span></th>
+        <th>Moneda</th>
+        <th>Región</th>
+        <th>Horizonte</th>
+        <th class="sorted" id="th-vard" onclick="thSort('var_d')">
+          Var. Diaria % <span class="sort-arrow">↕</span>
+          <span class="th-date" id="th-vard-date"></span>
+        </th>
+        <th id="th-varanio" onclick="thSort('var_anio')">
+          Var. Año % <span class="sort-arrow">↕</span>
+          <span class="th-date" id="th-varanio-date"></span>
+        </th>
+        <th id="th-var12" onclick="thSort('var_12')">
+          Var. 12m % <span class="sort-arrow">↕</span>
+          <span class="th-date" id="th-var12-date"></span>
+        </th>
+        <th id="th-pat" onclick="thSort('pat')">
+          Patrimonio <span class="sort-arrow">↕</span>
+        </th>
+        <th style="min-width:180px">Sociedad Gerente</th>
+        <th>Consultar<br>CAFCI</th>`;
+    }
+  }
+
+  if (isPortfolio) {
+    // Show FAB if user is logged in
+    const fab = document.getElementById('fab-add');
+    if (fab) fab.style.display = (typeof getCurrentUser === 'function' && getCurrentUser()) ? 'flex' : 'none';
+    buildTabs();
+    if (typeof renderPortfolioTab === 'function') renderPortfolioTab();
+    return;
+  }
+
+  // Hide FAB on other tabs
+  const fab = document.getElementById('fab-add');
+  if (fab) fab.style.display = 'none';
+
   // Restore filters for this tab
-  document.getElementById('q').value         = getFilter('q');
-  document.getElementById('f-moneda').value  = getFilter('moneda');
-  document.getElementById('f-region').value  = getFilter('region');
+  document.getElementById('q').value           = getFilter('q');
+  document.getElementById('f-moneda').value    = getFilter('moneda');
+  document.getElementById('f-region').value    = getFilter('region');
   document.getElementById('f-horizonte').value = getFilter('horizonte');
-  document.getElementById('f-sort').value    = getFilter('sort');
-  sortKey = null; sortDir = -1;
+  document.getElementById('f-sort').value      = getFilter('sort');
+  // Default sort: fondo asc (alphabetical). Only override if user had an explicit sort saved.
+  sortKey = 'fondo'; sortDir = 1;
   const sv = getFilter('sort');
   if (sv) {
     const map = {
@@ -377,6 +469,12 @@ function thSort(key) {
 
 // ── FILTER + SORT ─────────────────────────────────────────────────
 function applyAll() {
+  // Don't run normal filter logic for portfolio tab
+  if (activeTab === 'Mi Portafolio') {
+    if (typeof renderPortfolioTab === 'function') renderPortfolioTab();
+    return;
+  }
+
   const q   = document.getElementById('q').value.toLowerCase();
   const mon = document.getElementById('f-moneda').value;
   const reg = document.getElementById('f-region').value;
@@ -412,8 +510,7 @@ function applyAll() {
     });
   }
 
-  document.getElementById('filter-count').textContent =
-    filtered.length.toLocaleString('es-AR') + ' fondos';
+  document.getElementById('filter-count').textContent = '';
   renderKPIs();
   renderTable();
 }
@@ -520,8 +617,13 @@ function renderTable() {
   }
 
   tbody.className = 'fade-up';
-  tbody.innerHTML = slice.map((r) => `<tr>
-    <td>${favBtnHtml(r[1] || '')}</td>
+  tbody.innerHTML = slice.map((r) => {
+    const isLoggedIn = typeof getCurrentUser === 'function' && getCurrentUser();
+    const portBtn = isLoggedIn
+      ? `<button class="btn-port-add" onclick="openPortfolioModal('${(r[1]||'').replace(/'/g,"\\'")}','${r[2]||''}')" title="Agregar a mi portafolio" style="background:none;border:none;cursor:pointer;font-size:14px;opacity:0.3;transition:opacity 0.15s;padding:2px" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.3">+📊</button>`
+      : '';
+    return `<tr>
+    <td style="display:flex;align-items:center;gap:2px;justify-content:center">${favBtnHtml(r[1] || '')}${portBtn}</td>
     <td class="td-fondo">${r[1] || '—'}</td>
     <td>${monBadge(r[2])}</td>
     <td><span class="badge badge-reg">${REG_MAP[r[3]] || r[3] || '—'}</span></td>
@@ -532,7 +634,8 @@ function renderTable() {
     <td>${patCell(r[9])}</td>
     <td class="td-gerente">${r[11] || '—'}</td>
     <td>${cnvLink(r[13] || '', r[0] || '')}</td>
-  </tr>`).join('');
+  </tr>`;
+  }).join('');
 
   renderPagination();
 }
@@ -566,6 +669,23 @@ function goPage(p) {
   page = p;
   renderTable();
   document.querySelector('.table-wrap').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+// ── AUTH.JS helpers called from app ──────────────────────────────
+// Live cost calculation in portfolio modal
+function updatePortCalc() {
+  const cant  = parseFloat(document.getElementById('port-cantidad')?.value);
+  const price = parseFloat(document.getElementById('port-precio')?.value);
+  const calc  = document.getElementById('port-calc');
+  if (!calc) return;
+  if (!isNaN(cant) && !isNaN(price) && cant > 0 && price > 0) {
+    const total = cant * price;
+    const mon   = document.getElementById('port-moneda')?.value || 'ARS';
+    const fmt   = total.toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
+    calc.innerHTML = `Inversión total: <strong style="color:var(--text);font-size:13px">${mon === 'ARS' ? '$' : 'U$S '} ${fmt}</strong>`;
+  } else {
+    calc.innerHTML = 'Completá cantidad y precio para ver el total.';
+  }
 }
 
 async function reloadData() {

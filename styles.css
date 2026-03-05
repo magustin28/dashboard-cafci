@@ -144,10 +144,9 @@ header {
 /* ── Tabs ── */
 .tabs-row {
   display: flex;
-  gap: 1px;
+  gap: 2px;
   flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
+  align-items: flex-end;
   margin-bottom: 16px;
   border-bottom: 1px solid var(--border2);
 }
@@ -240,7 +239,7 @@ select option { background: #fff; }
   font-family: 'Inter', sans-serif;
   font-size: 12px;
   font-weight: 500;
-  padding: 6px 12px;
+  padding: 8px 12px;
   border-radius: 6px;
   border: 1px solid var(--border2);
   background: var(--card);
@@ -248,11 +247,10 @@ select option { background: #fff; }
   cursor: not-allowed;
   white-space: nowrap;
   margin-left: auto;
-  margin-bottom: 8px;
-  align-self: center;
   opacity: 0.45;
   box-shadow: 0 1px 3px rgba(0,0,0,0.06);
   transition: all 0.15s;
+  height: 36px;
 }
 .btn-clear:not(:disabled) {
   border-color: var(--red);
@@ -265,12 +263,313 @@ select option { background: #fff; }
   color: #fff;
   box-shadow: 0 2px 6px rgba(220,38,38,0.2);
 }
+.filter-count {
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   color: var(--muted);
   margin-left: auto;
   white-space: nowrap;
 }
+
+/* ── Auth button ── */
+.auth-wrap {
+  position: relative;
+}
+.btn-auth {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 7px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--accent);
+  background: rgba(37,99,235,0.07);
+  color: var(--accent);
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+.btn-auth:hover {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(37,99,235,0.2);
+}
+.btn-auth.logged-in {
+  background: var(--card);
+  border-color: var(--border2);
+  color: var(--text2);
+}
+.btn-auth.logged-in:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--card);
+}
+.auth-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+.auth-arrow { font-size: 10px; opacity: 0.6; }
+
+/* ── User dropdown menu ── */
+.user-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+  min-width: 190px;
+  z-index: 200;
+  overflow: hidden;
+}
+.user-menu.open { display: block; }
+.user-menu-header {
+  padding: 12px 16px 10px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--muted);
+}
+.user-menu-header strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+.user-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: var(--text2);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s;
+}
+.user-menu-item:hover { background: var(--bg2); }
+.user-menu-item.danger { color: var(--red); }
+.user-menu-item.danger:hover { background: rgba(220,38,38,0.06); }
+
+/* ── FAB (Floating Action Button) ── */
+.fab-add {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(37,99,235,0.4), 0 2px 6px rgba(0,0,0,0.15);
+  transition: all 0.2s ease;
+  z-index: 300;
+}
+.fab-add:hover {
+  background: #1d4ed8;
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(37,99,235,0.5), 0 3px 8px rgba(0,0,0,0.2);
+}
+.fab-add:active { transform: scale(0.96); }
+.fab-icon {
+  font-size: 26px;
+  font-weight: 400;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+/* ── Portfolio table compact ── */
+#main-table tbody td { white-space: nowrap; }
+#main-table thead th { white-space: normal; line-height: 1.3; }
+
+.btn-port-edit, .btn-port-del {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px;
+  opacity: 0.4;
+  transition: opacity 0.15s, transform 0.15s;
+  line-height: 1;
+}
+.btn-port-edit:hover { opacity: 1; transform: scale(1.15); }
+.btn-port-del:hover  { opacity: 1; transform: scale(1.15); }
+
+/* ── Portfolio thead ── */
+#thead-portfolio th { display: none; }
+#thead-portfolio.active th { display: table-cell; }
+
+/* ── Modal ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10,10,10,0.5);
+  backdrop-filter: blur(6px);
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal {
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  padding: 32px 28px 28px;
+  width: 100%;
+  max-width: 420px;
+  position: relative;
+  animation: fadeUp 0.2s ease;
+}
+.modal-close {
+  position: absolute;
+  top: 14px; right: 16px;
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: var(--muted2);
+  cursor: pointer;
+  line-height: 1;
+  transition: color 0.12s;
+}
+.modal-close:hover { color: var(--text); }
+.modal-logo { margin-bottom: 18px; }
+.modal-title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.modal-subtitle {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 22px;
+}
+.modal-field {
+  margin-bottom: 14px;
+  flex: 1;
+}
+.modal-field label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 5px;
+}
+.modal-field input,
+.modal-field select {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  padding: 9px 12px;
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+}
+.modal-field input:focus,
+.modal-field select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+}
+.modal-row {
+  display: flex;
+  gap: 12px;
+}
+.modal-calc {
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 12px;
+  min-height: 36px;
+}
+.modal-error {
+  font-size: 12px;
+  color: var(--red);
+  margin-bottom: 10px;
+  min-height: 18px;
+}
+.modal-submit {
+  width: 100%;
+  padding: 11px;
+  border-radius: 7px;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  box-shadow: 0 2px 8px rgba(37,99,235,0.25);
+  margin-bottom: 14px;
+}
+.modal-submit:hover {
+  background: #1d4ed8;
+  box-shadow: 0 4px 14px rgba(37,99,235,0.35);
+  transform: translateY(-1px);
+}
+.modal-toggle {
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+.modal-toggle a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+.modal-toggle a:hover { text-decoration: underline; }
+.modal-note {
+  text-align: center;
+  font-size: 11px;
+  color: var(--muted2);
+}
+
+/* Wider modal for portfolio */
+#port-modal { max-width: 560px; }
+
+/* ── Portfolio tab specific thead ── */
+.thead-portfolio { display: none; }
+.thead-portfolio.show { display: table-row; }
+
 
 /* ── Table ── */
 .table-wrap {
