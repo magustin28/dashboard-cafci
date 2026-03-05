@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FCI Argentina — Dashboard CAFCI</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <!-- Header -->
+      <header>
+        <div class="logo">
+          <span class="logo-badge">CAFCI</span>
+          <h1>Fondos Comunes de Inversión &mdash; Argentina</h1>
+        </div>
+        <div class="header-meta">
+          <div class="meta-item">
+            <span class="meta-dot"></span>
+            <span id="fecha-dato">Cargando...</span>
+          </div>
+          <div class="meta-item" id="total-meta"></div>
+          <div class="date-picker-wrap" id="date-picker-wrap">
+            <button class="date-picker-btn" id="date-picker-btn" onclick="toggleDatePicker()" disabled>
+              📅 Ver fecha anterior <span class="date-arrow">▾</span>
+            </button>
+            <div class="date-picker-dropdown" id="date-picker-dropdown"></div>
+          </div>
+          <button class="btn-refresh" onclick="reloadData()">↻ Actualizar</button>
+        </div>
+      </header>
+
+      <!-- KPIs -->
+      <div class="kpis" id="kpis"></div>
+
+      <!-- Tabs -->
+      <div class="tabs-row" id="tabs-row">
+        <button class="btn-clear" id="btn-clear" onclick="clearFilters()" disabled>✕ Limpiar filtros</button>
+      </div>
+
+      <!-- Filtros -->
+      <div class="filter-bar">
+        <div class="search-wrap">
+          <span class="search-icon">⌕</span>
+          <input type="text" id="q" placeholder="Buscar fondo o sociedad gerente…" />
+        </div>
+        <select id="f-moneda">
+          <option value="">Todas las monedas</option>
+          <option value="ARS">ARS — Pesos</option>
+          <option value="USD">USD — Dólar</option>
+          <option value="USB">USB — Dólar Billete</option>
+        </select>
+        <select id="f-region">
+          <option value="">Todas las regiones</option>
+          <option value="Arg">Argentina</option>
+          <option value="Glo">Global</option>
+          <option value="Latam">Latinoamérica</option>
+          <option value="Bra">Brasil</option>
+          <option value="Eur">Europa</option>
+        </select>
+        <select id="f-horizonte">
+          <option value="">Todos los horizontes</option>
+          <option value="Cor">Corto plazo</option>
+          <option value="Med">Mediano plazo</option>
+          <option value="Lar">Largo plazo</option>
+          <option value="Flex">Flexible</option>
+          <option value="Sasig">Sasig</option>
+        </select>
+        <select id="f-sort">
+          <option value="">Ordenar por…</option>
+          <option value="var_d_desc">Var. diaria ↓</option>
+          <option value="var_d_asc">Var. diaria ↑</option>
+          <option value="var_anio_desc">Var. Año ↓</option>
+          <option value="var_anio_asc">Var. Año ↑</option>
+          <option value="var_12_desc">Var. 12m ↓</option>
+          <option value="var_12_asc">Var. 12m ↑</option>
+          <option value="pat_desc">Patrimonio ↓</option>
+          <option value="pat_asc">Patrimonio ↑</option>
+        </select>
+        <span class="filter-count" id="filter-count"></span>
+      </div>
+
+      <!-- Tabla -->
+      <div class="table-wrap">
+        <div class="tbl-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:36px"></th>
+                <th style="min-width:240px" id="th-fondo" onclick="thSort('fondo')">Fondo <span class="sort-arrow">↕</span></th>
+                <th>Moneda</th>
+                <th>Región</th>
+                <th>Horizonte</th>
+                <th class="sorted" id="th-vard" onclick="thSort('var_d')">
+                  Var. Diaria % <span class="sort-arrow">↕</span>
+                  <span class="th-date" id="th-vard-date"></span>
+                </th>
+                <th id="th-varanio" onclick="thSort('var_anio')">
+                  Var. Año % <span class="sort-arrow">↕</span>
+                  <span class="th-date" id="th-varanio-date"></span>
+                </th>
+                <th id="th-var12" onclick="thSort('var_12')">
+                  Var. 12m % <span class="sort-arrow">↕</span>
+                  <span class="th-date" id="th-var12-date"></span>
+                </th>
+                <th id="th-pat" onclick="thSort('pat')">
+                  Patrimonio <span class="sort-arrow">↕</span>
+                </th>
+                <th style="min-width:180px">Sociedad Gerente</th>
+                <th>Consultar<br>CAFCI</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="pagination"></div>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
