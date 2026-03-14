@@ -41,8 +41,10 @@
   background: #15803d;
 }
 .btn-informe-print:disabled {
-  background: var(--bg3);
+  background: transparent;
   color: var(--text2);
+  border: 1px solid var(--border2);
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
