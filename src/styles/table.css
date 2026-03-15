@@ -104,6 +104,7 @@ tbody td:nth-child(2) {
   white-space: normal;
   line-height: 1.35;
   color: var(--text);
+  text-align: left;
 }
 .td-gerente {
   font-size: 11px;

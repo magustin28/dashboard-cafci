@@ -12,6 +12,7 @@ import SuscripcionModal from './components/SuscripcionModal';
 import RescateModal from './components/RescateModal';
 import HistorialModal from './components/HistorialModal';
 import FondoPanel    from './components/FondoPanel';
+import TopTab        from './components/TopTab';
 
 const SORT_MAP = {
   var_d_desc: ['var_d', -1], var_d_asc: ['var_d', 1],
@@ -91,6 +92,7 @@ export default function App() {
 
   const isPortfolio = activeTab === 'Mi Portfolio';
   const isFavoritos = activeTab === 'Favoritos';
+  const isTop       = activeTab === 'Top 10';
   const hasFilters  = q || moneda || region || horizonte || sort;
 
   const clearFilters = () => { setQ(''); setMoneda(''); setRegion(''); setHorizonte(''); setSort(''); };
@@ -162,11 +164,11 @@ export default function App() {
 
       <Tabs raw={raw} activeTab={activeTab} onSwitch={switchTab} />
 
-      {!isPortfolio && (
+      {!isPortfolio && !isTop && (
         <KPIs filtered={isFavoritos ? favFiltered : filtered} />
       )}
 
-      {!isPortfolio && (
+      {!isPortfolio && !isTop && (
         <div className="filter-bar">
           <div className="search-wrap">
             <span className="search-icon">⌕</span>
@@ -207,7 +209,14 @@ export default function App() {
         </div>
       )}
 
-      {isPortfolio ? (
+      {isTop ? (
+        <TopTab
+          raw={raw}
+          refs={{ ...refs, apiFecha }}
+          onOpenSuscripcion={(fondo, mon) => setSuscModal({ fondo, moneda: mon })}
+          onFondoClick={(row) => setFondoPanel(row)}
+        />
+      ) : isPortfolio ? (
         <>
           <PortfolioTab
             raw={raw}
