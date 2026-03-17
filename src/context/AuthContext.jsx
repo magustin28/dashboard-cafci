@@ -210,7 +210,7 @@ export function AuthProvider({ children }) {
       user, portfolio, favs, authReady,
       login, logout, toggleFav,
       addSuscripcion, deleteSuscripcion, addRescate,
-      reloadPortfolio: () => user && loadPortfolio(user.id),
+      reloadPortfolio: async () => { if (user) await loadPortfolio(user.id); },
     }}>
       {children}
     </AuthContext.Provider>

@@ -264,8 +264,7 @@ export default function App() {
         <HistorialModal
           fondoNombre={histModal.fondo}
           moneda={histModal.moneda}
-          onOpenSuscripcion={(fondo, mon) => setSuscModal({ fondo: fondo || '', moneda: mon || 'ARS' })}
-          onOpenRescate={(fondo, mon) => setRescModal({ fondo, moneda: mon })}
+          raw={raw}
           onClose={() => setHistModal(null)}
         />
       )}

@@ -1,15 +1,20 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { sb } from '../lib/supabase';
+import SuscripcionModal from './SuscripcionModal';
+import RescateModal from './RescateModal';
 
-export default function HistorialModal({ fondoNombre, moneda, onOpenSuscripcion, onOpenRescate, onClose }) {
-  const { user } = useAuth();
+export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
+  const { user, reloadPortfolio } = useAuth();
   const [data, setData]         = useState(null);
   const [loading, setLoading]   = useState(true);
   const [expanded, setExpanded] = useState({});
-  const [editSusc, setEditSusc] = useState(null);   // { id, fecha_compra, cantidad, precio_compra }
-  const [editResc, setEditResc] = useState(null);   // { id, fecha_rescate, precio_rescate }
+  const [editSusc, setEditSusc] = useState(null);
+  const [editResc, setEditResc] = useState(null);
   const [saving, setSaving]     = useState(false);
+  const [showSusc, setShowSusc] = useState(false);
+  const [showResc, setShowResc] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState(null);
 
   // Cerrar con ESC
   useEffect(() => {
@@ -41,9 +46,13 @@ export default function HistorialModal({ fondoNombre, moneda, onOpenSuscripcion,
 
   // ── Acciones suscripciones ──────────────────────────────────────
   const deleteSusc = async (id) => {
-    if (!confirm('¿Eliminar esta suscripción? Esta acción es irreversible.')) return;
-    await sb.from('suscripciones').delete().eq('id', id).eq('user_id', user.id);
-    await reload();
+    setConfirmDialog({
+      msg: '¿Eliminar esta suscripción? Esta acción es irreversible.',
+      onConfirm: async () => {
+        await sb.from('suscripciones').delete().eq('id', id).eq('user_id', user.id);
+        await reload();
+      }
+    });
   };
 
   const saveSusc = async () => {
@@ -64,10 +73,31 @@ export default function HistorialModal({ fondoNombre, moneda, onOpenSuscripcion,
 
   // ── Acciones rescates ───────────────────────────────────────────
   const deleteResc = async (id) => {
-    if (!confirm('¿Eliminar este rescate? Esta acción es irreversible y no restaura las cuotapartes.')) return;
-    await sb.from('rescate_detalle').delete().eq('rescate_id', id);
-    await sb.from('rescates').delete().eq('id', id).eq('user_id', user.id);
-    await reload();
+    setConfirmDialog({
+      msg: '¿Eliminar este rescate? Se restaurarán las cuotapartes en las suscripciones afectadas.',
+      onConfirm: async () => {
+        // Leer detalles antes de borrar para revertir cuotapartes
+        const { data: detalles } = await sb.from('rescate_detalle')
+          .select('*').eq('rescate_id', id);
+
+        // Restaurar cuotapartes en cada suscripción afectada
+        if (detalles?.length) {
+          for (const d of detalles) {
+            const { data: susc } = await sb.from('suscripciones')
+              .select('cuotapartes_disponibles').eq('id', d.suscripcion_id).single();
+            if (susc) {
+              const restauradas = Math.round((parseFloat(susc.cuotapartes_disponibles) + parseFloat(d.cuotapartes_consumidas)) * 1e6) / 1e6;
+              await sb.from('suscripciones').update({ cuotapartes_disponibles: restauradas }).eq('id', d.suscripcion_id);
+            }
+          }
+        }
+
+        await sb.from('rescate_detalle').delete().eq('rescate_id', id);
+        await sb.from('rescates').delete().eq('id', id).eq('user_id', user.id);
+        await reload();
+        await reloadPortfolio();
+      }
+    });
   };
 
   const saveResc = async () => {
@@ -160,8 +190,8 @@ export default function HistorialModal({ fondoNombre, moneda, onOpenSuscripcion,
             <p className="modal-subtitle">Historial de movimientos</p>
           </div>
           <div style={{ display: 'flex', gap: 8, flexShrink: 0, marginTop: 4, marginRight: 32 }}>
-            <button className="btn-port-action btn-susc" onClick={() => onOpenSuscripcion && onOpenSuscripcion(fondoNombre, moneda)} title="Nueva suscripción" style={{ fontSize: 12, padding: '4px 10px' }}>+ Suscripción</button>
-            <button className="btn-port-action btn-resc" onClick={() => onOpenRescate && onOpenRescate(fondoNombre, moneda)} title="Nuevo rescate" style={{ fontSize: 12, padding: '4px 10px' }}>− Rescate</button>
+            <button className="btn-port-action btn-susc" onClick={() => setShowSusc(true)} title="Nueva suscripción" style={{ fontSize: 12, padding: '4px 10px' }}>+ Suscripción</button>
+            <button className="btn-port-action btn-resc" onClick={() => setShowResc(true)} title="Nuevo rescate" style={{ fontSize: 12, padding: '4px 10px' }}>− Rescate</button>
           </div>
         </div>
 
@@ -364,6 +394,51 @@ export default function HistorialModal({ fondoNombre, moneda, onOpenSuscripcion,
         <div className="hist-footer-note">Los rescates se procesaron con método FIFO.</div>
         <div className="hist-footer-note" style={{ marginTop: 4, color: 'var(--text2)' }}>Para modificar la cantidad de un rescate, eliminá el rescate y cargalo nuevamente.</div>
       </div>
+
+      {/* Modales internos */}
+      {showSusc && (
+        <SuscripcionModal
+          fondoInicial={fondoNombre}
+          monedaInicial={moneda}
+          raw={raw || []}
+          onClose={async (ok) => {
+            setShowSusc(false);
+            if (ok) { await reload(); await reloadPortfolio(); }
+          }}
+        />
+      )}
+      {showResc && (
+        <RescateModal
+          fondoInicial={fondoNombre}
+          monedaInicial={moneda}
+          onClose={async (ok) => {
+            setShowResc(false);
+            if (ok) { await reload(); await reloadPortfolio(); }
+          }}
+        />
+      )}
+
+      {/* Modal de confirmación */}
+      {confirmDialog && (
+        <div className="modal-overlay" style={{ display: 'flex', zIndex: 900 }} onClick={e => { if (e.target === e.currentTarget) setConfirmDialog(null); }}>
+          <div className="modal" style={{ maxWidth: 420, textAlign: 'center' }}>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>⚠️</div>
+            <p style={{ fontSize: 14, color: 'var(--text)', marginBottom: 24, lineHeight: 1.6 }}>{confirmDialog.msg}</p>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+              <button
+                onClick={() => setConfirmDialog(null)}
+                style={{ padding: '8px 20px', borderRadius: 6, border: '1px solid var(--border2)', background: 'none', color: 'var(--text2)', cursor: 'pointer', fontSize: 13 }}>
+                Cancelar
+              </button>
+              <button
+                onClick={async () => { await confirmDialog.onConfirm(); setConfirmDialog(null); }}
+                style={{ padding: '8px 20px', borderRadius: 6, border: 'none', background: '#dc2626', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
