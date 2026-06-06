@@ -25,8 +25,9 @@ export function getTabGroup(categoria) {
 }
 
 export function cnvLink(cnvCode, cafciCode) {
-  const q = encodeURIComponent(cnvCode) + ";" + encodeURIComponent(cafciCode);
-  return `https://www.cafci.org.ar/ficha-fondo.html?q=${q}`;
+  const q = encodeURIComponent(cafciCode);
+  const w = encodeURIComponent(cnvCode);
+  return `https://estadisticas.cafci.org.ar/fondos/${q}?clase=${w}`;
 }
 
 export function parseFechaAPI(str) {

@@ -9,7 +9,7 @@ export default function Tabs({ raw, activeTab, onSwitch }) {
     <div className="tabs-row">
       {user && !esFechaHistorica && (
         <button className={`tab tab-port${activeTab === "Mi Portfolio" ? " active" : ""}`} onClick={() => onSwitch("Mi Portfolio")}>
-          📊 Mi Portfolio<span className="tab-n">{portfolio.filter((s) => parseFloat(s.cuotapartes_disponibles) > 0).length}</span>
+          📊 Mi Portfolio<span className="tab-n">{new Set(portfolio.filter((s) => parseFloat(s.cuotapartes_disponibles) > 0).map((s) => s.fondo_nombre)).size}</span>
         </button>
       )}
       <button className={`tab tab-fav${activeTab === "Favoritos" ? " active" : ""}`} onClick={() => onSwitch("Favoritos")}>

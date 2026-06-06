@@ -87,7 +87,35 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
     if (q && !i.fondo_nombre.toLowerCase().includes(q.toLowerCase())) return false;
     return true;
   });
-  const enriched = [...portfolioFiltered]
+
+  // Agrupar suscripciones del mismo fondo (mismo nombre + moneda)
+  const grouped = {};
+  portfolioFiltered.forEach((item) => {
+    const key = `${item.fondo_nombre}__${item.moneda}`;
+    if (!grouped[key]) {
+      grouped[key] = {
+        ...item,
+        _suscripciones: [],
+        cuotapartes_disponibles: 0,
+        _cpPonderadoNum: 0, // Σ (cp * precio_compra) para calcular precio promedio ponderado
+        fecha_compra: null,
+      };
+    }
+    const cp = parseFloat(item.cuotapartes_disponibles);
+    const precio = parseFloat(item.precio_compra);
+    grouped[key].cuotapartes_disponibles += cp;
+    grouped[key]._cpPonderadoNum += cp * precio;
+    grouped[key]._suscripciones.push(item);
+  });
+
+  // Calcular precio promedio ponderado para cada grupo
+  const portfolioAgrupado = Object.values(grouped).map((g) => {
+    const cpTotal = g.cuotapartes_disponibles;
+    const precioPond = cpTotal > 0 ? g._cpPonderadoNum / cpTotal : 0;
+    return { ...g, precio_compra: precioPond };
+  });
+
+  const enriched = [...portfolioAgrupado]
     .sort((a, b) => a.fondo_nombre.localeCompare(b.fondo_nombre, "es"))
     .map((item) => {
       const match = raw.find((r) => r[1] === item.fondo_nombre);
@@ -100,10 +128,33 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
       const rendPct = vActual !== null && costoTotal > 0 ? ((vActual - costoTotal) / costoTotal) * 100 : null;
       const varDiariaPct = match ? parseFloat(match[15]) : null;
       const rendImporte = vActual !== null ? Math.round((vActual - costoTotal) * 100) / 100 : null;
-      let tna = null,
-        tem = null,
-        tea = null;
-      if (vActual !== null && costoTotal > 0 && fechaAPI && item.fecha_compra) {
+      // TNA/TEM/TEA ponderadas por cuotapartes de cada suscripción individual
+      let tna = null, tem = null, tea = null;
+      if (vActual !== null && precioActual !== null && costoTotal > 0 && fechaAPI && item._suscripciones?.length) {
+        let sumCp = 0, sumTna = 0, sumTem = 0, sumTea = 0;
+        item._suscripciones.forEach((susc) => {
+          const cp = parseFloat(susc.cuotapartes_disponibles);
+          if (cp <= 0.000001 || !susc.fecha_compra) return;
+          const dias = Math.round((fechaAPI - new Date(susc.fecha_compra + "T00:00:00")) / (1000 * 60 * 60 * 24));
+          if (dias <= 0) return;
+          const costo_i = cp * parseFloat(susc.precio_compra);
+          const vActual_i = cp * precioActual;
+          const rend_i = vActual_i - costo_i;
+          const tna_i = (rend_i / costo_i / dias) * 360 * 100;
+          const tea_i = (Math.pow(1 + tna_i / 100 / 365, 365) - 1) * 100;
+          const tem_i = (Math.pow(1 + tea_i / 100, 1 / 12) - 1) * 100;
+          sumCp += cp;
+          sumTna += cp * tna_i;
+          sumTem += cp * tem_i;
+          sumTea += cp * tea_i;
+        });
+        if (sumCp > 0) {
+          tna = sumTna / sumCp;
+          tem = sumTem / sumCp;
+          tea = sumTea / sumCp;
+        }
+      } else if (vActual !== null && costoTotal > 0 && fechaAPI && item.fecha_compra) {
+        // Fallback para suscripción única sin _suscripciones
         const dias = Math.round((fechaAPI - new Date(item.fecha_compra + "T00:00:00")) / (1000 * 60 * 60 * 24));
         if (dias > 0) {
           tna = (rendImporte / costoTotal / dias) * 360 * 100;
@@ -114,22 +165,9 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
       return { ...item, match, costoTotal, precioActual, vActual, rendPct, varDiariaPct, rendImporte, tna, tem, tea };
     });
 
-  // Split actual vs historico
-  // Un fondo es histórico si TODAS sus suscripciones tienen cp_disponibles = 0
-  // Agrupamos por fondo_nombre para detectarlo
-  const fondosEnCartera = {};
-  portfolioFiltered.forEach((item) => {
-    const fn = item.fondo_nombre;
-    if (!fondosEnCartera[fn]) fondosEnCartera[fn] = [];
-    fondosEnCartera[fn].push(item);
-  });
-
+  // Split actual vs histórico — ya agrupado, un item por fondo
   const enrichedActual = enriched.filter((i) => parseFloat(i.cuotapartes_disponibles) > 0.000001);
-  const fondosHistoricos = Object.keys(fondosEnCartera).filter((fn) =>
-    fondosEnCartera[fn].every((i) => parseFloat(i.cuotapartes_disponibles) <= 0.000001),
-  );
-  // Una sola fila por fondo en histórico (la primera suscripción como representante)
-  const enrichedHistorico = fondosHistoricos.map((fn) => enriched.find((i) => i.fondo_nombre === fn)).filter(Boolean);
+  const enrichedHistorico = enriched.filter((i) => parseFloat(i.cuotapartes_disponibles) <= 0.000001);
   const enrichedView = subTab === "actual" ? enrichedActual : enrichedHistorico;
 
   // KPIs
@@ -145,8 +183,14 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
   const clsUSD = rendUSD > 0 ? "g" : rendUSD < 0 ? "r" : "y";
 
   const confirmDelete = (item) => {
-    if (confirm(`¿Eliminar "${item.fondo_nombre}" del portafolio? Esta acción es irreversible.`)) {
-      deleteSuscripcion(item.id);
+    const n = item._suscripciones?.length || 1;
+    const msg =
+      n > 1
+        ? `¿Eliminar "${item.fondo_nombre}" del portafolio? Se eliminarán ${n} suscripciones. Esta acción es irreversible.`
+        : `¿Eliminar "${item.fondo_nombre}" del portafolio? Esta acción es irreversible.`;
+    if (confirm(msg)) {
+      const ids = item._suscripciones?.map((s) => s.id) || [item.id];
+      ids.forEach((id) => deleteSuscripcion(id));
     }
   };
 
@@ -354,7 +398,7 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
                   const cantFmt = cpDisp.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 4 });
                   const precFmt = parseFloat(item.precio_compra).toLocaleString("es-AR", { minimumFractionDigits: 4, maximumFractionDigits: 6 });
                   return (
-                    <tr key={item.id}>
+                    <tr key={`${item.fondo_nombre}__${item.moneda}`}>
                       <td style={{ verticalAlign: "middle" }}>
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 3, width: 52 }}>
                           {/* Fila 1: ⓘ + 📋 */}

@@ -14,6 +14,14 @@ header {
   gap: 12px;
 }
 .logo-badge {
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.logo-badge:hover {
+  opacity: 0.8;
+}
+a.logo-badge {
   font-family: "JetBrains Mono", monospace;
   font-size: 10px;
   font-weight: 500;

@@ -61,7 +61,7 @@ export default function Header({ apiFecha, totalFondos, fechas, fechaParam, onRe
     <>
       <header>
         <div className="logo">
-          <span className="logo-badge">CAFCI</span>
+          <a className="logo-badge" href="https://www.cafci.org.ar/" target="_blank" rel="noopener noreferrer">CAFCI</a>
           <h1>Fondos Comunes de Inversión &mdash; Argentina</h1>
         </div>
         <div className="header-meta">
