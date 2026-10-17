@@ -1,6 +1,6 @@
 import { useState } from "react";
 import InformeModal from "./InformeModal";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 import { parseFechaAPI, fmtMoney, cnvLink } from "../lib/utils";
 
 function MoneyCell({ v, mon, colored }) {

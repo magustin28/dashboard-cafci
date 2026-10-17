@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 import { sb } from "../lib/supabase";
 
 export default function InformeModal({ enriched, apiFecha, onClose }) {

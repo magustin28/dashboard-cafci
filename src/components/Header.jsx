@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import AuthModal from './AuthModal';
 import { formatFechaLabel } from '../lib/utils';
 
@@ -10,7 +10,7 @@ export default function Header({ apiFecha, totalFondos, fechas, fechaParam, onRe
   const [showAuth, setShowAuth]       = useState(false);
   const [menuOpen, setMenuOpen]       = useState(false);
   const [pickerOpen, setPickerOpen]   = useState(false);
-  const [anioSel, setAnioSel]         = useState(null);
+  const [anioElegido, setAnioElegido] = useState(null);
 
   const menuRef = useRef(null);
 
@@ -29,10 +29,8 @@ export default function Header({ apiFecha, totalFondos, fechas, fechaParam, onRe
 
   const anios = useMemo(() => Object.keys(grouped).sort((a, b) => b - a), [grouped]);
 
-  // Seleccionar el año más reciente por defecto
-  useEffect(() => {
-    if (anios.length && !anioSel) setAnioSel(anios[0]);
-  }, [anios]);
+  // Año seleccionado: el más reciente por defecto (derivado, sin estado ni effect)
+  const anioSel = anioElegido || anios[0] || null;
 
   // Cerrar con ESC
   useEffect(() => {
@@ -129,7 +127,7 @@ export default function Header({ apiFecha, totalFondos, fechas, fechaParam, onRe
             {anios.length > 1 && (
               <div style={{ display: 'flex', gap: 8, margin: '16px 0 12px' }}>
                 {anios.map(a => (
-                  <button key={a} onClick={() => setAnioSel(a)}
+                  <button key={a} onClick={() => setAnioElegido(a)}
                     style={{
                       padding: '5px 16px', borderRadius: 20, border: '1px solid var(--border2)',
                       fontSize: 13, fontWeight: 600, cursor: 'pointer',

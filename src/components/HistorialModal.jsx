@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useEffect, useState, useCallback } from 'react';
+import { useAuth } from '../context/useAuth';
 import { sb } from '../lib/supabase';
 import { toast } from '../lib/utils';
 import SuscripcionModal from './SuscripcionModal';
@@ -24,14 +24,14 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
     return () => document.removeEventListener('keydown', handler);
   }, [onClose, editSusc, editResc]);
 
-  const reload = async () => {
+  const reload = useCallback(async () => {
     if (!user) return;
     const [{ data: suscs }, { data: rescates }] = await Promise.all([
       sb.from('suscripciones').select('*').eq('user_id', user.id).eq('fondo_nombre', fondoNombre).order('fecha_compra', { ascending: true }),
       sb.from('rescates').select('*, rescate_detalles(*)').eq('user_id', user.id).eq('fondo_nombre', fondoNombre).order('fecha_rescate', { ascending: true }),
     ]);
     setData({ suscs: suscs || [], rescates: rescates || [] });
-  };
+  }, [user, fondoNombre]);
 
   useEffect(() => {
     if (!user) return;
@@ -39,7 +39,7 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
       await reload();
       setLoading(false);
     })();
-  }, [user, fondoNombre]);
+  }, [user, fondoNombre, reload]);
 
   const fmtDate   = (d) => { const [y, m, day] = d.split('-'); return `${day}/${m}/${y.slice(2)}`; };
   const fmtCp     = (v) => parseFloat(v).toLocaleString('es-AR', { minimumFractionDigits: 4, maximumFractionDigits: 4 });

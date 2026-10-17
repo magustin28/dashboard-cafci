@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useAuth } from './context/AuthContext';
+import { useAuth } from './context/useAuth';
 import { useFondos } from './hooks/useFondos';
 import { getTabGroup } from './lib/utils';
 
@@ -32,7 +32,7 @@ export default function App() {
 
   const fechaParam = new URLSearchParams(window.location.search).get('fecha');
 
-  useEffect(() => { fetchData(fechaParam); }, []);
+  useEffect(() => { fetchData(fechaParam); }, [fechaParam, fetchData]);
 
   useEffect(() => {
     if (apiFecha) {

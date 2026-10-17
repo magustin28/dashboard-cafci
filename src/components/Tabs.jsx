@@ -1,4 +1,4 @@
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 import { TAB_GROUPS, getTabGroup } from "../lib/utils";
 
 export default function Tabs({ raw, activeTab, onSwitch }) {

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 import { REG_MAP, HOR_MAP, cnvLink } from "../lib/utils";
 
 // Parse "DD/MM/YY" or "DD/MM/YYYY" → Date

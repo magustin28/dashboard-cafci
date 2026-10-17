@@ -1,8 +1,7 @@
-import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { sb } from '../lib/supabase';
 import { toast } from '../lib/utils';
-
-const AuthContext = createContext(null);
+import { AuthContext } from './authContextValue';
 
 const LOCAL_FAV_KEY = 'cafci_favs_local';
 
@@ -233,5 +232,3 @@ export function AuthProvider({ children }) {
     </AuthContext.Provider>
   );
 }
-
-export const useAuth = () => useContext(AuthContext);
