@@ -19,7 +19,7 @@ export default function Tabs({ raw, activeTab, onSwitch }) {
         🏆 Top 10
       </button>
       {TAB_GROUPS.map((g) => {
-        const n = g.id === "Todos" ? raw.length : raw.filter((r) => getTabGroup(r[12]) === g.id).length;
+        const n = g.id === "Todos" ? raw.length : raw.filter((r) => getTabGroup(r) === g.id).length;
         return (
           <button key={g.id} className={`tab${activeTab === g.id ? " active" : ""}`} onClick={() => onSwitch(g.id)}>
             {g.label}

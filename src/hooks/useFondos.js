@@ -1,14 +1,17 @@
 import { useState, useCallback } from "react";
 import { API_BASE, API_URL, API_FECHAS } from "../lib/utils";
 
-const CACHE_KEY = "cafci_data_cache";
-const CACHE_FECHA = "cafci_data_fecha";
+// v2: el array posicional sumó el campo [23] (Código de Clasificación) → invalida el cache viejo
+const CACHE_KEY = "cafci_data_cache_v2";
+const CACHE_FECHA = "cafci_data_fecha_v2";
 
 function saveCache(rows, fecha, refs) {
   try {
     sessionStorage.setItem(CACHE_KEY, JSON.stringify({ rows, fecha, refs }));
     sessionStorage.setItem(CACHE_FECHA, fecha || "");
-  } catch {}
+  } catch (e) {
+    console.warn("[cafci] no se pudo cachear en sessionStorage:", e);
+  }
 }
 
 function loadCache() {
@@ -45,7 +48,7 @@ export function useFondos() {
 
   const fetchData = useCallback(
     async (fechaParam = null) => {
-      const MAX = 3;
+      const MAX = 7;
       const url = fechaParam ? `${API_BASE}/api/fondos/${fechaParam}` : API_URL;
 
       // Use cache on reload (only for main page, not historical)
@@ -120,6 +123,7 @@ export function useFondos() {
                 f[`Patrimonio_${fechaAnterior}`] ?? null, // [20] patrimonio anterior
                 f[`Valor (mil cuotapartes)_${fechaAnterior}`] ?? null, // [21] valor anterior
                 f["Valor (mil cuotapartes)_Reexp.Pesos"] ?? null, // [22]
+                f["Código de Clasificación"] ?? null, // [23] → lo usa getTabGroup (pestañas robustas)
               ]);
             });
           });
@@ -136,7 +140,8 @@ export function useFondos() {
             setError(e.message);
             setLoading(false);
           } else {
-            await new Promise((r) => setTimeout(r, 2500 * attempt));
+            // El cold start de Render puede tardar ~1 min: backoff más largo que antes (2,5s/5s)
+            await new Promise((r) => setTimeout(r, Math.min(3000 * attempt, 15000)));
           }
         }
       }

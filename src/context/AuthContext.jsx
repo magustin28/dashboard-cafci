@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { sb } from '../lib/supabase';
+import { toast } from '../lib/utils';
 
 const AuthContext = createContext(null);
 
@@ -104,10 +105,20 @@ export function AuthProvider({ children }) {
     }
     const idx = favs.indexOf(name);
     if (idx === -1) {
-      await sb.from('favoritos').insert({ user_id: user.id, fondo_nombre: name });
+      const { error } = await sb.from('favoritos').insert({ user_id: user.id, fondo_nombre: name });
+      if (error) {
+        console.error('[cafci] no se pudo guardar el favorito:', error);
+        toast(`No se pudo guardar el favorito: ${error.message}`);
+        return;
+      }
       setFavs(prev => [...prev, name]);
     } else {
-      await sb.from('favoritos').delete().eq('user_id', user.id).eq('fondo_nombre', name);
+      const { error } = await sb.from('favoritos').delete().eq('user_id', user.id).eq('fondo_nombre', name);
+      if (error) {
+        console.error('[cafci] no se pudo quitar el favorito:', error);
+        toast(`No se pudo quitar el favorito: ${error.message}`);
+        return;
+      }
       setFavs(prev => prev.filter(f => f !== name));
     }
   }, [user, favs]);
@@ -132,9 +143,15 @@ export function AuthProvider({ children }) {
 
   const deleteSuscripcion = useCallback(async (id) => {
     const u = userRef.current;
-    if (!u) return;
-    await sb.from('suscripciones').delete().eq('id', id).eq('user_id', u.id);
+    if (!u) return { ok: false, msg: 'No autenticado.' };
+    const { error } = await sb.from('suscripciones').delete().eq('id', id).eq('user_id', u.id);
+    if (error) {
+      console.error('[cafci] no se pudo eliminar la suscripción:', error);
+      toast(`No se pudo eliminar la suscripción: ${error.message}`);
+      return { ok: false, msg: error.message };
+    }
     setPortfolio(prev => prev.filter(i => i.id !== id));
+    return { ok: true };
   }, []);
 
   const addRescate = useCallback(async (item) => {
@@ -188,7 +205,7 @@ export function AuthProvider({ children }) {
     }).select().single();
     if (errR) return { ok: false, msg: errR.message };
 
-    await sb.from('rescate_detalle').insert(detalles.map(d => ({ ...d, rescate_id: rescate.id, user_id: user.id })));
+    await sb.from('rescate_detalles').insert(detalles.map(d => ({ ...d, rescate_id: rescate.id, user_id: user.id })));
 
     // Update cuotapartes en suscripciones
     const updatedPortfolio = [...portfolioRef.current];

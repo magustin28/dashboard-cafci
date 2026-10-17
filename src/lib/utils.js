@@ -5,6 +5,16 @@ export const API_FECHAS = API_BASE + "/api/fechas";
 export const REG_MAP = { Arg: "Argentina", Glo: "Global", Latam: "Latam", Bra: "Brasil", Eur: "Europa" };
 export const HOR_MAP = { Cor: "Corto", Med: "Mediano", Lar: "Largo", Flex: "Flexible", Sasig: "Sasig" };
 
+// "Código de Clasificación" del Excel de CAFCI → pestaña. Es la forma robusta de agrupar: el
+// código no depende de cómo se titule la categoría (con el regex anterior, un renombre de
+// título mandaba esos fondos a "Otros" en silencio). Verificado contra la planilla del
+// 16/10/2026: 1=Renta Variable, 2=Renta Fija, 3=Mercado de Dinero, 4=Renta Mixta, 5=PyME,
+// 6=Retorno Total; 7..10 (Infraestructura, Fondos Cerrados, ASG, RG900) → "Otros".
+export const CLASIF_MAP = {
+  1: "Renta Variable", 2: "Renta Fija", 3: "Mercado Dinero", 4: "Renta Mixta",
+  5: "PyME", 6: "Retorno Total", 7: "Otros", 8: "Otros", 9: "Otros", 10: "Otros",
+};
+
 export const TAB_GROUPS = [
   { id: "Todos", label: "Todos", match: () => true },
   { id: "Mercado Dinero", label: "Mercado de Dinero", match: (c) => /mercado de dinero|fondos l[íi]quidos/i.test(c) },
@@ -16,7 +26,18 @@ export const TAB_GROUPS = [
   { id: "Otros", label: "Otros", match: null },
 ];
 
-export function getTabGroup(categoria) {
+// Acepta la fila completa (usa el Código de Clasificación) o una categoría suelta (compatibilidad)
+export function getTabGroup(row) {
+  const categoria = typeof row === "string" ? row : (row && row[12]) || "";
+  const codigo = typeof row === "object" && row ? row[23] : null;
+
+  if (codigo != null) {
+    const grupo = CLASIF_MAP[codigo];
+    if (grupo) return grupo;
+    console.warn(`[cafci] Código de clasificación desconocido: ${codigo} (categoría "${categoria}")`);
+  }
+
+  // Respaldo por nombre de categoría (comportamiento anterior)
   for (const g of TAB_GROUPS) {
     if (g.id === "Todos" || g.match === null) continue;
     if (g.match(categoria)) return g.id;
@@ -69,4 +90,25 @@ export function fmtPct(v, d = 2) {
 export function formatFechaLabel(iso) {
   const [y, m, d] = iso.split("-");
   return `${d}/${m}/${y}`;
+}
+
+// Aviso flotante para mostrar errores en pantalla. Existe porque varias operaciones contra
+// Supabase fallaban en silencio (sin `error` chequeado) y el usuario no se enteraba.
+export function toast(msg) {
+  if (typeof document === "undefined") return;
+  let el = document.getElementById("cafci-toast");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "cafci-toast";
+    el.style.cssText =
+      "position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:9999;" +
+      "max-width:min(560px,92vw);padding:10px 16px;border-radius:8px;font-size:13px;line-height:1.4;" +
+      "background:#7f1d1d;color:#fff;border:1px solid #ef4444;text-align:center;" +
+      "box-shadow:0 6px 20px rgba(0,0,0,.35);transition:opacity .25s";
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.style.opacity = "1";
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => { el.style.opacity = "0"; }, 6000);
 }

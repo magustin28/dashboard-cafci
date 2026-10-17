@@ -8,14 +8,14 @@ const fmtFechaLarga = (f) => {
 };
 
 export default function FondoPanel({ fondo, refs, apiFecha, onClose }) {
-  if (!fondo) return null;
-
-  // Cerrar con ESC
+  // Cerrar con ESC (va antes del return temprano: los hooks no pueden ser condicionales)
   useEffect(() => {
     const handler = (e) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
   }, [onClose]);
+
+  if (!fondo) return null;
 
 
   const mon      = fondo[2];

@@ -14,13 +14,6 @@ import HistorialModal from './components/HistorialModal';
 import FondoPanel    from './components/FondoPanel';
 import TopTab        from './components/TopTab';
 
-const SORT_MAP = {
-  var_d_desc: ['var_d', -1], var_d_asc: ['var_d', 1],
-  var_anio_desc: ['var_anio', -1], var_anio_asc: ['var_anio', 1],
-  var_12_desc: ['var_12', -1], var_12_asc: ['var_12', 1],
-  pat_desc: ['pat', -1], pat_asc: ['pat', 1],
-};
-
 export default function App() {
   const { user, authReady, favs } = useAuth();
   const { raw, apiFecha, fechas, loading, error, refs, fetchData, forceRefresh } = useFondos();
@@ -31,7 +24,6 @@ export default function App() {
   const [moneda, setMoneda]       = useState('');
   const [region, setRegion]       = useState('');
   const [horizonte, setHorizonte] = useState('');
-  const [sort, setSort]           = useState('');
 
   // Modals
   const [suscModal,  setSuscModal]  = useState(null); // { fondo, moneda } | null
@@ -63,18 +55,11 @@ export default function App() {
     return () => window.removeEventListener('cafci:tab', handler);
   }, []);
 
-  // Switch to Mi Portfolio after login
-  useEffect(() => {
-    if (user && activeTab !== 'Mi Portfolio') {
-      // don't auto-switch, let user stay where they are
-    }
-  }, [user]);
-
   const filtered = useMemo(() => {
     if (!raw.length) return [];
     let rows = raw.filter(r => {
       if (activeTab === 'Favoritos') return false; // handled separately
-      if (activeTab !== 'Todos' && getTabGroup(r[12]) !== activeTab) return false;
+      if (activeTab !== 'Todos' && getTabGroup(r) !== activeTab) return false;
       if (moneda && r[2] !== moneda) return false;
       if (region && r[3] !== region) return false;
       if (horizonte && r[4] !== horizonte) return false;
@@ -93,11 +78,12 @@ export default function App() {
   const isPortfolio = activeTab === 'Mi Portfolio';
   const isFavoritos = activeTab === 'Favoritos';
   const isTop       = activeTab === 'Top 10';
-  const hasFilters  = q || moneda || region || horizonte || sort;
+  const hasFilters  = q || moneda || region || horizonte;
 
-  const clearFilters = () => { setQ(''); setMoneda(''); setRegion(''); setHorizonte(''); setSort(''); };
+  const clearFilters = () => { setQ(''); setMoneda(''); setRegion(''); setHorizonte(''); };
   const switchTab = (tab) => { setActiveTab(tab); clearFilters(); };
-  const handleLogout = () => { logout(); setActiveTab('Todos'); };
+
+  // Al cerrar sesión, volver a la pestaña principal
   useEffect(() => {
     const handler = () => setActiveTab('Todos');
     window.addEventListener('cafci:logout', handler);

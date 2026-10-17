@@ -23,7 +23,7 @@ export default function InformeModal({ enriched, apiFecha, onClose }) {
         sb.from("suscripciones").select("*").eq("user_id", user.id).in("fondo_nombre", fondos).order("fecha_compra", { ascending: true }),
         sb
           .from("rescates")
-          .select("*, rescate_detalle(*)")
+          .select("*, rescate_detalles(*)")
           .eq("user_id", user.id)
           .in("fondo_nombre", fondos)
           .order("fecha_rescate", { ascending: true }),

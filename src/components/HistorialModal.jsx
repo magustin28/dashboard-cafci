@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { sb } from '../lib/supabase';
+import { toast } from '../lib/utils';
 import SuscripcionModal from './SuscripcionModal';
 import RescateModal from './RescateModal';
 
@@ -27,7 +28,7 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
     if (!user) return;
     const [{ data: suscs }, { data: rescates }] = await Promise.all([
       sb.from('suscripciones').select('*').eq('user_id', user.id).eq('fondo_nombre', fondoNombre).order('fecha_compra', { ascending: true }),
-      sb.from('rescates').select('*, rescate_detalle(*)').eq('user_id', user.id).eq('fondo_nombre', fondoNombre).order('fecha_rescate', { ascending: true }),
+      sb.from('rescates').select('*, rescate_detalles(*)').eq('user_id', user.id).eq('fondo_nombre', fondoNombre).order('fecha_rescate', { ascending: true }),
     ]);
     setData({ suscs: suscs || [], rescates: rescates || [] });
   };
@@ -49,7 +50,12 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
     setConfirmDialog({
       msg: '¿Eliminar esta suscripción? Esta acción es irreversible.',
       onConfirm: async () => {
-        await sb.from('suscripciones').delete().eq('id', id).eq('user_id', user.id);
+        const { error } = await sb.from('suscripciones').delete().eq('id', id).eq('user_id', user.id);
+        if (error) {
+          console.error('[cafci] no se pudo eliminar la suscripción:', error);
+          toast(`No se pudo eliminar la suscripción: ${error.message}`);
+          return;
+        }
         await reload();
       }
     });
@@ -60,13 +66,18 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
     setSaving(true);
     const cant  = parseFloat(editSusc.cantidad);
     const prec  = parseFloat(editSusc.precio_compra);
-    await sb.from('suscripciones').update({
+    const { error } = await sb.from('suscripciones').update({
       fecha_compra:  editSusc.fecha_compra,
       cantidad:      cant,
       precio_compra: prec,
       // Mantenemos cuotapartes_disponibles proporcional si cambió la cantidad
     }).eq('id', editSusc.id).eq('user_id', user.id);
     setSaving(false);
+    if (error) {
+      console.error('[cafci] no se pudo guardar la suscripción:', error);
+      toast(`No se pudo guardar la suscripción: ${error.message}`);
+      return; // dejamos el editor abierto para reintentar
+    }
     setEditSusc(null);
     await reload();
   };
@@ -77,7 +88,7 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
       msg: '¿Eliminar este rescate? Se restaurarán las cuotapartes en las suscripciones afectadas.',
       onConfirm: async () => {
         // Leer detalles antes de borrar para revertir cuotapartes
-        const { data: detalles } = await sb.from('rescate_detalle')
+        const { data: detalles } = await sb.from('rescate_detalles')
           .select('*').eq('rescate_id', id);
 
         // Restaurar cuotapartes en cada suscripción afectada
@@ -92,8 +103,18 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
           }
         }
 
-        await sb.from('rescate_detalle').delete().eq('rescate_id', id);
-        await sb.from('rescates').delete().eq('id', id).eq('user_id', user.id);
+        // Borramos primero el rescate (lo crítico) y después su detalle (si falla, avisa pero no rompe)
+        const { error: errR } = await sb.from('rescates').delete().eq('id', id).eq('user_id', user.id);
+        if (errR) {
+          console.error('[cafci] no se pudo eliminar el rescate:', errR);
+          toast(`No se pudo eliminar el rescate: ${errR.message}`);
+          return;
+        }
+        const { error: errD } = await sb.from('rescate_detalles').delete().eq('rescate_id', id);
+        if (errD) {
+          console.error('[cafci] no se pudo borrar el detalle del rescate:', errD);
+          toast(`No se pudo borrar el detalle del rescate: ${errD.message}`);
+        }
         await reload();
         await reloadPortfolio();
       }
@@ -108,13 +129,18 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
     const resc = data.rescates.find(r => r.id === editResc.id);
     const importeVenta = parseFloat(resc.cuotapartes_rescatadas) * prec;
     const rendimiento  = importeVenta - parseFloat(resc.costo_total);
-    await sb.from('rescates').update({
+    const { error } = await sb.from('rescates').update({
       fecha_rescate:  editResc.fecha_rescate,
       precio_rescate: prec,
       importe_venta:  Math.round(importeVenta * 100) / 100,
       rendimiento:    Math.round(rendimiento * 100) / 100,
     }).eq('id', editResc.id).eq('user_id', user.id);
     setSaving(false);
+    if (error) {
+      console.error('[cafci] no se pudo guardar el rescate:', error);
+      toast(`No se pudo guardar el rescate: ${error.message}`);
+      return; // dejamos el editor abierto para reintentar
+    }
     setEditResc(null);
     await reload();
   };
