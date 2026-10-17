@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/useAuth";
 import { sb } from "../lib/supabase";
+import { toast } from "../lib/utils";
 
 export default function InformeModal({ enriched, apiFecha, onClose }) {
   const { user } = useAuth();
@@ -19,7 +20,7 @@ export default function InformeModal({ enriched, apiFecha, onClose }) {
     if (!user || !enriched?.length) return;
     (async () => {
       const fondos = enriched.map((i) => i.fondo_nombre);
-      const [{ data: suscs }, { data: rescates }] = await Promise.all([
+      const [rS, rR] = await Promise.all([
         sb.from("suscripciones").select("*").eq("user_id", user.id).in("fondo_nombre", fondos).order("fecha_compra", { ascending: true }),
         sb
           .from("rescates")
@@ -28,7 +29,12 @@ export default function InformeModal({ enriched, apiFecha, onClose }) {
           .in("fondo_nombre", fondos)
           .order("fecha_rescate", { ascending: true }),
       ]);
-      setData({ suscs: suscs || [], rescates: rescates || [] });
+      if (rS.error || rR.error) {
+        const e = rS.error || rR.error;
+        console.error("[cafci] no se pudieron leer los datos del informe:", e);
+        toast(`No se pudieron leer los datos del informe: ${e.message}`);
+      }
+      setData({ suscs: rS.data || [], rescates: rR.data || [] });
       setLoading(false);
     })();
   }, [user, enriched]);

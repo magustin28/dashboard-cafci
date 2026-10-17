@@ -26,11 +26,16 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
 
   const reload = useCallback(async () => {
     if (!user) return;
-    const [{ data: suscs }, { data: rescates }] = await Promise.all([
+    const [rS, rR] = await Promise.all([
       sb.from('suscripciones').select('*').eq('user_id', user.id).eq('fondo_nombre', fondoNombre).order('fecha_compra', { ascending: true }),
       sb.from('rescates').select('*, rescate_detalles(*)').eq('user_id', user.id).eq('fondo_nombre', fondoNombre).order('fecha_rescate', { ascending: true }),
     ]);
-    setData({ suscs: suscs || [], rescates: rescates || [] });
+    if (rS.error || rR.error) {
+      const e = rS.error || rR.error;
+      console.error('[cafci] no se pudo leer el historial:', e);
+      toast(`No se pudo leer el historial: ${e.message}`);
+    }
+    setData({ suscs: rS.data || [], rescates: rR.data || [] });
   }, [user, fondoNombre]);
 
   useEffect(() => {

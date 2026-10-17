@@ -27,22 +27,35 @@ export function AuthProvider({ children }) {
 
   // ── Load DB data ───────────────────────────────────────────────
   const loadFavsFromDB = useCallback(async (userId) => {
-    const { data } = await sb.from('favoritos').select('fondo_nombre').eq('user_id', userId);
+    const { data, error } = await sb.from('favoritos').select('fondo_nombre').eq('user_id', userId);
+    if (error) {
+      console.error('[cafci] no se pudieron leer los favoritos:', error);
+      toast(`No se pudieron leer tus favoritos: ${error.message}`);
+    }
     const dbFavs = data ? data.map(r => r.fondo_nombre) : [];
     const localFavs = loadLocalFavs();
     const toMerge = localFavs.filter(n => !dbFavs.includes(n));
     if (toMerge.length > 0) {
-      await sb.from('favoritos').insert(toMerge.map(n => ({ user_id: userId, fondo_nombre: n })));
-      saveLocalFavs([]);
+      const { error: errIns } = await sb.from('favoritos').insert(toMerge.map(n => ({ user_id: userId, fondo_nombre: n })));
+      if (errIns) {
+        console.error('[cafci] no se pudieron migrar los favoritos locales:', errIns);
+        toast(`No se pudieron guardar tus favoritos locales: ${errIns.message}`);
+      } else {
+        saveLocalFavs([]);
+      }
     }
     setFavs([...dbFavs, ...toMerge]);
   }, []);
 
   const loadPortfolio = useCallback(async (userId) => {
-    const { data } = await sb.from('suscripciones')
+    const { data, error } = await sb.from('suscripciones')
       .select('*')
       .eq('user_id', userId)
       .order('fecha_compra', { ascending: true });
+    if (error) {
+      console.error('[cafci] no se pudo leer el portfolio:', error);
+      toast(`No se pudo leer tu portfolio: ${error.message}`);
+    }
     setPortfolio(data || []);
   }, []);
 
@@ -204,7 +217,11 @@ export function AuthProvider({ children }) {
     }).select().single();
     if (errR) return { ok: false, msg: errR.message };
 
-    await sb.from('rescate_detalles').insert(detalles.map(d => ({ ...d, rescate_id: rescate.id, user_id: user.id })));
+    const { error: errDet } = await sb.from('rescate_detalles').insert(detalles.map(d => ({ ...d, rescate_id: rescate.id, user_id: user.id })));
+    if (errDet) {
+      console.error('[cafci] no se pudo guardar el detalle del rescate:', errDet);
+      toast(`El rescate se guardó pero falló su detalle: ${errDet.message}`);
+    }
 
     // Update cuotapartes en suscripciones
     const updatedPortfolio = [...portfolioRef.current];
@@ -212,8 +229,13 @@ export function AuthProvider({ children }) {
       const idx = updatedPortfolio.findIndex(s => s.id === d.suscripcion_id);
       if (idx !== -1) {
         const nuevasDisp = Math.round((parseFloat(updatedPortfolio[idx].cuotapartes_disponibles) - d.cuotapartes_consumidas) * 1e6) / 1e6;
-        await sb.from('suscripciones').update({ cuotapartes_disponibles: nuevasDisp }).eq('id', d.suscripcion_id);
-        updatedPortfolio[idx] = { ...updatedPortfolio[idx], cuotapartes_disponibles: nuevasDisp };
+        const { error: errUpd } = await sb.from('suscripciones').update({ cuotapartes_disponibles: nuevasDisp }).eq('id', d.suscripcion_id);
+        if (errUpd) {
+          console.error('[cafci] no se pudieron descontar las cuotapartes de la suscripción', d.suscripcion_id, errUpd);
+          toast(`No se pudieron descontar las cuotapartes de una suscripción: ${errUpd.message}`);
+        } else {
+          updatedPortfolio[idx] = { ...updatedPortfolio[idx], cuotapartes_disponibles: nuevasDisp };
+        }
       }
     }
 
