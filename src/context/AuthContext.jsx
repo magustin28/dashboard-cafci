@@ -171,7 +171,7 @@ export function AuthProvider({ children }) {
     if (!user) return { ok: false, msg: 'No autenticado.' };
 
     const suscsFifo = portfolioRef.current
-      .filter(s => s.fondo_nombre === item.fondoNombre && parseFloat(s.cuotapartes_disponibles) > 0)
+      .filter(s => s.fondo_nombre === item.fondoNombre && s.moneda === item.moneda && parseFloat(s.cuotapartes_disponibles) > 0)
       .sort((a, b) => new Date(a.fecha_compra) - new Date(b.fecha_compra));
 
     const totalDisp = suscsFifo.reduce((s, x) => s + parseFloat(x.cuotapartes_disponibles), 0);

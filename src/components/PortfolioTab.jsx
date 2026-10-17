@@ -97,22 +97,37 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
         ...item,
         _suscripciones: [],
         cuotapartes_disponibles: 0,
-        _cpPonderadoNum: 0, // Σ (cp * precio_compra) para calcular precio promedio ponderado
+        _cpPonderadoNum: 0,   // Σ (cuotapartes disponibles × precio) → ponderado de lo que TENÉS
+        _cantComprada: 0,     // Σ cantidad (lo comprado original: no baja con los rescates)
+        _cantPonderadaNum: 0, // Σ (cantidad × precio) → ponderado de lo COMPRADO
         fecha_compra: null,
       };
     }
     const cp = parseFloat(item.cuotapartes_disponibles);
     const precio = parseFloat(item.precio_compra);
+    const cant = parseFloat(item.cantidad);
     grouped[key].cuotapartes_disponibles += cp;
     grouped[key]._cpPonderadoNum += cp * precio;
+    if (!isNaN(cant)) {
+      grouped[key]._cantComprada += cant;
+      grouped[key]._cantPonderadaNum += cant * precio;
+    }
     grouped[key]._suscripciones.push(item);
   });
 
-  // Calcular precio promedio ponderado para cada grupo
+  // Precio promedio ponderado de cada grupo:
+  //  - precio_compra: sobre las cuotapartes DISPONIBLES → es la base de costo FIFO (no se toca)
+  //  - precio_suscripcion: lo que se MUESTRA en la tabla. Si ya no quedan cuotapartes (posición
+  //    totalmente rescatada) usa el ponderado de lo COMPRADO, para que no quede en 0.
   const portfolioAgrupado = Object.values(grouped).map((g) => {
     const cpTotal = g.cuotapartes_disponibles;
     const precioPond = cpTotal > 0 ? g._cpPonderadoNum / cpTotal : 0;
-    return { ...g, precio_compra: precioPond };
+    const precioPondComprado = g._cantComprada > 0 ? g._cantPonderadaNum / g._cantComprada : 0;
+    return {
+      ...g,
+      precio_compra: precioPond,
+      precio_suscripcion: cpTotal > 0 ? precioPond : precioPondComprado,
+    };
   });
 
   const enriched = [...portfolioAgrupado]
@@ -396,7 +411,7 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
                   const r = item.match;
                   const cpDisp = parseFloat(item.cuotapartes_disponibles);
                   const cantFmt = cpDisp.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 4 });
-                  const precFmt = parseFloat(item.precio_compra).toLocaleString("es-AR", { minimumFractionDigits: 4, maximumFractionDigits: 6 });
+                  const precFmt = parseFloat(item.precio_suscripcion ?? item.precio_compra).toLocaleString("es-AR", { minimumFractionDigits: 4, maximumFractionDigits: 6 });
                   return (
                     <tr key={`${item.fondo_nombre}__${item.moneda}`}>
                       <td style={{ verticalAlign: "middle" }}>

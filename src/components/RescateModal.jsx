@@ -28,14 +28,14 @@ export default function RescateModal({ fondoInicial, monedaInicial, onClose }) {
   const pfx  = moneda === 'ARS' ? '$ ' : 'U$S ';
 
   const disponibles = portfolio
-    .filter(s => s.fondo_nombre === fondo)
+    .filter(s => s.fondo_nombre === fondo && s.moneda === moneda)
     .reduce((s, x) => s + parseFloat(x.cuotapartes_disponibles), 0);
 
   // FIFO preview
   let preview = null;
   if (fondo && !isNaN(cant) && !isNaN(prec) && cant > 0 && prec > 0) {
     const suscsFifo = portfolio
-      .filter(s => s.fondo_nombre === fondo && parseFloat(s.cuotapartes_disponibles) > 0)
+      .filter(s => s.fondo_nombre === fondo && s.moneda === moneda && parseFloat(s.cuotapartes_disponibles) > 0)
       .sort((a, b) => new Date(a.fecha_compra) - new Date(b.fecha_compra));
     let restante = cant, costoTotal = 0;
     for (const s of suscsFifo) {

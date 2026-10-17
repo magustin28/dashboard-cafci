@@ -251,11 +251,11 @@ export default function InformeModal({ enriched, apiFecha, onClose }) {
         {/* ── Historial por fondo: suscrip + rescates juntos ── */}
         <div className="inf-section-title">Historial por Fondo</div>
         {enrichedActivo.map((item) => {
-          const fondoSuscs = suscs.filter((s) => s.fondo_nombre === item.fondo_nombre);
-          const fondoRescates = rescates.filter((r) => r.fondo_nombre === item.fondo_nombre);
+          const fondoSuscs = suscs.filter((s) => s.fondo_nombre === item.fondo_nombre && s.moneda === item.moneda);
+          const fondoRescates = rescates.filter((r) => r.fondo_nombre === item.fondo_nombre && r.moneda === item.moneda);
 
           return (
-            <div key={item.fondo_nombre} className="inf-fondo-block">
+            <div key={`${item.fondo_nombre}__${item.moneda}`} className="inf-fondo-block">
               <div className="inf-fondo-name">
                 {item.fondo_nombre}
                 <span className="inf-mon-badge">{item.moneda}</span>
@@ -315,7 +315,7 @@ export default function InformeModal({ enriched, apiFecha, onClose }) {
                     </thead>
                     <tbody>
                       {fondoRescates.map((r) => {
-                        const detalles = r.rescate_detalle || [];
+                        const detalles = r.rescate_detalles || [];
                         const totalCp = detalles.reduce((s, d) => s + parseFloat(d.cuotapartes_consumidas), 0);
                         const precPond =
                           totalCp > 0

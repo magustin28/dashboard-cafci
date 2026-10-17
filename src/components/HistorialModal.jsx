@@ -27,8 +27,8 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
   const reload = useCallback(async () => {
     if (!user) return;
     const [rS, rR] = await Promise.all([
-      sb.from('suscripciones').select('*').eq('user_id', user.id).eq('fondo_nombre', fondoNombre).order('fecha_compra', { ascending: true }),
-      sb.from('rescates').select('*, rescate_detalles(*)').eq('user_id', user.id).eq('fondo_nombre', fondoNombre).order('fecha_rescate', { ascending: true }),
+      sb.from('suscripciones').select('*').eq('user_id', user.id).eq('fondo_nombre', fondoNombre).eq('moneda', moneda).order('fecha_compra', { ascending: true }),
+      sb.from('rescates').select('*, rescate_detalles(*)').eq('user_id', user.id).eq('fondo_nombre', fondoNombre).eq('moneda', moneda).order('fecha_rescate', { ascending: true }),
     ]);
     if (rS.error || rR.error) {
       const e = rS.error || rR.error;
@@ -36,7 +36,7 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
       toast(`No se pudo leer el historial: ${e.message}`);
     }
     setData({ suscs: rS.data || [], rescates: rR.data || [] });
-  }, [user, fondoNombre]);
+  }, [user, fondoNombre, moneda]);
 
   useEffect(() => {
     if (!user) return;
@@ -173,8 +173,8 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
   const cpDisp          = suscs.reduce((s, x) => s + parseFloat(x.cuotapartes_disponibles), 0);
 
   const tnasValidas = rescates
-    .filter(r => r.rescate_detalle?.length === 1 && r.rescate_detalle[0].dias > 0)
-    .map(r => (parseFloat(r.rendimiento) / parseFloat(r.costo_total)) / r.rescate_detalle[0].dias * 360 * 100);
+    .filter(r => r.rescate_detalles?.length === 1 && r.rescate_detalles[0].dias > 0)
+    .map(r => (parseFloat(r.rendimiento) / parseFloat(r.costo_total)) / r.rescate_detalles[0].dias * 360 * 100);
   const tnaPromedio = tnasValidas.length ? tnasValidas.reduce((a, b) => a + b, 0) / tnasValidas.length : null;
 
   const pctSpan = (v) => {
@@ -319,7 +319,7 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
               {rescates.length === 0
                 ? <tr><td colSpan={12} style={{ textAlign: 'center', color: 'var(--text2)', padding: 16 }}>Sin rescates registrados</td></tr>
                 : rescates.flatMap(r => {
-                  const detalles    = r.rescate_detalle || [];
+                  const detalles    = r.rescate_detalles || [];
                   const esCompuesto = detalles.length > 1;
                   const rendPos     = parseFloat(r.rendimiento) >= 0;
                   const rendPct     = parseFloat(r.costo_total) > 0 ? parseFloat(r.rendimiento) / parseFloat(r.costo_total) * 100 : null;
