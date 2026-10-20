@@ -70,8 +70,8 @@ function TopTable({ rows, refs, onOpenSuscripcion, onFondoClick, moneda }) {
         </thead>
         <tbody className="fade-up">
           {rows.map((r, i) => {
-            const isFaved = favs.includes(r[1]);
-            const varD = parseFloat(r[15]);
+            const isFaved = favs.includes(r.fondo);
+            const varD = parseFloat(r.valorVarPct);
             const tna = !isNaN(varD) ? varD * 360 : null;
             return (
               <tr key={i}>
@@ -82,7 +82,7 @@ function TopTable({ rows, refs, onOpenSuscripcion, onFondoClick, moneda }) {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 3, width: 52, margin: '0 auto' }}>
                     <button
                       className={`btn-fav${isFaved ? ' active' : ''}`}
-                      onClick={() => toggleFav(r[1])}
+                      onClick={() => toggleFav(r.fondo)}
                       title={isFaved ? 'Quitar de favoritos' : 'Agregar a favoritos'}
                       style={{ fontSize: 13 }}>★</button>
                     <button
@@ -92,15 +92,15 @@ function TopTable({ rows, refs, onOpenSuscripcion, onFondoClick, moneda }) {
                     {user ? (
                       <button
                         className="btn-port-action btn-susc"
-                        onClick={() => onOpenSuscripcion(r[1], r[2])}
+                        onClick={() => onOpenSuscripcion(r.fondo, r.moneda)}
                         title="Agregar a mi portfolio"
                         style={{ gridColumn: 'span 2' }}>+📊</button>
                     ) : <span />}
                   </div>
                 </td>
-                <td className="td-fondo">{r[1] || '—'}</td>
+                <td className="td-fondo">{r.fondo || '—'}</td>
                 <td style={{ textAlign: 'center' }}>
-                  <PctCell v={r[15]} />
+                  <PctCell v={r.valorVarPct} />
                 </td>
                 <td style={{ textAlign: 'center' }}>
                   {tna !== null
@@ -110,12 +110,12 @@ function TopTable({ rows, refs, onOpenSuscripcion, onFondoClick, moneda }) {
                     : <span className="td-mono zero">—</span>
                   }
                 </td>
-                <td style={{ textAlign: 'center' }}><PctCell v={r[6]} decimals={2} /></td>
-                <td style={{ textAlign: 'center' }}><PctCell v={r[7]} decimals={2} /></td>
-                <td><PatCell v={r[9]} /></td>
-                <td className="td-gerente">{r[11] || '—'}</td>
+                <td style={{ textAlign: 'center' }}><PctCell v={r.varAnio} decimals={2} /></td>
+                <td style={{ textAlign: 'center' }}><PctCell v={r.varAnual} decimals={2} /></td>
+                <td><PatCell v={r.patrimonio} /></td>
+                <td className="td-gerente">{r.socGerente || '—'}</td>
                 <td>
-                  <a className="btn-cnv" href={cnvLink(r[13] || '', r[0] || '')} target="_blank" rel="noopener" title="Ver en CAFCI">↗</a>
+                  <a className="btn-cnv" href={cnvLink(r.cafci || '', r.cnv || '')} target="_blank" rel="noopener" title="Ver en CAFCI">↗</a>
                 </td>
               </tr>
             );
@@ -128,17 +128,17 @@ function TopTable({ rows, refs, onOpenSuscripcion, onFondoClick, moneda }) {
 
 export default function TopTab({ raw, refs, onOpenSuscripcion, onFondoClick }) {
   const parseVar = (r) => {
-    const v = parseFloat(r[15]);
+    const v = parseFloat(r.valorVarPct);
     return isNaN(v) ? -Infinity : v;
   };
 
   const top10ARS = [...raw]
-    .filter(r => r[2] === 'ARS' && r[15] != null && !isNaN(parseFloat(r[15])) && /clase\s+a$/i.test(r[1] || ''))
+    .filter(r => r.moneda === 'ARS' && r.valorVarPct != null && !isNaN(parseFloat(r.valorVarPct)) && /clase\s+a$/i.test(r.fondo || ''))
     .sort((a, b) => parseVar(b) - parseVar(a))
     .slice(0, 10);
 
   const top10USD = [...raw]
-    .filter(r => (r[2] === 'USD' || r[2] === 'USB') && r[15] != null && !isNaN(parseFloat(r[15])) && /clase\s+a$/i.test(r[1] || ''))
+    .filter(r => (r.moneda === 'USD' || r.moneda === 'USB') && r.valorVarPct != null && !isNaN(parseFloat(r.valorVarPct)) && /clase\s+a$/i.test(r.fondo || ''))
     .sort((a, b) => parseVar(b) - parseVar(a))
     .slice(0, 10);
 

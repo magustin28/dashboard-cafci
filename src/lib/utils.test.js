@@ -12,14 +12,13 @@ import assert from "node:assert/strict";
 import {
   getTabGroup, CLASIF_MAP,
   parseFechaAPI, fmtMoney, fmtPat, fmtPct,
-  formatFechaLabel, cnvLink, toast,
+  formatFechaLabel, cnvLink, toast, formatPlazoLiq,
 } from "./utils.js";
 
-// Fila como la arma useFondos: [12] = categoría, [23] = Código de Clasificación
+// Fila como la arma useFondos: objeto con nombres estables (categoria + clasificacion)
 function fila(categoria, codigo) {
-  const f = [];
-  f[12] = categoria;
-  if (codigo !== undefined) f[23] = codigo;
+  const f = { categoria };
+  if (codigo !== undefined) f.clasificacion = codigo;
   return f;
 }
 
@@ -153,6 +152,29 @@ test("cnvLink: arma el link a CAFCI con los códigos codificados", () => {
 
 test("toast: fuera del navegador no rompe", () => {
   assert.doesNotThrow(() => toast("mensaje de prueba"));
+});
+
+test("formatPlazoLiq: convierte los días de la planilla a la forma de mostrar", () => {
+  assert.equal(formatPlazoLiq(0), "Inmediato");
+  assert.equal(formatPlazoLiq(1), "24 hs hábiles");
+  assert.equal(formatPlazoLiq(2), "48 hs hábiles");
+  assert.equal(formatPlazoLiq(3), "72 hs hábiles");
+  assert.equal(formatPlazoLiq(5), "5 días hábiles");
+  assert.equal(formatPlazoLiq(10), "10 días hábiles");
+  assert.equal(formatPlazoLiq("2"), "48 hs hábiles"); // el Excel puede traerlo como texto
+});
+
+test("formatPlazoLiq: centinelas y valores raros → No aplica / guion", () => {
+  assert.equal(formatPlazoLiq(-1), "No aplica");
+  assert.equal(formatPlazoLiq(99), "No aplica");
+  assert.equal(formatPlazoLiq(999), "No aplica");
+  assert.equal(formatPlazoLiq(9999), "No aplica");
+  assert.equal(formatPlazoLiq(99999), "No aplica");
+  assert.equal(formatPlazoLiq(100), "No aplica");
+  assert.equal(formatPlazoLiq(null), "—");
+  assert.equal(formatPlazoLiq(undefined), "—");
+  assert.equal(formatPlazoLiq(""), "—");
+  assert.equal(formatPlazoLiq("cualquiera"), "No aplica");
 });
 
 

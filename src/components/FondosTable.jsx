@@ -58,10 +58,10 @@ export default function FondosTable({ filtered, refs, onOpenSuscripcion, onFondo
   };
 
   const sorted = [...filtered].sort((a, b) => {
-    const idx = { fondo: 1, var_d: 15, var_anio: 6, var_12: 7, pat: 9 }[sortKey];
-    if (sortKey === "fondo") return (a[1] || "").localeCompare(b[1] || "", "es") * sortDir;
-    const av = parseFloat(a[idx]) || -Infinity;
-    const bv = parseFloat(b[idx]) || -Infinity;
+    const campo = { fondo: "fondo", var_d: "valorVarPct", var_anio: "varAnio", var_12: "varAnual", pat: "patrimonio" }[sortKey];
+    if (sortKey === "fondo") return (a.fondo || "").localeCompare(b.fondo || "", "es") * sortDir;
+    const av = parseFloat(a[campo]) || -Infinity;
+    const bv = parseFloat(b[campo]) || -Infinity;
     return (av - bv) * sortDir;
   });
 
@@ -139,14 +139,14 @@ export default function FondosTable({ filtered, refs, onOpenSuscripcion, onFondo
               </tr>
             ) : (
               slice.map((r, i) => {
-                const isFaved = favs.includes(r[1]);
+                const isFaved = favs.includes(r.fondo);
                 return (
                   <tr key={i}>
                     <td style={{ verticalAlign: "middle" }}>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 3, width: 52, margin: "0 auto" }}>
                         <button
                           className={`btn-fav${isFaved ? " active" : ""}`}
-                          onClick={() => toggleFav(r[1])}
+                          onClick={() => toggleFav(r.fondo)}
                           title={isFaved ? "Quitar de favoritos" : "Agregar a favoritos"}
                           style={{ fontSize: 13 }}
                         >★</button>
@@ -158,32 +158,32 @@ export default function FondosTable({ filtered, refs, onOpenSuscripcion, onFondo
                         {user ? (
                           <button
                             className="btn-port-action btn-susc"
-                            onClick={() => onOpenSuscripcion(r[1], r[2])}
+                            onClick={() => onOpenSuscripcion(r.fondo, r.moneda)}
                             title="Agregar a mi portfolio"
                             style={{ gridColumn: "span 2" }}
                           >+📊</button>
                         ) : <span />}
                       </div>
                     </td>
-                    <td className="td-fondo">{r[1] || "—"}</td>
+                    <td className="td-fondo">{r.fondo || "—"}</td>
                     <td>
-                      <MonBadge m={r[2]} />
+                      <MonBadge m={r.moneda} />
                     </td>
                     <td>
-                      <span className="badge badge-reg">{REG_MAP[r[3]] || r[3] || "—"}</span>
+                      <span className="badge badge-reg">{REG_MAP[r.region] || r.region || "—"}</span>
                     </td>
                     <td>
-                      <span className="badge badge-hor">{HOR_MAP[r[4]] || r[4] || "—"}</span>
+                      <span className="badge badge-hor">{HOR_MAP[r.horizonte] || r.horizonte || "—"}</span>
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      <PctCell v={r[15]} />
-                      {r[15] != null && (
-                        <div style={{ fontSize: 9, color: "var(--text2)", marginTop: 1 }}>~ {(parseFloat(r[15]) * 360).toFixed(2)}% TNA ~</div>
+                      <PctCell v={r.valorVarPct} />
+                      {r.valorVarPct != null && (
+                        <div style={{ fontSize: 9, color: "var(--text2)", marginTop: 1 }}>~ {(parseFloat(r.valorVarPct) * 360).toFixed(2)}% TNA ~</div>
                       )}
                     </td>
                     <td style={{ textAlign: "center" }}>
                       {(() => {
-                        const pct = parseFloat(r[6]);
+                        const pct = parseFloat(r.varAnio);
                         if (isNaN(pct)) return <span className="td-mono zero">—</span>;
                         const apiFechaDate = parseApiDate(refs?.apiFecha);
                         const baseAnio = parseApiDate(refs?.fecha2);
@@ -199,14 +199,14 @@ export default function FondosTable({ filtered, refs, onOpenSuscripcion, onFondo
                       })()}
                     </td>
                     <td>
-                      <PctCell v={r[7]} />
+                      <PctCell v={r.varAnual} />
                     </td>
                     <td>
-                      <PatCell v={r[9]} />
+                      <PatCell v={r.patrimonio} />
                     </td>
-                    <td className="td-gerente">{r[11] || "—"}</td>
+                    <td className="td-gerente">{r.socGerente || "—"}</td>
                     <td>
-                      <a className="btn-cnv" href={cnvLink(r[13] || "", r[0] || "")} target="_blank" rel="noopener" title="Ver en CAFCI">
+                      <a className="btn-cnv" href={cnvLink(r.cafci || "", r.cnv || "")} target="_blank" rel="noopener" title="Ver en CAFCI">
                         ↗
                       </a>
                     </td>

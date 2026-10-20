@@ -133,15 +133,15 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
   const enriched = [...portfolioAgrupado]
     .sort((a, b) => a.fondo_nombre.localeCompare(b.fondo_nombre, "es"))
     .map((item) => {
-      const match = raw.find((r) => r[1] === item.fondo_nombre);
+      const match = raw.find((r) => r.fondo === item.fondo_nombre);
       // Costo basado en cuotapartes DISPONIBLES (refleja posición actual tras rescates)
       const cpDisponibles = parseFloat(item.cuotapartes_disponibles);
       const costoTotal = cpDisponibles * parseFloat(item.precio_compra);
-      const valorMilCp = match ? parseFloat(match[14]) : null;
+      const valorMilCp = match ? parseFloat(match.valor) : null;
       const precioActual = valorMilCp !== null && !isNaN(valorMilCp) ? valorMilCp / 1000 : null;
       const vActual = precioActual !== null ? cpDisponibles * precioActual : null;
       const rendPct = vActual !== null && costoTotal > 0 ? ((vActual - costoTotal) / costoTotal) * 100 : null;
-      const varDiariaPct = match ? parseFloat(match[15]) : null;
+      const varDiariaPct = match ? parseFloat(match.valorVarPct) : null;
       const rendImporte = vActual !== null ? Math.round((vActual - costoTotal) * 100) / 100 : null;
       // TNA/TEM/TEA ponderadas por cuotapartes de cada suscripción individual
       let tna = null, tem = null, tea = null;
@@ -420,7 +420,7 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
                           <button
                             className="btn-port-action btn-info"
                             onClick={() => {
-                              const match = raw.find((r) => r[1] === item.fondo_nombre);
+                              const match = raw.find((r) => r.fondo === item.fondo_nombre);
                               if (match) onFondoClick && onFondoClick(match);
                             }}
                             title="Ver detalle del fondo"
@@ -508,7 +508,7 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
                       </td>
                       <td>
                         {r ? (
-                          <a className="btn-cnv" href={cnvLink(r[13] || "", r[0] || "")} target="_blank" rel="noopener" title="Ver en CAFCI">
+                          <a className="btn-cnv" href={cnvLink(r.cafci || "", r.cnv || "")} target="_blank" rel="noopener" title="Ver en CAFCI">
                             ↗
                           </a>
                         ) : (

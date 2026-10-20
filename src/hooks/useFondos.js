@@ -1,9 +1,39 @@
 import { useState, useCallback } from "react";
 import { API_BASE, API_URL, API_FECHAS } from "../lib/utils";
 
-// v2: el array posicional sumó el campo [23] (Código de Clasificación) → invalida el cache viejo
-const CACHE_KEY = "cafci_data_cache_v2";
-const CACHE_FECHA = "cafci_data_fecha_v2";
+// v3: las filas pasaron de array posicional a OBJETO con nombres estables, y se sumó plazoLiq
+const CACHE_KEY = "cafci_data_cache_v3";
+const CACHE_FECHA = "cafci_data_fecha_v3";
+
+// Nombres estables → encabezado en el Excel (sólo para la respuesta completa / respaldo)
+const EXCEL = {
+  cnv: "Codigo CNV",
+  fondo: "Fondo",
+  moneda: "Moneda Fondo",
+  region: "Clasificación_Región",
+  horizonte: "Clasificación_Horizonte",
+  patrimonio: "Patrimonio_Actual",
+  socGerente: "Sociedad Gerente",
+  cafci: "Código CAFCI",
+  valor: "Valor (mil cuotapartes)_Actual",
+  valorVarPct: "Valor (mil cuotapartes)_Variac. %",
+  socDepositaria: "Sociedad Depositaria",
+  honSD: "Honorarios Adm. SD",
+  honSG: "Honorarios Adm. SG",
+  minimoInversion: "Mínimo de Inversión",
+  valorReexp: "Valor (mil cuotapartes)_Reexp.Pesos",
+  clasificacion: "Código de Clasificación",
+  plazoLiq: "Plazo Liq.",
+};
+
+// Los que llevan la fecha de referencia dentro de la clave (sólo en el formato completo)
+const EXCEL_CON_FECHA = {
+  varMes:        (r) => `Variacion cuotaparte %_${r.variacion_fecha1}`,
+  varAnio:       (r) => `Variacion cuotaparte %_${r.variacion_fecha2}`,
+  varAnual:      (r) => `Variacion cuotaparte %_${r.variacion_fecha3}`,
+  patrimonioAnt: (r) => `Patrimonio_${r.patrimonio_fecha_anterior}`,
+  valorAnt:      (r) => `Valor (mil cuotapartes)_${r.valor_fecha_anterior}`,
+};
 
 function saveCache(rows, fecha, refs) {
   try {
@@ -49,7 +79,10 @@ export function useFondos() {
   const fetchData = useCallback(
     async (fechaParam = null) => {
       const MAX = 7;
-      const url = fechaParam ? `${API_BASE}/api/fondos/${fechaParam}` : API_URL;
+      // ?fields=slim → 22 campos con nombres estables (ver README de la API)
+      const url = fechaParam
+        ? `${API_BASE}/api/fondos/${fechaParam}?fields=slim`
+        : `${API_URL}?fields=slim`;
 
       // Use cache on reload (only for main page, not historical)
       if (!fechaParam && loadCache()) {
@@ -67,12 +100,26 @@ export function useFondos() {
           if (!res.ok) throw new Error("HTTP " + res.status);
           const data = await res.json();
 
-          const r = data.datos.referencias;
-          // Detectar fecha anterior (clave tipo "Patrimonio_DD/MM/YY")
-          const patrimonioKeys = Object.keys(data.datos.listado_fondos?.[0]?.fondos?.[0] || {}).filter(
-            (k) => k.startsWith("Patrimonio_") && k !== "Patrimonio_Actual",
-          );
-          const fechaAnterior = patrimonioKeys.length > 0 ? patrimonioKeys[0].replace("Patrimonio_", "") : "";
+          const r = data.datos.referencias || {};
+          // En la respuesta slim, `campos` trae el orden de los 22 valores de cada fondo
+          const campos = data.datos.campos;
+          const pos = campos ? Object.fromEntries(campos.map((c, i) => [c, i])) : null;
+
+          // Lee un campo de un fondo: por posición (slim) o por el encabezado del Excel
+          // (respuesta completa). Así el cliente funciona con las dos versiones de la API.
+          const leer = (f, nombre) => {
+            if (pos) return f[pos[nombre]] ?? null;
+            const clave = EXCEL[nombre] || (EXCEL_CON_FECHA[nombre] && EXCEL_CON_FECHA[nombre](r));
+            return clave ? f[clave] ?? null : null;
+          };
+
+          // Fecha anterior: en slim ya viene en `referencias`; en el formato completo se
+          // deduce de la clave tipo "Patrimonio_DD/MM/YY"
+          const fechaAnterior = r.patrimonio_fecha_anterior
+            || (Object.keys(data.datos.listado_fondos?.[0]?.fondos?.[0] || {})
+                  .find((k) => k.startsWith("Patrimonio_") && k !== "Patrimonio_Actual") || "")
+                 .replace("Patrimonio_", "");
+
           // Calcular fecha inicio de año: 01/01/YY donde YY = año de variacion_fecha2 + 1
           const fechaInicioAnio = (() => {
             const f2 = r.variacion_fecha2 || "";
@@ -94,37 +141,38 @@ export function useFondos() {
           setRefs(newRefs);
           setApiFecha(data.fecha || null);
 
+          // Las filas son OBJETOS con nombres estables (los mismos 22 del payload slim + la
+          // categoría). Así ninguna parte de la UI depende de posiciones ni del Excel.
           const rows = [];
           (data.datos.listado_fondos || []).forEach((cat) => {
-            const catNombre = cat.categoria_fondo || "";
+            const categoria = cat.categoria_fondo || "";
             (cat.fondos || []).forEach((f) => {
-              rows.push([
-                f["Codigo CNV"] || "", // [0]
-                f["Fondo"] || "", // [1]
-                f["Moneda Fondo"] || "", // [2]
-                f["Clasificación_Región"] || "", // [3]
-                f["Clasificación_Horizonte"] || "", // [4]
-                f[`Variacion cuotaparte %_${r.variacion_fecha1}`] ?? null, // [5]
-                f[`Variacion cuotaparte %_${r.variacion_fecha2}`] ?? null, // [6]
-                f[`Variacion cuotaparte %_${r.variacion_fecha3}`] ?? null, // [7]
-                null, // [8]
-                f["Patrimonio_Actual"] ?? null, // [9]
-                null, // [10]
-                f["Sociedad Gerente"] || "", // [11]
-                catNombre, // [12]
-                f["Código CAFCI"] || "", // [13]
-                f["Valor (mil cuotapartes)_Actual"] ?? null, // [14]
-                f["Valor (mil cuotapartes)_Variac. %"] ?? null, // [15]
+              rows.push({
+                cnv:             leer(f, "cnv") || "",
+                fondo:           leer(f, "fondo") || "",
+                moneda:          leer(f, "moneda") || "",
+                region:          leer(f, "region") || "",
+                horizonte:       leer(f, "horizonte") || "",
+                varMes:          leer(f, "varMes"),
+                varAnio:         leer(f, "varAnio"),
+                varAnual:        leer(f, "varAnual"),
+                patrimonio:      leer(f, "patrimonio"),
+                socGerente:      leer(f, "socGerente") || "",
+                cafci:           leer(f, "cafci") || "",
+                valor:           leer(f, "valor"),
+                valorVarPct:     leer(f, "valorVarPct"),
                 // ── campos para el panel de detalle ──
-                f["Sociedad Depositaria"] || "", // [16]
-                f["Honorarios Adm. SD"] ?? null, // [17]
-                f["Honorarios Adm. SG"] ?? null, // [18]
-                f["Mínimo de Inversión"] ?? null, // [19]
-                f[`Patrimonio_${fechaAnterior}`] ?? null, // [20] patrimonio anterior
-                f[`Valor (mil cuotapartes)_${fechaAnterior}`] ?? null, // [21] valor anterior
-                f["Valor (mil cuotapartes)_Reexp.Pesos"] ?? null, // [22]
-                f["Código de Clasificación"] ?? null, // [23] → lo usa getTabGroup (pestañas robustas)
-              ]);
+                socDepositaria:  leer(f, "socDepositaria") || "",
+                honSD:           leer(f, "honSD"),
+                honSG:           leer(f, "honSG"),
+                minimoInversion: leer(f, "minimoInversion"),
+                patrimonioAnt:   leer(f, "patrimonioAnt"),
+                valorAnt:        leer(f, "valorAnt"),
+                valorReexp:      leer(f, "valorReexp"),
+                clasificacion:   leer(f, "clasificacion"),
+                plazoLiq:        leer(f, "plazoLiq"),
+                categoria,
+              });
             });
           });
 

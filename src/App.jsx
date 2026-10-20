@@ -60,11 +60,11 @@ export default function App() {
     let rows = raw.filter(r => {
       if (activeTab === 'Favoritos') return false; // handled separately
       if (activeTab !== 'Todos' && getTabGroup(r) !== activeTab) return false;
-      if (moneda && r[2] !== moneda) return false;
-      if (region && r[3] !== region) return false;
-      if (horizonte && r[4] !== horizonte) return false;
+      if (moneda && r.moneda !== moneda) return false;
+      if (region && r.region !== region) return false;
+      if (horizonte && r.horizonte !== horizonte) return false;
       if (q) {
-        const hay = (r[1] || '').toLowerCase() + ' ' + (r[11] || '').toLowerCase();
+        const hay = (r.fondo || '').toLowerCase() + ' ' + (r.socGerente || '').toLowerCase();
         if (!hay.includes(q.toLowerCase())) return false;
       }
       return true;
@@ -73,7 +73,7 @@ export default function App() {
   }, [raw, activeTab, q, moneda, region, horizonte]);
 
 
-  const favFiltered = useMemo(() => raw.filter(r => favs.includes(r[1])), [raw, favs]);
+  const favFiltered = useMemo(() => raw.filter(r => favs.includes(r.fondo)), [raw, favs]);
 
   const isPortfolio = activeTab === 'Mi Portfolio';
   const isFavoritos = activeTab === 'Favoritos';

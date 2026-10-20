@@ -1,9 +1,9 @@
 import { fmtPat } from '../lib/utils';
 
 export default function KPIs({ filtered }) {
-  const vd  = filtered.map(r => parseFloat(r[5])).filter(v => !isNaN(v));
-  const v12 = filtered.map(r => parseFloat(r[7])).filter(v => !isNaN(v));
-  const pat = filtered.map(r => parseFloat(r[9])).filter(v => !isNaN(v) && v > 0);
+  const vd  = filtered.map(r => parseFloat(r.varMes)).filter(v => !isNaN(v));
+  const v12 = filtered.map(r => parseFloat(r.varAnual)).filter(v => !isNaN(v));
+  const pat = filtered.map(r => parseFloat(r.patrimonio)).filter(v => !isNaN(v) && v > 0);
 
   const avgVd  = vd.length  ? vd.reduce((a, b)  => a + b, 0) / vd.length  : null;
   const avgV12 = v12.length ? v12.reduce((a, b) => a + b, 0) / v12.length : null;

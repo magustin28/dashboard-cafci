@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { REG_MAP, HOR_MAP, formatPlazoLiq } from '../lib/utils';
 // Helpers de fecha: "27/02/26" → "27/02/2026"
 const fmtFechaLarga = (f) => {
   if (!f) return f;
@@ -18,9 +19,7 @@ export default function FondoPanel({ fondo, refs, apiFecha, onClose }) {
   if (!fondo) return null;
 
 
-  const mon      = fondo[2];
-  const regionMap   = { 'Arg': 'Argentina', 'Ext': 'Exterior' };
-  const horizonteMap = { 'Cor': 'Corto Plazo', 'Med': 'Mediano Plazo', 'Lar': 'Largo Plazo' };
+  const mon      = fondo.moneda;
   const monSym   = mon === 'ARS' ? '$' : 'U$S';
   const fmtNum   = (v, dec = 2) => v != null ? parseFloat(v).toLocaleString('es-AR', { minimumFractionDigits: dec, maximumFractionDigits: dec }) : '—';
   const fmtPct   = (v) => v != null ? (parseFloat(v) > 0 ? '+' : '') + fmtNum(v, 3) + '%' : '—';
@@ -28,10 +27,10 @@ export default function FondoPanel({ fondo, refs, apiFecha, onClose }) {
   const fmtMon4  = (v, sym) => v != null ? `${sym} ${fmtNum(v, 4)}` : '—';
   const clrPct   = (v) => v == null ? '' : parseFloat(v) >= 0 ? '#16a34a' : '#dc2626';
 
-  const varD  = fondo[15];
-  const var1  = fondo[5];
-  const var2  = fondo[6];
-  const var3  = fondo[7];
+  const varD  = fondo.valorVarPct;
+  const var1  = fondo.varMes;
+  const var2  = fondo.varAnio;
+  const var3  = fondo.varAnual;
 
   // Fechas con año completo
   const fechaActual   = fmtFechaLarga(apiFecha?.includes('-')
@@ -59,7 +58,7 @@ export default function FondoPanel({ fondo, refs, apiFecha, onClose }) {
         {/* Header */}
         <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid var(--border)', position: 'sticky', top: 0, background: 'var(--card)', zIndex: 1 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, lineHeight: 1.3, color: 'var(--text1)' }}>{fondo[1]}</div>
+            <div style={{ fontSize: 14, fontWeight: 700, lineHeight: 1.3, color: 'var(--text1)' }}>{fondo.fondo}</div>
             <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text2)', cursor: 'pointer', fontSize: 18, padding: 4, flexShrink: 0 }}>✕</button>
           </div>
         </div>
@@ -68,22 +67,24 @@ export default function FondoPanel({ fondo, refs, apiFecha, onClose }) {
 
           {/* 1. Datos Generales — primero */}
           <Section title="Datos Generales">
-            <Row label="Moneda"              value={mon} />
-            <Row label="Región"              value={regionMap[fondo[3]] || fondo[3] || '—'} />
-            <Row label="Horizonte"           value={horizonteMap[fondo[4]] || fondo[4] || '—'} />
-            <Row label="Sociedad Gerente"    value={fondo[11] || '—'} nowrap />
-            <Row label="Sociedad Depositaria" value={fondo[16] || '—'} nowrap />
-            <Row label="Mínimo de Inversión" value={fondo[19] != null ? fmtMon(fondo[19], monSym) : '—'} />
-            <Row label="Código CAFCI"        value={fondo[13] || '—'} />
-            <Row label="Código CNV"          value={fondo[0]  || '—'} />
+            <Row label="Categoría"            value={fondo.categoria || '—'} nowrap />
+            <Row label="Moneda"               value={mon} />
+            <Row label="Región"               value={REG_MAP[fondo.region] || fondo.region || '—'} />
+            <Row label="Horizonte"            value={HOR_MAP[fondo.horizonte] || fondo.horizonte || '—'} />
+            <Row label="Plazo de liquidación" value={formatPlazoLiq(fondo.plazoLiq)} />
+            <Row label="Sociedad Gerente"     value={fondo.socGerente || '—'} nowrap />
+            <Row label="Sociedad Depositaria" value={fondo.socDepositaria || '—'} nowrap />
+            <Row label="Mínimo de Inversión"  value={fondo.minimoInversion != null ? fmtMon(fondo.minimoInversion, monSym) : '—'} />
+            <Row label="Código CAFCI"         value={fondo.cafci || '—'} />
+            <Row label="Código CNV"           value={fondo.cnv || '—'} />
           </Section>
 
           {/* 2. Valor cuotaparte */}
           <Section title="Valor Cuotaparte">
-            <Row label={`Valor al ${fechaActual}`} value={<span style={{ fontWeight: 700 }}>{fmtMon4(fondo[14], monSym)}</span>} />
+            <Row label={`Valor al ${fechaActual}`} value={<span style={{ fontWeight: 700 }}>{fmtMon4(fondo.valor, monSym)}</span>} />
             <Row label="Variación diaria" value={<span style={{ color: clrPct(varD), fontWeight: 600 }}>{fmtPct(varD)}</span>} />
-            {fondo[21] != null && <Row label={`Valor al ${fechaAnterior || 'anterior'}`} value={fmtMon4(fondo[21], monSym)} />}
-            {fondo[22] != null && mon !== 'ARS' && <Row label="Valor reexp. ARS" value={fmtMon4(fondo[22], '$')} />}
+            {fondo.valorAnt != null && <Row label={`Valor al ${fechaAnterior || 'anterior'}`} value={fmtMon4(fondo.valorAnt, monSym)} />}
+            {fondo.valorReexp != null && mon !== 'ARS' && <Row label="Valor reexp. ARS" value={fmtMon4(fondo.valorReexp, '$')} />}
           </Section>
 
           {/* 3. Variaciones históricas */}
@@ -95,14 +96,14 @@ export default function FondoPanel({ fondo, refs, apiFecha, onClose }) {
 
           {/* 4. Patrimonio */}
           <Section title="Patrimonio">
-            <Row label={`Al ${fechaActual}`}           value={fmtMon(fondo[9], monSym)} />
-            {fondo[20] != null && <Row label={`Al ${fechaAnterior || 'anterior'}`} value={fmtMon(fondo[20], monSym)} />}
+            <Row label={`Al ${fechaActual}`}           value={fmtMon(fondo.patrimonio, monSym)} />
+            {fondo.patrimonioAnt != null && <Row label={`Al ${fechaAnterior || 'anterior'}`} value={fmtMon(fondo.patrimonioAnt, monSym)} />}
           </Section>
 
           {/* 5. Honorarios */}
           <Section title="Honorarios">
-            <Row label="Adm. Sociedad Depositaria" value={fondo[17] != null ? fmtNum(fondo[17], 2) + '%' : '—'} />
-            <Row label="Adm. Sociedad Gerente"     value={fondo[18] != null ? fmtNum(fondo[18], 2) + '%' : '—'} />
+            <Row label="Adm. Sociedad Depositaria" value={fondo.honSD != null ? fmtNum(fondo.honSD, 2) + '%' : '—'} />
+            <Row label="Adm. Sociedad Gerente"     value={fondo.honSG != null ? fmtNum(fondo.honSG, 2) + '%' : '—'} />
           </Section>
 
         </div>

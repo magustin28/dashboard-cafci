@@ -26,10 +26,10 @@ export const TAB_GROUPS = [
   { id: "Otros", label: "Otros", match: null },
 ];
 
-// Acepta la fila completa (usa el Código de Clasificación) o una categoría suelta (compatibilidad)
+// Acepta la fila completa (usa clasificación/categoría) o una categoría suelta (compatibilidad)
 export function getTabGroup(row) {
-  const categoria = typeof row === "string" ? row : (row && row[12]) || "";
-  const codigo = typeof row === "object" && row ? row[23] : null;
+  const categoria = typeof row === "string" ? row : (row && row.categoria) || "";
+  const codigo = typeof row === "object" && row ? row.clasificacion : null;
 
   if (codigo != null) {
     const grupo = CLASIF_MAP[codigo];
@@ -90,6 +90,21 @@ export function fmtPct(v, d = 2) {
 export function formatFechaLabel(iso) {
   const [y, m, d] = iso.split("-");
   return `${d}/${m}/${y}`;
+}
+
+// "Plazo Liq." viene del Excel expresado en DÍAS. Cómo se muestra:
+//   0 → Inmediato · 1..3 → 24/48/72 hs hábiles · 4..98 → N días hábiles
+//   99, 999, 9999, 99999, negativos y cualquier valor >= 99 → No aplica
+// (Medido sobre la planilla del 16/10/2026: los valores reales son -1, 0, 1, 2, 3, 5, 10,
+//  999, 9999 y 99999.)
+export function formatPlazoLiq(v) {
+  if (v === null || v === undefined || v === "") return "—";
+  const n = parseFloat(v);
+  if (isNaN(n) || n < 0) return "No aplica";
+  if (n === 0) return "Inmediato";
+  if (n <= 3) return `${n * 24} hs hábiles`;
+  if (n < 99) return `${n} días hábiles`;
+  return "No aplica";
 }
 
 // Aviso flotante para mostrar errores en pantalla. Existe porque varias operaciones contra

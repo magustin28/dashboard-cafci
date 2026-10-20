@@ -52,7 +52,7 @@ export default function SuscripcionModal({ fondoInicial, monedaInicial, raw, onC
           <input type="text" value={fondo} onChange={e => setFondo(e.target.value)}
             placeholder="Nombre del fondo" list="fondos-datalist" autoComplete="off" />
           <datalist id="fondos-datalist">
-            {raw.map((r, i) => <option key={i} value={r[1]} />)}
+            {raw.map((r, i) => <option key={i} value={r.fondo} />)}
           </datalist>
         </div>
 
