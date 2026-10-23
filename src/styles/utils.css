@@ -13,6 +13,14 @@
   animation: fadeUp 0.2s ease;
 }
 
+/* ── Iconos ── */
+/* SVG vendorizados de Lucide (components/Icons.jsx): heredan el color con currentColor y se
+   centran con el texto. -0.125em es el ajuste óptico que usa la propia librería. */
+.icon {
+  flex-shrink: 0;
+  vertical-align: -0.125em;
+}
+
 /* ── Date picker ── */
 .date-picker-wrap {
   position: relative;

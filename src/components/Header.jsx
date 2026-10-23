@@ -3,10 +3,14 @@ import { useAuth } from '../context/useAuth';
 import AuthModal from './AuthModal';
 import { formatFechaLabel } from '../lib/utils';
 import { useModalClose } from '../hooks/useModalClose';
+import {
+  IconCalendar, IconRefreshCw, IconChevronDown, IconLogIn,
+  IconLogOut, IconChartColumn, IconX, IconExternalLink,
+} from './Icons';
 
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
-export default function Header({ apiFecha, totalFondos, fechas, fechaParam, onReload }) {
+export default function Header({ apiFecha, totalFondos, fechas, fechaParam, onReload, loading = false }) {
   const { user, logout } = useAuth();
   const [showAuth, setShowAuth]       = useState(false);
   const [menuOpen, setMenuOpen]       = useState(false);
@@ -76,14 +80,18 @@ export default function Header({ apiFecha, totalFondos, fechas, fechaParam, onRe
     <>
       <header>
         <div className="logo">
-          <a className="logo-badge" href="https://www.cafci.org.ar/" target="_blank" rel="noopener noreferrer">CAFCI</a>
+          <a className="logo-badge" href="https://www.cafci.org.ar/" target="_blank" rel="noopener noreferrer"
+            title="Ir al sitio de CAFCI (abre en una pestaña nueva)"
+            aria-label="Ir al sitio de CAFCI (abre en una pestaña nueva)">
+            CAFCI<IconExternalLink size={10} className="icon-inline" />
+          </a>
           <h1>Fondos Comunes de Inversión &mdash; Argentina</h1>
         </div>
         <div className="header-meta">
           <div className="meta-item">
             <span className="meta-dot"></span>
             {fechaParam
-              ? <span style={{ color: 'var(--yellow)', fontWeight: 600 }}>📅 Histórico: {formatFechaLabel(fechaParam)}</span>
+              ? <span className="meta-historico"><IconCalendar size={12} /> Histórico: {formatFechaLabel(fechaParam)}</span>
               : <span>Actualizado: {apiFecha || 'Cargando…'}</span>
             }
           </div>
@@ -94,11 +102,19 @@ export default function Header({ apiFecha, totalFondos, fechas, fechaParam, onRe
           {/* Date picker trigger */}
           {fechas.length > 0 && (
             <button className="date-picker-btn" onClick={() => setPickerOpen(true)}>
-              📅 Ver fecha anterior <span className="date-arrow">▾</span>
+              <IconCalendar size={12} /> Ver fecha anterior{' '}
+              <span className="date-arrow"><IconChevronDown size={12} /></span>
             </button>
           )}
 
-          <button className="btn-refresh" onClick={onReload}>↻ Actualizar</button>
+          {/* Mientras consulta la API el botón queda bloqueado y muestra el spinner: es el feedback
+              del refresco, que ahora no desmonta la app (App.jsx sólo pinta el overlay si no hay datos). */}
+          <button className="btn-refresh" onClick={onReload} disabled={loading} aria-busy={loading}
+            title={loading ? 'Consultando la API…' : 'Volver a consultar la API'}>
+            {loading
+              ? <><span className="btn-spinner" aria-hidden="true"></span>Actualizando…</>
+              : <><IconRefreshCw size={13} /> Actualizar</>}
+          </button>
 
           {/* Auth */}
           <div className="auth-wrap" ref={menuRef}>
@@ -106,7 +122,7 @@ export default function Header({ apiFecha, totalFondos, fechas, fechaParam, onRe
               <>
                 <button className="btn-auth logged-in" onClick={() => setMenuOpen(o => !o)}>
                   <span className="auth-avatar">{label[0]?.toUpperCase()}</span>
-                  {label} <span className="auth-arrow">▾</span>
+                  {label} <span className="auth-arrow"><IconChevronDown size={11} /></span>
                 </button>
                 {menuOpen && (
                   <div className="user-menu open">
@@ -114,17 +130,17 @@ export default function Header({ apiFecha, totalFondos, fechas, fechaParam, onRe
                       <strong>{label}</strong>{user.email}
                     </div>
                     <button className="user-menu-item" onClick={() => { setMenuOpen(false); window.dispatchEvent(new CustomEvent('cafci:tab', { detail: 'Mi Portfolio' })); }}>
-                      📊 Mi Portfolio
+                      <IconChartColumn size={13} /> Mi Portfolio
                     </button>
                     <button className="user-menu-item danger" onClick={() => { setMenuOpen(false); logout(); window.dispatchEvent(new CustomEvent('cafci:logout')); }}>
-                      ↩ Cerrar sesión
+                      <IconLogOut size={13} /> Cerrar sesión
                     </button>
                   </div>
                 )}
               </>
             ) : (
               <button className="btn-auth" onClick={() => setShowAuth(true)}>
-                <span className="auth-icon">⎆</span> Ingresar
+                <IconLogIn size={13} /> Ingresar
               </button>
             )}
           </div>
@@ -136,8 +152,8 @@ export default function Header({ apiFecha, totalFondos, fechas, fechaParam, onRe
         <div className={`modal-overlay${pickerClosing ? ' closing' : ''}`} style={{ display: 'flex', zIndex: 700 }}
           onClick={e => { if (e.target === e.currentTarget) closePicker(); }}>
           <div className="modal" style={{ maxWidth: 520, width: '95vw' }}>
-            <button className="modal-close" onClick={closePicker}>✕</button>
-            <h2 className="modal-title" style={{ marginBottom: 4 }}>📅 Fechas históricas</h2>
+            <button className="modal-close" onClick={closePicker} aria-label="Cerrar"><IconX size={16} /></button>
+            <h2 className="modal-title" style={{ marginBottom: 4 }}><IconCalendar size={18} /> Fechas históricas</h2>
             <p className="modal-subtitle">Seleccioná una fecha para ver los datos de ese día</p>
 
             {/* Selector de año */}

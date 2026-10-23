@@ -115,7 +115,10 @@ export default function App() {
     );
   }
 
-  if (loading) {
+  // Overlay de pantalla completa SÓLO en la primera carga (cuando todavía no hay datos). En un
+  // refresco (↻ Actualizar) la tabla sigue visible con los datos anteriores y el feedback va en el
+  // propio botón del header: antes cualquier refresco desmontaba la app entera y parecía una recarga.
+  if (loading && raw.length === 0) {
     return (
       <div id="loader-overlay" style={{ display: 'flex' }}>
         <div className="spinner"></div>
@@ -159,6 +162,7 @@ export default function App() {
         fechas={fechas}
         fechaParam={fechaParam}
         onReload={() => forceRefresh(fechaParam)}
+        loading={loading}
       />
 
       <Tabs raw={raw} activeTab={tabActual} onSwitch={switchTab} />

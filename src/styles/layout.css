@@ -35,6 +35,10 @@ a.logo-badge {
 a.logo-badge:hover {
   opacity: 0.8;
 }
+/* Ícono de "abre en pestaña nueva" dentro del badge (components/Icons.jsx). */
+.logo-badge .icon-inline {
+  margin-left: 3px;
+}
 .logo h1 {
   font-size: 16px;
   font-weight: 600;
@@ -62,6 +66,14 @@ a.logo-badge:hover {
   background: var(--accent2);
   animation: pulse 2s ease infinite;
 }
+/* Fecha histórica en el meta del header (antes era un style inline en Header.jsx). */
+.meta-historico {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--yellow);
+  font-weight: 600;
+}
 @keyframes pulse {
   0%,
   100% {
@@ -77,6 +89,10 @@ a.logo-badge:hover {
   font-family: "Inter", sans-serif;
   font-size: 12px;
   font-weight: 500;
+  /* inline-flex + gap: el ícono ↻ y el texto quedan alineados sin depender de vertical-align. */
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 7px 14px;
   border-radius: 6px;
   border: 1px solid var(--border2);
@@ -86,9 +102,25 @@ a.logo-badge:hover {
   transition: all 0.15s;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
-.btn-refresh:hover {
+.btn-refresh:hover:not(:disabled) {
   border-color: var(--accent);
   color: var(--accent);
+}
+/* Mientras consulta la API el botón queda bloqueado: cursor normal y spinner en lugar del ↻. */
+.btn-refresh:disabled {
+  cursor: default;
+  opacity: 0.75;
+}
+.btn-spinner {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  border: 2px solid var(--border2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  /* La separación con el texto la pone el gap de .btn-refresh. */
+  flex-shrink: 0;
 }
 
 /* ── KPIs ── */
