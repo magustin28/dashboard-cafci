@@ -18,7 +18,10 @@ export default function App() {
   const { user, authReady, favs } = useAuth();
   const { raw, apiFecha, fechas, loading, error, refs, fetchData, forceRefresh } = useFondos();
 
-  const [activeTab, setActiveTab] = useState('Todos');
+  // Al volver del login con Google la página se recarga y se pierde el dispatch de cafci:tab que
+  // usaba el login por contraseña: AuthModal deja el tab destino en sessionStorage y acá se toma
+  // como pestaña inicial (se limpia sola cuando el usuario cambia de pestaña, en switchTab).
+  const [activeTab, setActiveTab] = useState(() => sessionStorage.getItem('cafci_post_login_tab') || 'Todos');
   const [fondoPanel, setFondoPanel] = useState(null);
   const [q, setQ]                 = useState('');
   const [moneda, setMoneda]       = useState('');
@@ -55,14 +58,23 @@ export default function App() {
     return () => window.removeEventListener('cafci:tab', handler);
   }, []);
 
+
+
+  // El tab "Mi Portfolio" sólo existe con sesión (Tabs.jsx lo esconde). Si la sesión se cae justo
+  // cuando estábamos parados ahí (logout en otra pestaña, token vencido), activeTab queda apuntando
+  // a un tab invisible y App seguía renderizando PortfolioTab: el único caso en el que se veía el
+  // mensaje "Iniciá sesión para ver tu portafolio". Se deriva el tab efectivo en vez de resetear con
+  // un effect (el lint del proyecto no permite setState dentro de un effect).
+  const tabActual = !user && activeTab === 'Mi Portfolio' ? 'Todos' : activeTab;
+
   const filtered = useMemo(() => {
     if (!raw.length) return [];
     const rows = raw.filter(r => {
-      if (activeTab === 'Favoritos') return false; // se muestra con favFiltered
-      return activeTab === 'Todos' || getTabGroup(r) === activeTab;
+      if (tabActual === 'Favoritos') return false; // se muestra con favFiltered
+      return tabActual === 'Todos' || getTabGroup(r) === tabActual;
     });
     return filterRows(rows, { q, moneda, region, horizonte });
-  }, [raw, activeTab, q, moneda, region, horizonte]);
+  }, [raw, tabActual, q, moneda, region, horizonte]);
 
   // Los favoritos pasan por la MISMA función de filtros que el resto de las pestañas. Antes este
   // memo sólo miraba `favs`: el buscador y los selects se veían en la barra pero no filtraban
@@ -72,13 +84,17 @@ export default function App() {
     [raw, favs, q, moneda, region, horizonte]
   );
 
-  const isPortfolio = activeTab === 'Mi Portfolio';
-  const isFavoritos = activeTab === 'Favoritos';
-  const isTop       = activeTab === 'Top 10';
+  const isPortfolio = tabActual === 'Mi Portfolio';
+  const isFavoritos = tabActual === 'Favoritos';
+  const isTop       = tabActual === 'Top 10';
   const hasFilters  = q || moneda || region || horizonte;
 
   const clearFilters = () => { setQ(''); setMoneda(''); setRegion(''); setHorizonte(''); };
-  const switchTab = (tab) => { setActiveTab(tab); clearFilters(); };
+  const switchTab = (tab) => {
+    sessionStorage.removeItem('cafci_post_login_tab'); // ya se usó como pestaña inicial
+    setActiveTab(tab);
+    clearFilters();
+  };
 
   // Al cerrar sesión, volver a la pestaña principal
   useEffect(() => {
@@ -145,7 +161,7 @@ export default function App() {
         onReload={() => forceRefresh(fechaParam)}
       />
 
-      <Tabs raw={raw} activeTab={activeTab} onSwitch={switchTab} />
+      <Tabs raw={raw} activeTab={tabActual} onSwitch={switchTab} />
 
       {!isPortfolio && !isTop && (
         <KPIs filtered={isFavoritos ? favFiltered : filtered} />
@@ -186,8 +202,8 @@ export default function App() {
 
       {isFavoritos && !user && (
         <div className="favs-banner">
-          <span>⭐ Tus favoritos se guardan solo en este navegador.</span>
-          {' '}<a href="#" onClick={e => { e.preventDefault(); window.dispatchEvent(new CustomEvent('cafci:openauth')); }}>Solicitá acceso</a>
+          <span>⭐ Tus favoritos se guardan sólo en este navegador.</span>
+          {' '}<a href="#" onClick={e => { e.preventDefault(); window.dispatchEvent(new CustomEvent('cafci:openauth')); }}>Iniciá sesión con Google</a>
           <span> para guardarlos en tu cuenta y acceder desde cualquier dispositivo.</span>
         </div>
       )}
@@ -220,7 +236,7 @@ export default function App() {
       ) : (
         <FondosTable
           filtered={tableData}
-          activeTab={activeTab}
+          activeTab={tabActual}
           refs={{ ...refs, apiFecha }}
           onOpenSuscripcion={(fondo, mon) => setSuscModal({ fondo, moneda: mon })}
           onFondoClick={(row) => setFondoPanel(row)}

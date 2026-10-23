@@ -3,14 +3,9 @@ import { useAuth } from "../context/useAuth";
 import { useModalClose } from "../hooks/useModalClose";
 
 export default function AuthModal({ onClose }) {
-  const { login } = useAuth();
-  const [mode, setMode] = useState("login");
-  const [email, setEmail] = useState("");
-  const [pass, setPass] = useState("");
+  const { loginGoogle } = useAuth();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const [remember, setRemember] = useState(true);
 
   // Cierre animado: `closing` pinta la clase de salida en el overlay y `requestClose` reemplaza
   // a onClose en TODOS los caminos (✕, clic en el fondo, ESC, login exitoso). Ver
@@ -26,18 +21,17 @@ export default function AuthModal({ onClose }) {
     return () => document.removeEventListener("keydown", handler);
   }, [requestClose]);
 
-  const isLogin = mode === "login";
-
-  const submit = async () => {
-    if (!isLogin) return;
+  // Google es el único método. supabase-js redirige a Google y al volver la página se recarga,
+  // así que acá no hace falta cerrar el modal ni avisar del login: se deja anotado el tab
+  // destino en sessionStorage para que App.jsx abra "Mi Portfolio" cuando el usuario vuelva.
+  const conGoogle = async () => {
     setLoading(true);
     setError("");
-    const result = await login(email, pass, remember);
-    setLoading(false);
-    if (result.ok) {
-      requestClose();
-      window.dispatchEvent(new CustomEvent("cafci:tab", { detail: "Mi Portfolio" }));
-    } else {
+    sessionStorage.setItem("cafci_post_login_tab", "Mi Portfolio");
+    const result = await loginGoogle();
+    if (!result.ok) {
+      sessionStorage.removeItem("cafci_post_login_tab");
+      setLoading(false);
       setError(result.msg);
     }
   };
@@ -50,7 +44,7 @@ export default function AuthModal({ onClose }) {
         if (e.target === e.currentTarget) requestClose();
       }}
     >
-      <div className="modal" data-mode={mode}>
+      <div className="modal">
         <button className="modal-close" onClick={requestClose}>
           ✕
         </button>
@@ -59,102 +53,22 @@ export default function AuthModal({ onClose }) {
             CAFCI
           </span>
         </div>
-        <h2 className="modal-title">{isLogin ? "Iniciar sesión" : "Crear cuenta"}</h2>
-        <p className="modal-subtitle">Accedé a tu portafolio personal de FCI</p>
-
-        <div className="modal-field">
-          <label>Email</label>
-          <input
-            type="email"
-            placeholder="tu@email.com"
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={!isLogin}
-            style={{ opacity: isLogin ? 1 : 0.5 }}
-            onKeyDown={(e) => e.key === "Enter" && submit()}
-          />
-        </div>
-        <div className="modal-field">
-          <label>Contraseña</label>
-          <input
-            type="password"
-            placeholder="••••••••"
-            autoComplete="current-password"
-            value={pass}
-            onChange={(e) => setPass(e.target.value)}
-            disabled={!isLogin}
-            style={{ opacity: isLogin ? 1 : 0.5 }}
-            onKeyDown={(e) => e.key === "Enter" && submit()}
-          />
-        </div>
+        <h2 className="modal-title">Iniciar sesión</h2>
+        <p className="modal-subtitle">Entrá con tu cuenta de Google para ver y guardar tu portafolio de FCI</p>
 
         {error && (
           <p className="modal-error" style={{ color: "#ef4444" }}>
             {error}
           </p>
         )}
-        {isLogin && (
-          <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "4px 0 8px" }}>
-            <input
-              type="checkbox"
-              id="remember-me"
-              checked={remember}
-              onChange={(e) => setRemember(e.target.checked)}
-              style={{ cursor: "pointer", width: 14, height: 14 }}
-            />
-            <label htmlFor="remember-me" style={{ fontSize: 13, color: "var(--text2)", cursor: "pointer", userSelect: "none" }}>
-              Recordar sesión
-            </label>
-          </div>
-        )}
 
-        <button
-          className="modal-submit"
-          onClick={submit}
-          disabled={!isLogin || loading}
-          style={{ opacity: isLogin ? 1 : 0.5, cursor: isLogin ? "pointer" : "not-allowed" }}
-        >
-          {loading ? "Ingresando…" : isLogin ? "Entrar" : "Registrarse"}
+        <button className="modal-submit" onClick={conGoogle} disabled={loading}>
+          {loading ? "Conectando con Google…" : "Continuar con Google"}
         </button>
 
-        <p className="modal-toggle">
-          {isLogin ? (
-            <>
-              ¿No tenés cuenta?{" "}
-              <a
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setMode("register");
-                  setError("");
-                }}
-              >
-                Registrate
-              </a>
-            </>
-          ) : (
-            <>
-              ¿Ya tenés cuenta?{" "}
-              <a
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setMode("login");
-                  setError("");
-                }}
-              >
-                Iniciá sesión
-              </a>
-            </>
-          )}
+        <p className="modal-note">
+          Acceso privado. Tus favoritos y tu portafolio quedan asociados a tu cuenta de Google.
         </p>
-        {!isLogin && (
-          <p className="modal-error" style={{ color: "#ef4444" }}>
-            El registro es privado. Contactá al administrador.
-          </p>
-        )}
-        <p className="modal-note">Acceso privado. Sesión gestionada con Supabase.</p>
       </div>
     </div>
   );

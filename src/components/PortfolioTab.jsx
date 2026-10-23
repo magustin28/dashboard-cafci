@@ -48,7 +48,7 @@ function MonBadge({ m }) {
 }
 
 export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, onOpenRescate, onOpenHistorial, onFondoClick }) {
-  const { user, portfolio, deleteSuscripcion } = useAuth();
+  const { portfolio, deleteSuscripcion } = useAuth();
   const [subTab, setSubTab] = useState("actual");
   const [q, setQ] = useState("");
   const [showInforme, setShowInforme] = useState(false);
@@ -58,27 +58,6 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
     setQ("");
     setFilterMoneda("");
   };
-
-  if (!user) {
-    return (
-      <div className="table-wrap">
-        <div className="tbl-scroll">
-          <table id="main-table">
-            <tbody>
-              <tr>
-                <td colSpan={14}>
-                  <div className="empty-favs">
-                    <div className="empty-icon">🔐</div>
-                    <p>Iniciá sesión para ver tu portafolio.</p>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    );
-  }
 
   const fechaAPI = parseFechaAPI(apiFecha);
 

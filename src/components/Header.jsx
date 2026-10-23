@@ -56,6 +56,16 @@ export default function Header({ apiFecha, totalFondos, fechas, fechaParam, onRe
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
+  // Abrir el modal de login cuando lo pide otra parte de la app. El banner de la pestaña Favoritos
+  // ("Iniciá sesión con Google") despacha cafci:openauth y hasta ahora nadie lo escuchaba, así que
+  // el link —y antes el "Solicitá acceso"— no abrían nada. El modal vive acá, así que el listener
+  // va acá: es el mismo patrón de cafci:tab / cafci:logout.
+  useEffect(() => {
+    const handler = () => setShowAuth(true);
+    window.addEventListener('cafci:openauth', handler);
+    return () => window.removeEventListener('cafci:openauth', handler);
+  }, []);
+
   const label = user?.email?.split('@')[0] || '';
 
   const mesesDelAnio = anioSel && grouped[anioSel]

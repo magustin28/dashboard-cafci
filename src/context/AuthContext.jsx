@@ -61,48 +61,109 @@ export function AuthProvider({ children }) {
 
   // ── Auth state ─────────────────────────────────────────────────
   useEffect(() => {
-    const { data: { subscription } } = sb.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'INITIAL_SESSION') {
+    // El callback NO es async a propósito (ver el comentario de adentro).
+    const { data: { subscription } } = sb.auth.onAuthStateChange((event, session) => {
+      // INITIAL_SESSION: primer render con la sesión que ya existía. SIGNED_IN: recién logueado
+      // (con Google, supabase-js vuelve de la redirección y emite SIGNED_IN) → hay que cargar los
+      // datos en los DOS casos, si no el usuario queda sin favoritos ni portfolio.
+      if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
+        // Ojo: acá NO se traen datos de la base. Este callback corre dentro de la sección con
+        // lock del cliente de Supabase: un fetch lento (o uno que falle) puede dejar ese lock
+        // tomado y colgar después signOut() — que era justo lo que pasaba con "Cerrar sesión".
+        // Los datos se cargan en el useEffect que observa `user` (más abajo).
         if (session) {
           const u = { id: session.user.id, email: session.user.email };
           setUser(u);
           userRef.current = u;
-          await Promise.all([loadFavsFromDB(u.id), loadPortfolio(u.id)]);
         } else {
           setFavs(loadLocalFavs());
         }
         setAuthReady(true);
       }
 
+      if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setPortfolio([]);
+        setFavs(loadLocalFavs());
+      }
+
       if (event === 'TOKEN_REFRESHED' && session) {
-        const u = { id: session.user.id, email: session.user.email };
-        setUser(u);
-        userRef.current = u;
+        // En un refresh el id no cambia: alcanza con mantener el ref al día. Si acá se llamara a
+        // setUser con un objeto nuevo, el useEffect de carga correría de nuevo sin motivo (el
+        // token se refresca cada hora) y volvería a pedirle el portfolio a la base.
+        userRef.current = { id: session.user.id, email: session.user.email };
       }
     });
     return () => subscription.unsubscribe();
   }, [loadFavsFromDB, loadPortfolio]);
 
-  // ── Auth actions ───────────────────────────────────────────────
-  const login = useCallback(async (email, password, remember = true) => {
-    const { data, error } = await sb.auth.signInWithPassword({ email, password });
-    if (error) return { ok: false, msg: error.message };
-    if (!remember) {
-      // Sin persistencia: limpiar localStorage al cerrar el navegador
-      sb.auth.setSession({ access_token: data.session.access_token, refresh_token: data.session.refresh_token });
-    }
-    const u = { id: data.user.id, email: data.user.email };
-    setUser(u);
-    userRef.current = u;
-    await Promise.all([loadFavsFromDB(u.id), loadPortfolio(u.id)]);
-    return { ok: true };
-  }, [loadFavsFromDB, loadPortfolio]);
+  // Favoritos y portfolio en cuanto hay usuario logueado. Antes esto se hacía dentro del callback
+  // de onAuthStateChange (con await adentro): al sacarlo, el lock del cliente de Supabase queda
+  // libre enseguida y signOut() no se cuelga.
+  useEffect(() => {
+    if (!user) return;
+    loadFavsFromDB(user.id);
+    loadPortfolio(user.id);
+  }, [user, loadFavsFromDB, loadPortfolio]);
 
+  // ── Auth actions ───────────────────────────────────────────────
+  // Login con Google: el ÚNICO método habilitado (el acceso sigue siendo privado: sólo las
+  // cuentas que ya existen en Supabase, o las que se den de alta a mano, pueden entrar).
+  // supabase-js redirige a Google y al volver procesa los tokens del hash: acá sólo se dispara
+  // la redirección, el usuario se resuelve en onAuthStateChange (evento SIGNED_IN).
+  const loginGoogle = useCallback(async () => {
+    const { error } = await sb.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin + window.location.pathname,
+        queryParams: { prompt: 'select_account' }, // permite elegir la cuenta (varios usuarios)
+      },
+    });
+    if (error) return { ok: false, msg: error.message };
+    return { ok: true, redirect: true };
+  }, []);
+
+  // Cerrar sesión. Dos cosas importantes:
+  // 1) Se limpia el estado ANTES de hablar con Supabase. Antes se limpiaba después del await, así
+  //    que si signOut() no resolvía (el cliente se queda esperando su lock del navegador) el botón
+  //    parecía no hacer nada y la sesión seguía abierta.
+  // 2) scope 'local' no depende de la red. Si aun así no responde en 2 s, se borra el token del
+  //    storage a mano para que al recargar la app no vuelva logueado.
   const logout = useCallback(async () => {
-    await sb.auth.signOut();
     setUser(null);
     setPortfolio([]);
     setFavs(loadLocalFavs());
+
+    const limpiarTokenLocal = () => {
+      try {
+        Object.keys(localStorage)
+          .filter(k => k.startsWith('sb-') && k.endsWith('-auth-token'))
+          .forEach(k => localStorage.removeItem(k));
+      } catch (e) {
+        console.error('[cafci] no se pudo limpiar el token local:', e);
+      }
+    };
+
+    let timeoutId;
+    const timeout = new Promise((resolve) => {
+      timeoutId = setTimeout(() => resolve({ timedOut: true }), 2000);
+    });
+
+    try {
+      const res = await Promise.race([sb.auth.signOut({ scope: 'local' }), timeout]);
+      if (res?.timedOut) {
+        console.error('[cafci] signOut no respondió a tiempo: se limpia el token local a mano');
+        limpiarTokenLocal();
+      } else if (res?.error) {
+        console.error('[cafci] no se pudo cerrar la sesión:', res.error);
+        limpiarTokenLocal();
+      }
+    } catch (e) {
+      console.error('[cafci] error al cerrar la sesión:', e);
+      limpiarTokenLocal();
+    } finally {
+      clearTimeout(timeoutId);
+    }
   }, []);
 
   // ── Favorites ─────────────────────────────────────────────────
@@ -246,7 +307,7 @@ export function AuthProvider({ children }) {
   return (
     <AuthContext.Provider value={{
       user, portfolio, favs, authReady,
-      login, logout, toggleFav,
+      loginGoogle, logout, toggleFav,
       addSuscripcion, deleteSuscripcion, addRescate,
       reloadPortfolio: async () => { if (user) await loadPortfolio(user.id); },
     }}>
