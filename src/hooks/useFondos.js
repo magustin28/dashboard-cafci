@@ -206,7 +206,7 @@ export function useFondos() {
         } catch (e) {
           // Timeout/abort del fetch → mensaje entendible en vez de "signal timed out"
           const msg = e.name === "TimeoutError" || e.name === "AbortError"
-            ? "La consulta tardó demasiado. Probá de nuevo (↻ Actualizar)."
+            ? "La consulta tardó demasiado. Probá de nuevo con el botón Actualizar."
             : e.message;
           if (attempt === MAX) {
             setError(msg);

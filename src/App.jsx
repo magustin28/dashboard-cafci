@@ -13,6 +13,7 @@ import RescateModal from './components/RescateModal';
 import HistorialModal from './components/HistorialModal';
 import FondoPanel    from './components/FondoPanel';
 import TopTab        from './components/TopTab';
+import { IconX, IconRefreshCw, IconSearch, IconStar, IconAlertTriangle } from './components/Icons';
 
 export default function App() {
   const { user, authReady, favs } = useAuth();
@@ -143,9 +144,9 @@ export default function App() {
       <div className="wrap">
         <div className="table-wrap">
           <div style={{ textAlign: 'center', padding: 40 }}>
-            <div style={{ fontSize: 32, marginBottom: 12 }}>⚠</div>
+            <div style={{ marginBottom: 12, color: 'var(--red)' }}><IconAlertTriangle size={32} strokeWidth={1.75} /></div>
             <p>No se pudieron cargar los datos.<br /><small>{error}</small></p>
-            <button className="btn-retry" onClick={() => fetchData(fechaParam)}>↻ Reintentar</button>
+            <button className="btn-retry" onClick={() => fetchData(fechaParam)}><IconRefreshCw size={13} /> Reintentar</button>
           </div>
         </div>
       </div>
@@ -174,7 +175,7 @@ export default function App() {
       {!isPortfolio && !isTop && (
         <div className="filter-bar">
           <div className="search-wrap">
-            <span className="search-icon">⌕</span>
+            <span className="search-icon"><IconSearch size={14} /></span>
             <input type="search" placeholder="Buscar fondo o sociedad gerente…" autoComplete="off"
               value={q} onChange={e => setQ(e.target.value)} />
           </div>
@@ -200,13 +201,13 @@ export default function App() {
             <option value="Flex">Flexible</option>
             <option value="Sasig">Sasig</option>
           </select>
-          <button className="btn-clear" disabled={!hasFilters} onClick={clearFilters}>✕ Limpiar filtros</button>
+          <button className="btn-clear" disabled={!hasFilters} onClick={clearFilters}><IconX size={12} /> Limpiar filtros</button>
         </div>
       )}
 
       {isFavoritos && !user && (
         <div className="favs-banner">
-          <span>⭐ Tus favoritos se guardan sólo en este navegador.</span>
+          <span><IconStar size={13} /> Tus favoritos se guardan sólo en este navegador.</span>
           {' '}<a href="#" onClick={e => { e.preventDefault(); window.dispatchEvent(new CustomEvent('cafci:openauth')); }}>Iniciá sesión con Google</a>
           <span> para guardarlos en tu cuenta y acceder desde cualquier dispositivo.</span>
         </div>

@@ -5,6 +5,10 @@ import { toast } from '../lib/utils';
 import { useModalClose } from '../hooks/useModalClose';
 import SuscripcionModal from './SuscripcionModal';
 import RescateModal from './RescateModal';
+import {
+  IconX, IconPencil, IconTrash2, IconDownload, IconUpload,
+  IconChevronUp, IconChevronDown, IconAlertTriangle,
+} from './Icons';
 
 export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
   const { user, reloadPortfolio } = useAuth();
@@ -160,7 +164,7 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
     return (
       <div className={`modal-overlay${closing ? ' closing' : ''}`} style={{ display: 'flex' }} onClick={e => { if (e.target === e.currentTarget) requestClose(); }}>
         <div className="modal modal-wide">
-          <button className="modal-close" onClick={requestClose}>✕</button>
+          <button className="modal-close" onClick={requestClose} aria-label="Cerrar"><IconX size={16} /></button>
           <div style={{ textAlign: 'center', padding: 24, color: 'var(--text2)' }}>Cargando...</div>
         </div>
       </div>
@@ -203,11 +207,11 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
       <button onClick={onEdit} title="Editar"
         style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, opacity: 0.5, padding: '2px 4px', transition: 'opacity 0.15s' }}
         onMouseOver={e => e.currentTarget.style.opacity = 1}
-        onMouseOut={e => e.currentTarget.style.opacity = 0.5}>✏️</button>
+        onMouseOut={e => e.currentTarget.style.opacity = 0.5}><IconPencil size={13} /></button>
       <button onClick={onDelete} title="Eliminar"
         style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, opacity: 0.5, padding: '2px 4px', transition: 'opacity 0.15s' }}
         onMouseOver={e => e.currentTarget.style.opacity = 1}
-        onMouseOut={e => e.currentTarget.style.opacity = 0.5}>🗑</button>
+        onMouseOut={e => e.currentTarget.style.opacity = 0.5}><IconTrash2 size={13} /></button>
     </td>
   );
 
@@ -220,7 +224,7 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
   return (
     <div className={`modal-overlay${closing ? ' closing' : ''}`} style={{ display: 'flex' }} onClick={e => { if (e.target === e.currentTarget) requestClose(); }}>
       <div className="modal modal-wide" style={{ maxWidth: 1150, width: '95vw' }}>
-        <button className="modal-close" onClick={requestClose}>✕</button>
+        <button className="modal-close" onClick={requestClose} aria-label="Cerrar"><IconX size={16} /></button>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
           <div>
             <h2 className="modal-title" style={{ marginBottom: 4 }}>{fondoNombre}</h2>
@@ -249,7 +253,7 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
         </div>
 
         {/* ── Suscripciones ── */}
-        <div className="hist-section-title">📥 Suscripciones <span className="hist-count">{suscs.length}</span></div>
+        <div className="hist-section-title"><IconDownload size={13} /> Suscripciones <span className="hist-count">{suscs.length}</span></div>
         <div style={{ display: 'inline-block', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>
           <table className="hist-table hist-table-susc" style={{ width: 'auto', minWidth: 0 }}>
             <thead><tr>
@@ -304,7 +308,7 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
         </div>
 
         {/* ── Rescates ── */}
-        <div className="hist-section-title" style={{ marginTop: 16 }}>📤 Rescates <span className="hist-count">{rescates.length}</span></div>
+        <div className="hist-section-title" style={{ marginTop: 16 }}><IconUpload size={13} /> Rescates <span className="hist-count">{rescates.length}</span></div>
         <div className="hist-tbl-wrap">
           <table className="hist-table">
             <thead><tr>
@@ -377,7 +381,7 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
                           <td style={{ textAlign: 'center' }}>{esCompuesto && (
                             <button className="btn-hist-expand"
                               onClick={() => setExpanded(prev => ({ ...prev, [r.id]: !prev[r.id] }))}>
-                              {detalles.length} mov {isExp ? '▴' : '▾'}
+                              {detalles.length} mov {isExp ? <IconChevronUp size={11} /> : <IconChevronDown size={11} />}
                             </button>
                           )}</td>
                         </>
@@ -459,7 +463,7 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
       {confirmDialog && (
         <div className={`modal-overlay${confirmClosing ? ' closing' : ''}`} style={{ display: 'flex', zIndex: 900 }} onClick={e => { if (e.target === e.currentTarget) requestConfirmClose(); }}>
           <div className="modal" style={{ maxWidth: 420, textAlign: 'center' }}>
-            <div style={{ fontSize: 32, marginBottom: 12 }}>⚠️</div>
+            <div style={{ marginBottom: 12, color: 'var(--yellow)' }}><IconAlertTriangle size={32} strokeWidth={1.75} /></div>
             <p style={{ fontSize: 14, color: 'var(--text)', marginBottom: 24, lineHeight: 1.6 }}>{confirmDialog.msg}</p>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
               <button

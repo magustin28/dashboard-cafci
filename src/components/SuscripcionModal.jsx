@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/useAuth';
 import { useModalClose } from '../hooks/useModalClose';
+import { IconX } from './Icons';
 
 export default function SuscripcionModal({ fondoInicial, monedaInicial, raw, onClose }) {
   const { addSuscripcion } = useAuth();
@@ -48,7 +49,7 @@ export default function SuscripcionModal({ fondoInicial, monedaInicial, raw, onC
   return (
     <div className={`modal-overlay modal-overlay-top${closing ? ' closing' : ''}`} style={{ display: 'flex' }} onClick={e => { if (e.target === e.currentTarget) requestClose(); }}>
       <div className="modal">
-        <button className="modal-close" onClick={requestClose}>✕</button>
+        <button className="modal-close" onClick={requestClose} aria-label="Cerrar"><IconX size={16} /></button>
         <h2 className="modal-title">Agregar suscripción</h2>
         <p className="modal-subtitle">Registrá una compra de cuotapartes</p>
 

@@ -2,6 +2,10 @@ import { useState } from "react";
 import InformeModal from "./InformeModal";
 import { useAuth } from "../context/useAuth";
 import { parseFechaAPI, fmtMoney, cnvLink } from "../lib/utils";
+import {
+  IconX, IconSearch, IconFileText, IconChartColumn,
+  IconInfo, IconTrash2, IconAlertTriangle,
+} from "./Icons";
 
 function MoneyCell({ v, mon, colored }) {
   if (v === null || isNaN(v)) return <span className="td-mono zero">—</span>;
@@ -281,7 +285,7 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
       {/* Filter bar */}
       <div className="filter-bar">
         <div className="search-wrap">
-          <span className="search-icon">⌕</span>
+          <span className="search-icon"><IconSearch size={14} /></span>
           <input type="search" placeholder="Buscar fondo…" autoComplete="off" value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
         <select value={filterMoneda} onChange={(e) => setFilterMoneda(e.target.value)}>
@@ -291,10 +295,10 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
           <option value="USB">USB — Dólar Billete</option>
         </select>
         <button className="btn-clear" disabled={!hasFilters} onClick={clearFilters}>
-          ✕ Limpiar filtros
+          <IconX size={12} /> Limpiar filtros
         </button>
         <button className="btn-informe-print" style={{ marginLeft: "auto" }} onClick={() => setShowInforme(true)} disabled={subTab === "historico"}>
-          📄 Exportar PDF
+          <IconFileText size={13} /> Exportar PDF
         </button>
       </div>
 
@@ -367,7 +371,7 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
                     <div className="empty-favs">
                       {subTab === "actual" ? (
                         <>
-                          <div className="empty-icon">📊</div>
+                          <div className="empty-icon"><IconChartColumn size={32} strokeWidth={1.5} /></div>
                           <p>
                             No tenés suscripciones activas.
                             <br />
@@ -378,7 +382,7 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
                         </>
                       ) : (
                         <>
-                          <div className="empty-icon">📋</div>
+                          <div className="empty-icon"><IconFileText size={32} strokeWidth={1.5} /></div>
                           <p>No hay fondos rescatados en tu historial.</p>
                         </>
                       )}
@@ -395,7 +399,7 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
                     <tr key={`${item.fondo_nombre}__${item.moneda}`}>
                       <td style={{ verticalAlign: "middle" }}>
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 3, width: 52 }}>
-                          {/* Fila 1: ⓘ + 📋 */}
+                          {/* Fila 1: info + historial */}
                           <button
                             className="btn-port-action btn-info"
                             onClick={() => {
@@ -404,16 +408,16 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
                             }}
                             title="Ver detalle del fondo"
                           >
-                            ⓘ
+                            <IconInfo size={13} />
                           </button>
                           <button
                             className="btn-port-action btn-hist"
                             onClick={() => onOpenHistorial(item.fondo_nombre, item.moneda)}
                             title="Ver historial"
                           >
-                            📋
+                            <IconFileText size={13} />
                           </button>
-                          {/* Fila 2: + y − (actual) o + y 🗑 (historico) */}
+                          {/* Fila 2: + y − (actual) o + y borrar (historico) */}
                           <button
                             className="btn-port-action btn-susc"
                             onClick={() => onOpenSuscripcion(item.fondo_nombre, item.moneda)}
@@ -431,7 +435,7 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
                             </button>
                           ) : (
                             <button className="btn-port-action btn-del" onClick={() => confirmDelete(item)} title="Eliminar posición">
-                              🗑
+                              <IconTrash2 size={13} />
                             </button>
                           )}
                         </div>
@@ -442,9 +446,9 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
                       >
                         {item.fondo_nombre}
                         {!r && (
-                          <span style={{ fontSize: 10, color: "var(--yellow)" }} title="Sin match">
+                          <span style={{ color: "var(--yellow)" }} title="Sin match">
                             {" "}
-                            ⚠
+                            <IconAlertTriangle size={11} />
                           </span>
                         )}
                       </td>

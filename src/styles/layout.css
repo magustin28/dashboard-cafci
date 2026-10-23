@@ -244,6 +244,10 @@ a.logo-badge:hover {
 .tab.tab-fav.active {
   color: var(--fav);
 }
+/* Iconos dentro de los tabs: separación con el texto (.tab no es flex, así que va por margen). */
+.tab .icon {
+  margin-right: 4px;
+}
 .tab .tab-n {
   font-family: "JetBrains Mono", monospace;
   font-size: 10px;
@@ -292,6 +296,9 @@ a.logo-badge:hover {
   left: 10px;
   top: 50%;
   transform: translateY(-50%);
+  /* flex: centra el SVG del buscador (components/Icons.jsx) sin depender de font-size. */
+  display: flex;
+  align-items: center;
   color: var(--muted2);
   font-size: 15px;
   pointer-events: none;

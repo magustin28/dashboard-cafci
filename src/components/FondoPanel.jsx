@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { REG_MAP, HOR_MAP, formatPlazoLiq } from '../lib/utils';
 import { useModalClose } from '../hooks/useModalClose';
+import { IconX } from './Icons';
 // Helpers de fecha: "27/02/26" → "27/02/2026"
 const fmtFechaLarga = (f) => {
   if (!f) return f;
@@ -71,7 +72,7 @@ export default function FondoPanel({ fondo, refs, apiFecha, onClose }) {
         <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid var(--border)', position: 'sticky', top: 0, background: 'var(--card)', zIndex: 1 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
             <div style={{ fontSize: 14, fontWeight: 700, lineHeight: 1.3, color: 'var(--text1)' }}>{fondo.fondo}</div>
-            <button onClick={requestClose} style={{ background: 'none', border: 'none', color: 'var(--text2)', cursor: 'pointer', fontSize: 18, padding: 4, flexShrink: 0 }}>✕</button>
+            <button onClick={requestClose} aria-label="Cerrar" style={{ background: 'none', border: 'none', color: 'var(--text2)', cursor: 'pointer', fontSize: 18, padding: 4, flexShrink: 0 }}><IconX size={16} /></button>
           </div>
         </div>
 

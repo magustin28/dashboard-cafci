@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/useAuth';
 import { useModalClose } from '../hooks/useModalClose';
+import { IconX } from './Icons';
 
 export default function RescateModal({ fondoInicial, monedaInicial, onClose }) {
   const { portfolio, addRescate } = useAuth();
@@ -72,7 +73,7 @@ export default function RescateModal({ fondoInicial, monedaInicial, onClose }) {
   return (
     <div className={`modal-overlay modal-overlay-top${closing ? ' closing' : ''}`} style={{ display: 'flex' }} onClick={e => { if (e.target === e.currentTarget) requestClose(); }}>
       <div className="modal">
-        <button className="modal-close" onClick={requestClose}>✕</button>
+        <button className="modal-close" onClick={requestClose} aria-label="Cerrar"><IconX size={16} /></button>
         <h2 className="modal-title">Registrar rescate</h2>
         <p className="modal-subtitle">Vendé cuotapartes — se aplica método FIFO</p>
 

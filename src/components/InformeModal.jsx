@@ -3,6 +3,7 @@ import { useAuth } from "../context/useAuth";
 import { sb } from "../lib/supabase";
 import { toast } from "../lib/utils";
 import { useModalClose } from "../hooks/useModalClose";
+import { IconX, IconFileText } from "./Icons";
 
 export default function InformeModal({ enriched, apiFecha, onClose }) {
   const { user } = useAuth();
@@ -380,10 +381,10 @@ export default function InformeModal({ enriched, apiFecha, onClose }) {
             </div>
             <div style={{ display: "flex", gap: 8 }}>
               <button className="btn-informe-print" onClick={handleOpenPDF} disabled={loading}>
-                📄 Ver / Guardar PDF
+                <IconFileText size={13} /> Ver / Guardar PDF
               </button>
-              <button className="modal-close" style={{ position: "static", fontSize: 16 }} onClick={requestClose}>
-                ✕
+              <button className="modal-close" style={{ position: "static", fontSize: 16 }} onClick={requestClose} aria-label="Cerrar">
+                <IconX size={16} />
               </button>
             </div>
           </div>

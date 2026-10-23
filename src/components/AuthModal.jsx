@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/useAuth";
 import { useModalClose } from "../hooks/useModalClose";
+import { IconX } from "./Icons";
 
 export default function AuthModal({ onClose }) {
   const { loginGoogle } = useAuth();
@@ -45,8 +46,8 @@ export default function AuthModal({ onClose }) {
       }}
     >
       <div className="modal">
-        <button className="modal-close" onClick={requestClose}>
-          ✕
+        <button className="modal-close" onClick={requestClose} aria-label="Cerrar">
+          <IconX size={16} />
         </button>
         <div className="modal-logo">
           <span className="logo-badge" style={{ fontSize: 12, padding: "5px 12px" }}>

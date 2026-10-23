@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../context/useAuth";
 import { REG_MAP, HOR_MAP, cnvLink } from "../lib/utils";
+import { IconStar, IconInfo, IconPlus } from "./Icons";
 
 // Parse "DD/MM/YY" or "DD/MM/YYYY" → Date
 function parseApiDate(s) {
@@ -155,19 +156,19 @@ export default function FondosTable({ filtered, refs, onOpenSuscripcion, onFondo
                           onClick={() => toggleFav(r.fondo)}
                           title={isFaved ? "Quitar de favoritos" : "Agregar a favoritos"}
                           style={{ fontSize: 13 }}
-                        >★</button>
+                        ><IconStar size={13} /></button>
                         <button
                           className="btn-port-action btn-info"
                           onClick={() => onFondoClick && onFondoClick(r)}
                           title="Ver detalle del fondo"
-                        >ⓘ</button>
+                        ><IconInfo size={13} /></button>
                         {user ? (
                           <button
                             className="btn-port-action btn-susc"
                             onClick={() => onOpenSuscripcion(r.fondo, r.moneda)}
                             title="Agregar a mi portfolio"
                             style={{ gridColumn: "span 2" }}
-                          >+📊</button>
+                          ><IconPlus size={13} /></button>
                         ) : <span />}
                       </div>
                     </td>

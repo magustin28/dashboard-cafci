@@ -1,5 +1,6 @@
 import { useAuth } from '../context/useAuth';
 import { cnvLink } from '../lib/utils';
+import { IconChartColumn, IconTrophy, IconInfo, IconPlus } from './Icons';
 
 function PctCell({ v, decimals = 3 }) {
   if (v === null || v === undefined || v === '') return <span className="td-mono zero">—</span>;
@@ -24,7 +25,7 @@ function TopTable({ rows, refs, onOpenSuscripcion, onFondoClick, moneda }) {
   if (rows.length === 0) {
     return (
       <div className="empty-favs" style={{ padding: '32px 0' }}>
-        <div className="empty-icon">📊</div>
+        <div className="empty-icon"><IconChartColumn size={32} strokeWidth={1.5} /></div>
         <p>No hay datos disponibles para {moneda}.</p>
       </div>
     );
@@ -88,13 +89,13 @@ function TopTable({ rows, refs, onOpenSuscripcion, onFondoClick, moneda }) {
                     <button
                       className="btn-port-action btn-info"
                       onClick={() => onFondoClick && onFondoClick(r)}
-                      title="Ver detalle del fondo">ⓘ</button>
+                      title="Ver detalle del fondo"><IconInfo size={13} /></button>
                     {user ? (
                       <button
                         className="btn-port-action btn-susc"
                         onClick={() => onOpenSuscripcion(r.fondo, r.moneda)}
                         title="Agregar a mi portfolio"
-                        style={{ gridColumn: 'span 2' }}>+📊</button>
+                        style={{ gridColumn: 'span 2' }}><IconPlus size={13} /></button>
                     ) : <span />}
                   </div>
                 </td>
@@ -148,7 +149,7 @@ export default function TopTab({ raw, refs, onOpenSuscripcion, onFondoClick }) {
       {/* ARS */}
       <div className="table-wrap">
         <div style={{ padding: '10px 16px 8px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>🏆 Top 10 — Pesos</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}><IconTrophy size={13} /> Top 10 — Pesos</span>
           <span className="badge badge-ars">ARS</span>
           <span style={{ fontSize: 11, color: 'var(--text2)', marginLeft: 'auto' }}>Ordenado por variación diaria</span>
         </div>
@@ -164,7 +165,7 @@ export default function TopTab({ raw, refs, onOpenSuscripcion, onFondoClick }) {
       {/* USD */}
       <div className="table-wrap">
         <div style={{ padding: '10px 16px 8px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>🏆 Top 10 — Dólares</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}><IconTrophy size={13} /> Top 10 — Dólares</span>
           <span className="badge badge-usd">USD</span>
           <span className="badge badge-usb" style={{ marginLeft: 4 }}>USB</span>
           <span style={{ fontSize: 11, color: 'var(--text2)', marginLeft: 'auto' }}>Ordenado por variación diaria</span>
