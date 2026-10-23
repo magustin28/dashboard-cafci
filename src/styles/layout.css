@@ -15,13 +15,10 @@ header {
 }
 .logo-badge {
   text-decoration: none;
-  cursor: pointer;
   transition: opacity 0.15s;
-}
-.logo-badge:hover {
-  opacity: 0.8;
-}
-a.logo-badge {
+  /* El estilo visual va en la clase y NO en a.logo-badge: el badge también se usa como <span> en
+     el modal de login (AuthModal). Con el selector a.* el span quedaba sin fondo, sin padding y
+     sin color (se veía como texto suelto). */
   font-family: "JetBrains Mono", monospace;
   font-size: 10px;
   font-weight: 500;
@@ -30,6 +27,13 @@ a.logo-badge {
   background: var(--accent);
   padding: 4px 9px;
   border-radius: 4px;
+}
+/* Sólo el <a> del header es clickeable: ni el cursor ni el hover corresponden al span del modal. */
+a.logo-badge {
+  cursor: pointer;
+}
+a.logo-badge:hover {
+  opacity: 0.8;
 }
 .logo h1 {
   font-size: 16px;
