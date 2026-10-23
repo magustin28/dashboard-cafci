@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/useAuth';
+import { useModalClose } from '../hooks/useModalClose';
 
 export default function SuscripcionModal({ fondoInicial, monedaInicial, raw, onClose }) {
   const { addSuscripcion } = useAuth();
@@ -10,17 +11,21 @@ export default function SuscripcionModal({ fondoInicial, monedaInicial, raw, onC
   const [precio,   setPrecio]   = useState('');
   const [error,    setError]    = useState('');
   const [loading,  setLoading]  = useState(false);
+  // Cierre animado (hooks/useModalClose.js). requestClose(true) al guardar: el hook reenvía el
+  // argumento, así el padre sigue enterándose de que hay que refrescar el portfolio.
+  const { closing, requestClose } = useModalClose(onClose);
+
   // Cerrar con ESC — stopPropagation para no disparar modales de fondo
   useEffect(() => {
     const handler = (e) => {
       if (e.key === 'Escape') {
         e.stopPropagation();
-        onClose();
+        requestClose();
       }
     };
     document.addEventListener('keydown', handler, true); // capture phase
     return () => document.removeEventListener('keydown', handler, true);
-  }, [onClose]);
+  }, [requestClose]);
 
 
   const cant = parseFloat(cantidad);
@@ -36,14 +41,14 @@ export default function SuscripcionModal({ fondoInicial, monedaInicial, raw, onC
     setLoading(true);
     const result = await addSuscripcion({ fondoNombre: fondo, moneda, fechaCompra: fecha, cantidad: cant, precioCompra: prec });
     setLoading(false);
-    if (result.ok) onClose(true);
+    if (result.ok) requestClose(true);
     else setError(result.msg);
   };
 
   return (
-    <div className="modal-overlay modal-overlay-top" style={{ display: 'flex' }} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+    <div className={`modal-overlay modal-overlay-top${closing ? ' closing' : ''}`} style={{ display: 'flex' }} onClick={e => { if (e.target === e.currentTarget) requestClose(); }}>
       <div className="modal">
-        <button className="modal-close" onClick={() => onClose()}>✕</button>
+        <button className="modal-close" onClick={requestClose}>✕</button>
         <h2 className="modal-title">Agregar suscripción</h2>
         <p className="modal-subtitle">Registrá una compra de cuotapartes</p>
 

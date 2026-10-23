@@ -10,7 +10,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  getTabGroup, CLASIF_MAP,
+  getTabGroup, CLASIF_MAP, filterRows, cacheVencida, CACHE_TTL_MS,
   parseFechaAPI, fmtMoney, fmtPat, fmtPct,
   formatFechaLabel, cnvLink, toast, formatPlazoLiq,
 } from "./utils.js";
@@ -175,6 +175,69 @@ test("formatPlazoLiq: centinelas y valores raros → No aplica / guion", () => {
   assert.equal(formatPlazoLiq(undefined), "—");
   assert.equal(formatPlazoLiq(""), "—");
   assert.equal(formatPlazoLiq("cualquiera"), "No aplica");
+});
+
+test("filterRows: busca por nombre de fondo o de sociedad gerente (sin distinguir mayúsculas)", () => {
+  const rows = [
+    { fondo: "Fondo Alpha Clase A", socGerente: "GALICIA", moneda: "ARS" },
+    { fondo: "Fondo Beta Clase B", socGerente: "SANTANDER", moneda: "USD" },
+    { fondo: "Otro Gamma", socGerente: "GALICIA", moneda: "ARS" },
+  ];
+  assert.equal(filterRows(rows, { q: "alpha" }).length, 1);
+  assert.equal(filterRows(rows, { q: "ALPHA" })[0].fondo, "Fondo Alpha Clase A");
+  assert.equal(filterRows(rows, { q: "galicia" }).length, 2, "también matchea por sociedad gerente");
+  assert.equal(filterRows(rows, { q: "  alpha  " }).length, 1, "recorta los espacios de los costados");
+  assert.equal(filterRows(rows, { q: "no existe" }).length, 0);
+});
+
+test("filterRows: moneda, región y horizonte se combinan con el texto (AND)", () => {
+  const rows = [
+    { fondo: "Renta Fija Peso", moneda: "ARS", region: "Arg", horizonte: "Cor" },
+    { fondo: "Renta Fija Dólar", moneda: "USD", region: "Arg", horizonte: "Med" },
+    { fondo: "Renta Variable Global", moneda: "USD", region: "Glo", horizonte: "Lar" },
+  ];
+  assert.equal(filterRows(rows, { moneda: "USD" }).length, 2);
+  assert.equal(filterRows(rows, { moneda: "USD", region: "Glo" }).length, 1);
+  assert.equal(filterRows(rows, { moneda: "USD", horizonte: "Med" })[0].fondo, "Renta Fija Dólar");
+  assert.equal(filterRows(rows, { q: "renta", moneda: "USD", region: "Glo" }).length, 1);
+  assert.equal(filterRows(rows, { q: "renta", moneda: "ARS", region: "Glo" }).length, 0);
+});
+
+test("filterRows: sin filtros devuelve todo y no muta el array original", () => {
+  const rows = [{ fondo: "A" }, { fondo: "B" }];
+  const copia = [...rows];
+  assert.equal(filterRows(rows, {}).length, 2);
+  assert.equal(filterRows(rows, { q: "" }).length, 2, "q vacío no filtra");
+  assert.equal(filterRows(rows).length, 2, "sin opciones tampoco");
+  assert.deepEqual(rows, copia, "no debe mutar el array original");
+});
+
+test("filterRows: filas con campos faltantes no rompen", () => {
+  const rows = [{}, { fondo: null, socGerente: null }, { fondo: "Renta Fija" }];
+  assert.equal(filterRows(rows, { q: "renta" }).length, 1);
+  assert.equal(filterRows(rows, { moneda: "ARS" }).length, 0);
+});
+
+test("cacheVencida: vence pasado el TTL y descarta la caché sin marca de tiempo", () => {
+  const ahora = 1_700_000_000_000;
+  assert.equal(cacheVencida(ahora, ahora), false, "recién guardada");
+  assert.equal(cacheVencida(ahora - 1000, ahora), false, "hace un segundo");
+  assert.equal(cacheVencida(ahora - CACHE_TTL_MS, ahora), false, "justo en el TTL todavía vale");
+  assert.equal(cacheVencida(ahora - CACHE_TTL_MS - 1, ahora), true, "un ms más y venció");
+  // Cachés guardadas antes de que existiera el ts (o corruptas) → vencidas
+  assert.equal(cacheVencida(undefined, ahora), true);
+  assert.equal(cacheVencida(null, ahora), true);
+  assert.equal(cacheVencida(0, ahora), true);
+  assert.equal(cacheVencida("1700000000000", ahora), true, "ts como texto no es válido");
+  // Reloj desfasado hacia adelante: no vence por adelantado
+  assert.equal(cacheVencida(ahora + 60_000, ahora), false);
+});
+
+test("cacheVencida: el TTL se puede acortar (parámetro)", () => {
+  const ahora = 1_700_000_000_000;
+  assert.equal(cacheVencida(ahora - 5000, ahora, 1000), true);
+  assert.equal(cacheVencida(ahora - 500, ahora, 1000), false);
+  assert.equal(CACHE_TTL_MS, 60 * 60 * 1000, "el TTL por defecto es 1 hora");
 });
 
 

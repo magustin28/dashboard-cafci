@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { API_BASE, API_URL, API_FECHAS } from "../lib/utils";
+import { API_BASE, API_URL, API_FECHAS, cacheVencida } from "../lib/utils";
 
 // v3: las filas pasaron de array posicional a OBJETO con nombres estables, y se sumó plazoLiq
 const CACHE_KEY = "cafci_data_cache_v3";
@@ -37,10 +37,20 @@ const EXCEL_CON_FECHA = {
 
 function saveCache(rows, fecha, refs) {
   try {
-    sessionStorage.setItem(CACHE_KEY, JSON.stringify({ rows, fecha, refs }));
+    // ts = cuándo se guardó: la caché vence (CACHE_TTL_MS = 1 h, ver cacheVencida en lib/utils)
+    sessionStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), rows, fecha, refs }));
     sessionStorage.setItem(CACHE_FECHA, fecha || "");
   } catch (e) {
     console.warn("[cafci] no se pudo cachear en sessionStorage:", e);
+  }
+}
+
+function limpiarCache() {
+  try {
+    sessionStorage.removeItem(CACHE_KEY);
+    sessionStorage.removeItem(CACHE_FECHA);
+  } catch {
+    /* sessionStorage no disponible: nada que limpiar */
   }
 }
 
@@ -48,7 +58,13 @@ function loadCache() {
   try {
     const raw = sessionStorage.getItem(CACHE_KEY);
     if (!raw) return null;
-    return JSON.parse(raw);
+    const cache = JSON.parse(raw);
+    // Vencida (más de 1 h, o guardada antes de que existiera el ts) → se descarta y se limpia
+    if (cacheVencida(cache.ts)) {
+      limpiarCache();
+      return null;
+    }
+    return cache;
   } catch {
     return null;
   }
@@ -68,7 +84,8 @@ export function useFondos() {
 
   const loadFechas = useCallback(async () => {
     try {
-      const res = await fetch(API_FECHAS);
+      // Timeout: es un endpoint liviano, no vale la pena esperar más que esto
+      const res = await fetch(API_FECHAS, { signal: AbortSignal.timeout(30 * 1000) });
       const data = await res.json();
       setFechas(data.slice(0, -1).reverse());
     } catch (e) {
@@ -96,7 +113,10 @@ export function useFondos() {
 
       for (let attempt = 1; attempt <= MAX; attempt++) {
         try {
-          const res = await fetch(url);
+          // Timeout: sin esto, si el servidor se cuelga el intento queda esperando el timeout del
+          // navegador (puede pasar de los 5 min). El cold start de Render puede tardar ~1 min: si
+          // se corta acá, el backoff de abajo lo reintenta cuando el servicio ya está despierto.
+          const res = await fetch(url, { signal: AbortSignal.timeout(45 * 1000) });
           if (!res.ok) throw new Error("HTTP " + res.status);
           const data = await res.json();
 
@@ -184,8 +204,12 @@ export function useFondos() {
           }
           return;
         } catch (e) {
+          // Timeout/abort del fetch → mensaje entendible en vez de "signal timed out"
+          const msg = e.name === "TimeoutError" || e.name === "AbortError"
+            ? "La consulta tardó demasiado. Probá de nuevo (↻ Actualizar)."
+            : e.message;
           if (attempt === MAX) {
-            setError(e.message);
+            setError(msg);
             setLoading(false);
           } else {
             // El cold start de Render puede tardar ~1 min: backoff más largo que antes (2,5s/5s)
@@ -200,8 +224,7 @@ export function useFondos() {
   // Force refresh ignores cache
   const forceRefresh = useCallback(
     async (fechaParam = null) => {
-      sessionStorage.removeItem(CACHE_KEY);
-      sessionStorage.removeItem(CACHE_FECHA);
+      limpiarCache();
       setLoading(true);
       await fetchData(fechaParam);
     },

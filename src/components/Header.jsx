@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useAuth } from '../context/useAuth';
 import AuthModal from './AuthModal';
 import { formatFechaLabel } from '../lib/utils';
+import { useModalClose } from '../hooks/useModalClose';
 
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
@@ -32,13 +33,19 @@ export default function Header({ apiFecha, totalFondos, fechas, fechaParam, onRe
   // Año seleccionado: el más reciente por defecto (derivado, sin estado ni effect)
   const anioSel = anioElegido || anios[0] || null;
 
+  // Cierre animado del selector de fechas (hooks/useModalClose.js). El callback va envuelto en
+  // useCallback para que sea estable: si cambiara en cada render, requestClose también cambiaría
+  // y el listener de ESC se re-registraría todo el tiempo.
+  const cerrarPicker = useCallback(() => setPickerOpen(false), []);
+  const { closing: pickerClosing, requestClose: closePicker } = useModalClose(cerrarPicker);
+
   // Cerrar con ESC
   useEffect(() => {
     if (!pickerOpen) return;
-    const handler = (e) => { if (e.key === 'Escape') setPickerOpen(false); };
+    const handler = (e) => { if (e.key === 'Escape') closePicker(); };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
-  }, [pickerOpen]);
+  }, [pickerOpen, closePicker]);
 
   // Cerrar menu usuario con clic fuera
   useEffect(() => {
@@ -116,10 +123,10 @@ export default function Header({ apiFecha, totalFondos, fechas, fechaParam, onRe
 
       {/* Modal selector de fecha histórica */}
       {pickerOpen && (
-        <div className="modal-overlay" style={{ display: 'flex', zIndex: 700 }}
-          onClick={e => { if (e.target === e.currentTarget) setPickerOpen(false); }}>
+        <div className={`modal-overlay${pickerClosing ? ' closing' : ''}`} style={{ display: 'flex', zIndex: 700 }}
+          onClick={e => { if (e.target === e.currentTarget) closePicker(); }}>
           <div className="modal" style={{ maxWidth: 520, width: '95vw' }}>
-            <button className="modal-close" onClick={() => setPickerOpen(false)}>✕</button>
+            <button className="modal-close" onClick={closePicker}>✕</button>
             <h2 className="modal-title" style={{ marginBottom: 4 }}>📅 Fechas históricas</h2>
             <p className="modal-subtitle">Seleccioná una fecha para ver los datos de ese día</p>
 
@@ -154,7 +161,7 @@ export default function Header({ apiFecha, totalFondos, fechas, fechaParam, onRe
                       const [, , d] = f.split('-');
                       return (
                         <button key={f}
-                          onClick={() => { setPickerOpen(false); window.open(`?fecha=${f}`, '_blank'); }}
+                          onClick={() => { closePicker(); window.open(`?fecha=${f}`, '_blank'); }}
                           style={{
                             padding: '5px 12px', borderRadius: 6,
                             border: '1px solid var(--border2)',

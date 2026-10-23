@@ -65,8 +65,14 @@ export default function FondosTable({ filtered, refs, onOpenSuscripcion, onFondo
     return (av - bv) * sortDir;
   });
 
-  const total = Math.ceil(sorted.length / pageSize);
-  const slice = sorted.slice((page - 1) * pageSize, page * pageSize);
+  // Si la lista cambió (filtros, cambio de pestaña o refresco), `page` puede quedar fuera de
+  // rango y mostrar una página vacía. Se recorta durante el render (derivando la página válida)
+  // en lugar de resetear con un useEffect: el effect dispara un render en cascada y el lint de
+  // react-hooks lo marca como error.
+  const total = Math.max(1, Math.ceil(sorted.length / pageSize));
+  const pagina = Math.min(page, total);
+
+  const slice = sorted.slice((pagina - 1) * pageSize, pagina * pageSize);
 
   const arrow = (key) => (sortKey === key ? (sortDir === 1 ? " ↑" : " ↓") : " ↕");
 
@@ -222,13 +228,13 @@ export default function FondosTable({ filtered, refs, onOpenSuscripcion, onFondo
       {total > 1 && (
         <div className="pagination">
           <div className="page-btns">
-            <button className="pg" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}>
+            <button className="pg" onClick={() => setPage(pagina - 1)} disabled={pagina <= 1}>
               ‹
             </button>
             {(() => {
               const pages = [];
               for (let i = 1; i <= total; i++) {
-                if (i === 1 || i === total || Math.abs(i - page) <= 2) pages.push(i);
+                if (i === 1 || i === total || Math.abs(i - pagina) <= 2) pages.push(i);
                 else if (pages[pages.length - 1] !== "…") pages.push("…");
               }
               return pages.map((p, i) =>
@@ -237,18 +243,18 @@ export default function FondosTable({ filtered, refs, onOpenSuscripcion, onFondo
                     …
                   </span>
                 ) : (
-                  <button key={i} className={`pg${p === page ? " on" : ""}`} onClick={() => setPage(p)}>
+                  <button key={i} className={`pg${p === pagina ? " on" : ""}`} onClick={() => setPage(p)}>
                     {p}
                   </button>
                 ),
               );
             })()}
-            <button className="pg" onClick={() => setPage((p) => Math.min(total, p + 1))} disabled={page >= total}>
+            <button className="pg" onClick={() => setPage(pagina + 1)} disabled={pagina >= total}>
               ›
             </button>
           </div>
           <span className="pg-info">
-            {((page - 1) * pageSize + 1).toLocaleString("es-AR")}–{Math.min(page * pageSize, sorted.length).toLocaleString("es-AR")} de{" "}
+            {((pagina - 1) * pageSize + 1).toLocaleString("es-AR")}–{Math.min(pagina * pageSize, sorted.length).toLocaleString("es-AR")} de{" "}
             {sorted.length.toLocaleString("es-AR")}
           </span>
           <select

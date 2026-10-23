@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from './context/useAuth';
 import { useFondos } from './hooks/useFondos';
-import { getTabGroup } from './lib/utils';
+import { getTabGroup, filterRows } from './lib/utils';
 
 import Header from './components/Header';
 import Tabs from './components/Tabs';
@@ -57,23 +57,20 @@ export default function App() {
 
   const filtered = useMemo(() => {
     if (!raw.length) return [];
-    let rows = raw.filter(r => {
-      if (activeTab === 'Favoritos') return false; // handled separately
-      if (activeTab !== 'Todos' && getTabGroup(r) !== activeTab) return false;
-      if (moneda && r.moneda !== moneda) return false;
-      if (region && r.region !== region) return false;
-      if (horizonte && r.horizonte !== horizonte) return false;
-      if (q) {
-        const hay = (r.fondo || '').toLowerCase() + ' ' + (r.socGerente || '').toLowerCase();
-        if (!hay.includes(q.toLowerCase())) return false;
-      }
-      return true;
+    const rows = raw.filter(r => {
+      if (activeTab === 'Favoritos') return false; // se muestra con favFiltered
+      return activeTab === 'Todos' || getTabGroup(r) === activeTab;
     });
-    return rows;
+    return filterRows(rows, { q, moneda, region, horizonte });
   }, [raw, activeTab, q, moneda, region, horizonte]);
 
-
-  const favFiltered = useMemo(() => raw.filter(r => favs.includes(r.fondo)), [raw, favs]);
+  // Los favoritos pasan por la MISMA función de filtros que el resto de las pestañas. Antes este
+  // memo sólo miraba `favs`: el buscador y los selects se veían en la barra pero no filtraban
+  // nada (tipear el nombre de un fondo no hacía efecto).
+  const favFiltered = useMemo(
+    () => filterRows(raw.filter(r => favs.includes(r.fondo)), { q, moneda, region, horizonte }),
+    [raw, favs, q, moneda, region, horizonte]
+  );
 
   const isPortfolio = activeTab === 'Mi Portfolio';
   const isFavoritos = activeTab === 'Favoritos';

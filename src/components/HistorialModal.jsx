@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../context/useAuth';
 import { sb } from '../lib/supabase';
 import { toast } from '../lib/utils';
+import { useModalClose } from '../hooks/useModalClose';
 import SuscripcionModal from './SuscripcionModal';
 import RescateModal from './RescateModal';
 
@@ -17,12 +18,17 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
   const [showResc, setShowResc] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState(null);
 
+  // Cierres animados (hooks/useModalClose.js): el modal principal y el diálogo de confirmación
+  // tienen cada uno su propia animación de salida.
+  const { closing, requestClose } = useModalClose(onClose);
+  const { closing: confirmClosing, requestClose: requestConfirmClose } = useModalClose(() => setConfirmDialog(null));
+
   // Cerrar con ESC
   useEffect(() => {
-    const handler = (e) => { if (e.key === 'Escape') { if (editSusc || editResc) { setEditSusc(null); setEditResc(null); } else onClose(); } };
+    const handler = (e) => { if (e.key === 'Escape') { if (editSusc || editResc) { setEditSusc(null); setEditResc(null); } else requestClose(); } };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
-  }, [onClose, editSusc, editResc]);
+  }, [requestClose, editSusc, editResc]);
 
   const reload = useCallback(async () => {
     if (!user) return;
@@ -152,9 +158,9 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
 
   if (!data && loading) {
     return (
-      <div className="modal-overlay" style={{ display: 'flex' }} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className={`modal-overlay${closing ? ' closing' : ''}`} style={{ display: 'flex' }} onClick={e => { if (e.target === e.currentTarget) requestClose(); }}>
         <div className="modal modal-wide">
-          <button className="modal-close" onClick={onClose}>✕</button>
+          <button className="modal-close" onClick={requestClose}>✕</button>
           <div style={{ textAlign: 'center', padding: 24, color: 'var(--text2)' }}>Cargando...</div>
         </div>
       </div>
@@ -212,9 +218,9 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
   );
 
   return (
-    <div className="modal-overlay" style={{ display: 'flex' }} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+    <div className={`modal-overlay${closing ? ' closing' : ''}`} style={{ display: 'flex' }} onClick={e => { if (e.target === e.currentTarget) requestClose(); }}>
       <div className="modal modal-wide" style={{ maxWidth: 1150, width: '95vw' }}>
-        <button className="modal-close" onClick={onClose}>✕</button>
+        <button className="modal-close" onClick={requestClose}>✕</button>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
           <div>
             <h2 className="modal-title" style={{ marginBottom: 4 }}>{fondoNombre}</h2>
@@ -451,18 +457,18 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
 
       {/* Modal de confirmación */}
       {confirmDialog && (
-        <div className="modal-overlay" style={{ display: 'flex', zIndex: 900 }} onClick={e => { if (e.target === e.currentTarget) setConfirmDialog(null); }}>
+        <div className={`modal-overlay${confirmClosing ? ' closing' : ''}`} style={{ display: 'flex', zIndex: 900 }} onClick={e => { if (e.target === e.currentTarget) requestConfirmClose(); }}>
           <div className="modal" style={{ maxWidth: 420, textAlign: 'center' }}>
             <div style={{ fontSize: 32, marginBottom: 12 }}>⚠️</div>
             <p style={{ fontSize: 14, color: 'var(--text)', marginBottom: 24, lineHeight: 1.6 }}>{confirmDialog.msg}</p>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
               <button
-                onClick={() => setConfirmDialog(null)}
+                onClick={requestConfirmClose}
                 style={{ padding: '8px 20px', borderRadius: 6, border: '1px solid var(--border2)', background: 'none', color: 'var(--text2)', cursor: 'pointer', fontSize: 13 }}>
                 Cancelar
               </button>
               <button
-                onClick={async () => { await confirmDialog.onConfirm(); setConfirmDialog(null); }}
+                onClick={async () => { await confirmDialog.onConfirm(); requestConfirmClose(); }}
                 style={{ padding: '8px 20px', borderRadius: 6, border: 'none', background: '#dc2626', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
                 Eliminar
               </button>

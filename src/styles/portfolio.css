@@ -70,6 +70,34 @@
   position: relative;
   animation: fadeUp 0.2s ease;
 }
+/* Salida del modal: la clase .closing la agrega useModalClose (hooks/useModalClose.js) cuando se
+   pide cerrar, y el componente se desmonta recién al terminar esta animación (240 ms, igual que
+   MODAL_CLOSE_MS). Antes el modal abría con fadeUp pero desaparecía de golpe: entrada y salida
+   no eran el mismo efecto. Las transformaciones son a propósito marcadas: con movimientos muy
+   chicos el cierre se percibía igual que un corte seco. */
+.modal-overlay.closing {
+  animation: overlayOut 0.24s ease forwards;
+}
+.modal-overlay.closing .modal,
+.modal-overlay.closing .informe-modal {
+  animation: modalOut 0.24s ease forwards;
+}
+@keyframes overlayOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+@keyframes modalOut {
+  from { opacity: 1; transform: translateY(0)    scale(1); }
+  to   { opacity: 0; transform: translateY(18px) scale(0.94); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .modal-overlay.closing,
+  .modal-overlay.closing .modal,
+  .modal-overlay.closing .informe-modal {
+    animation-duration: 0.01s;
+  }
+}
+
 .modal-close {
   position: absolute;
   top: 14px;

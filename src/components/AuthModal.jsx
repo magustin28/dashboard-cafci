@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/useAuth";
+import { useModalClose } from "../hooks/useModalClose";
 
 export default function AuthModal({ onClose }) {
   const { login } = useAuth();
@@ -10,14 +11,20 @@ export default function AuthModal({ onClose }) {
   const [loading, setLoading] = useState(false);
 
   const [remember, setRemember] = useState(true);
+
+  // Cierre animado: `closing` pinta la clase de salida en el overlay y `requestClose` reemplaza
+  // a onClose en TODOS los caminos (✕, clic en el fondo, ESC, login exitoso). Ver
+  // hooks/useModalClose.js + las animaciones de salida en styles/portfolio.css.
+  const { closing, requestClose } = useModalClose(onClose);
+
   // Cerrar con ESC
   useEffect(() => {
     const handler = (e) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") requestClose();
     };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
-  }, [onClose]);
+  }, [requestClose]);
 
   const isLogin = mode === "login";
 
@@ -28,7 +35,7 @@ export default function AuthModal({ onClose }) {
     const result = await login(email, pass, remember);
     setLoading(false);
     if (result.ok) {
-      onClose();
+      requestClose();
       window.dispatchEvent(new CustomEvent("cafci:tab", { detail: "Mi Portfolio" }));
     } else {
       setError(result.msg);
@@ -37,14 +44,14 @@ export default function AuthModal({ onClose }) {
 
   return (
     <div
-      className="modal-overlay"
+      className={`modal-overlay${closing ? " closing" : ""}`}
       style={{ display: "flex" }}
       onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
+        if (e.target === e.currentTarget) requestClose();
       }}
     >
       <div className="modal" data-mode={mode}>
-        <button className="modal-close" onClick={onClose}>
+        <button className="modal-close" onClick={requestClose}>
           ✕
         </button>
         <div className="modal-logo">

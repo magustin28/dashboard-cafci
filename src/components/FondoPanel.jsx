@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { REG_MAP, HOR_MAP, formatPlazoLiq } from '../lib/utils';
+import { useModalClose } from '../hooks/useModalClose';
 // Helpers de fecha: "27/02/26" → "27/02/2026"
 const fmtFechaLarga = (f) => {
   if (!f) return f;
@@ -9,12 +10,16 @@ const fmtFechaLarga = (f) => {
 };
 
 export default function FondoPanel({ fondo, refs, apiFecha, onClose }) {
+  // Cierre animado (hooks/useModalClose.js): el panel se desliza hacia la derecha y el fondo se
+  // desvanece antes de desmontarse. Antes abría con slideIn y al cerrar desaparecía de golpe.
+  const { closing, requestClose } = useModalClose(onClose);
+
   // Cerrar con ESC (va antes del return temprano: los hooks no pueden ser condicionales)
   useEffect(() => {
-    const handler = (e) => { if (e.key === 'Escape') onClose(); };
+    const handler = (e) => { if (e.key === 'Escape') requestClose(); };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
-  }, [onClose]);
+  }, [requestClose]);
 
   if (!fondo) return null;
 
@@ -43,7 +48,14 @@ export default function FondoPanel({ fondo, refs, apiFecha, onClose }) {
 
   return (
     <>
-      <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 300 }} onClick={onClose} />
+      <div
+        onClick={requestClose}
+        style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 300,
+          animation: closing ? 'backdropOut 0.24s ease forwards' : undefined,
+          pointerEvents: closing ? 'none' : 'auto',
+        }}
+      />
 
       <div style={{
         position: 'fixed', top: 0, right: 0, bottom: 0,
@@ -52,14 +64,14 @@ export default function FondoPanel({ fondo, refs, apiFecha, onClose }) {
         zIndex: 301, overflowY: 'auto',
         display: 'flex', flexDirection: 'column',
         boxShadow: '-4px 0 24px rgba(0,0,0,0.25)',
-        animation: 'slideIn 0.2s ease',
+        animation: closing ? 'slideOut 0.24s ease forwards' : 'slideIn 0.2s ease',
       }}>
 
         {/* Header */}
         <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid var(--border)', position: 'sticky', top: 0, background: 'var(--card)', zIndex: 1 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
             <div style={{ fontSize: 14, fontWeight: 700, lineHeight: 1.3, color: 'var(--text1)' }}>{fondo.fondo}</div>
-            <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text2)', cursor: 'pointer', fontSize: 18, padding: 4, flexShrink: 0 }}>✕</button>
+            <button onClick={requestClose} style={{ background: 'none', border: 'none', color: 'var(--text2)', cursor: 'pointer', fontSize: 18, padding: 4, flexShrink: 0 }}>✕</button>
           </div>
         </div>
 
@@ -113,6 +125,21 @@ export default function FondoPanel({ fondo, refs, apiFecha, onClose }) {
         @keyframes slideIn {
           from { transform: translateX(100%); opacity: 0; }
           to   { transform: translateX(0);    opacity: 1; }
+        }
+        @keyframes slideOut {
+          from { transform: translateX(0);    opacity: 1; }
+          to   { transform: translateX(100%); opacity: 0; }
+        }
+        @keyframes backdropOut {
+          from { opacity: 1; }
+          to   { opacity: 0; }
+        }
+        /* Con "reducir movimiento" activado, el panel se apaga sin desplazarse */
+        @media (prefers-reduced-motion: reduce) {
+          @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to   { transform: translateX(0); opacity: 0; }
+          }
         }
       `}</style>
     </>

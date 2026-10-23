@@ -45,6 +45,36 @@ export function getTabGroup(row) {
   return "Otros";
 }
 
+// Vencimiento de la caché de datos del dashboard (sessionStorage, ver hooks/useFondos.js).
+// Antes no vencía nunca: con la pestaña abierta se seguía mostrando la planilla guardada y ni se
+// consultaba la API. 1 hora de TTL es el balance elegido: evita esperar la consulta (~3 s) en
+// recargas seguidas y, como máximo, muestra la planilla anterior durante 1 hora.
+export const CACHE_TTL_MS = 60 * 60 * 1000;
+
+export function cacheVencida(ts, ahora = Date.now(), ttl = CACHE_TTL_MS) {
+  // Sin marca de tiempo (cachés guardadas antes de este cambio) → se considera vencida
+  if (typeof ts !== "number" || ts <= 0) return true;
+  return ahora - ts > ttl;
+}
+
+// Filtros de la barra superior: buscador (nombre del fondo o sociedad gerente) + los selects de
+// moneda/región/horizonte. Viven acá y no dentro de App.jsx porque el tab "Favoritos" armaba su
+// propia lista a mano: mostraba el input de búsqueda pero nunca aplicaba `q` ni los selects
+// (tipear el nombre no hacía nada). Ahora las dos pestañas usan exactamente la misma función.
+export function filterRows(rows, { q, moneda, region, horizonte } = {}) {
+  const texto = (q || "").trim().toLowerCase();
+  return rows.filter((r) => {
+    if (moneda && r.moneda !== moneda) return false;
+    if (region && r.region !== region) return false;
+    if (horizonte && r.horizonte !== horizonte) return false;
+    if (texto) {
+      const hay = `${r.fondo || ""} ${r.socGerente || ""}`.toLowerCase();
+      if (!hay.includes(texto)) return false;
+    }
+    return true;
+  });
+}
+
 export function cnvLink(cnvCode, cafciCode) {
   const q = encodeURIComponent(cafciCode);
   const w = encodeURIComponent(cnvCode);

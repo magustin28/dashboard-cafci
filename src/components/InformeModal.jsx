@@ -2,19 +2,24 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../context/useAuth";
 import { sb } from "../lib/supabase";
 import { toast } from "../lib/utils";
+import { useModalClose } from "../hooks/useModalClose";
 
 export default function InformeModal({ enriched, apiFecha, onClose }) {
   const { user } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  // Cierre animado (hooks/useModalClose.js): el informe usa .informe-modal, que tiene su propia
+  // animación de salida en styles/portfolio.css.
+  const { closing, requestClose } = useModalClose(onClose);
+
   // Cerrar con ESC
   useEffect(() => {
     const handler = (e) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") requestClose();
     };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
-  }, [onClose]);
+  }, [requestClose]);
 
   useEffect(() => {
     if (!user || !enriched?.length) return;
@@ -361,10 +366,10 @@ export default function InformeModal({ enriched, apiFecha, onClose }) {
   return (
     <>
       <div
-        className="modal-overlay informe-overlay"
+        className={`modal-overlay informe-overlay${closing ? " closing" : ""}`}
         style={{ display: "flex", alignItems: "flex-start", overflowY: "auto", padding: "20px" }}
         onClick={(e) => {
-          if (e.target === e.currentTarget) onClose();
+          if (e.target === e.currentTarget) requestClose();
         }}
       >
         <div className="informe-modal" style={{ maxWidth: 1200 }}>
@@ -377,7 +382,7 @@ export default function InformeModal({ enriched, apiFecha, onClose }) {
               <button className="btn-informe-print" onClick={handleOpenPDF} disabled={loading}>
                 📄 Ver / Guardar PDF
               </button>
-              <button className="modal-close" style={{ position: "static", fontSize: 16 }} onClick={onClose}>
+              <button className="modal-close" style={{ position: "static", fontSize: 16 }} onClick={requestClose}>
                 ✕
               </button>
             </div>
