@@ -1,0 +1,19 @@
+{
+  "id": "./",
+  "name": "FCI - Argentina",
+  "short_name": "FCI - Argentina",
+  "description": "Fondos Comunes de Inversión de Argentina: variación diaria, rendimiento a 12 meses, patrimonio y seguimiento de tenencias.",
+  "lang": "es-AR",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f0f0ee",
+  "theme_color": "#f0f0ee",
+  "categories": ["finance", "business", "productivity"],
+  "icons": [
+    { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "./icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

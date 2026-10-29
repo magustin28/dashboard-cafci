@@ -22,3 +22,16 @@ createRoot(document.getElementById('root')).render(
     </AuthProvider>
   </StrictMode>,
 )
+
+// ── PWA: service worker ──
+// Sólo en producción: en dev el SW cachearía el HTML y pelearía con el HMR de Vite (recargás y seguís
+// viendo la versión cacheada). El archivo (public/sw.js) sale al build con el precache inyectado por
+// scripts/pwa-precache.mjs, y BASE_URL es el base de vite.config.js → /dashboard-cafci/sw.js.
+// Si el registro falla, la app sigue funcionando igual: la PWA es una mejora, no un requisito.
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register(`${import.meta.env.BASE_URL}sw.js`)
+      .catch((err) => console.warn('No se pudo registrar el service worker:', err));
+  });
+}
