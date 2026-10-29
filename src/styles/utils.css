@@ -32,7 +32,11 @@
   font-size: 11px;
   color: var(--muted2);
   cursor: not-allowed;
-  padding: 5px 10px;
+  /* 32px de alto y padding sólo horizontal: es la altura de control del header, la misma que
+     .btn-refresh y .btn-auth. Antes eran 5px de padding con fuente de 11px = 25px, y quedaba más
+     bajo que Actualizar (31px) y que el botón de sesión con avatar (36px). */
+  height: 32px;
+  padding: 0 12px;
   border-radius: 6px;
   border: 1px solid var(--border2);
   background: var(--card);
@@ -191,6 +195,390 @@
   .tab {
     font-size: 11px;
     padding: 7px 10px;
+  }
+}
+
+/* ── Modal de fechas históricas (components/DatePickerModal.jsx) ──────────────────────────
+   Antes estos estilos vivían inline en el JSX. Los selectores son compuestos a propósito:
+   .modal y .modal-overlay se definen en portfolio.css, que se carga DESPUÉS de este archivo,
+   así que con una sola clase el override perdería por orden de carga. */
+.modal-overlay.datepicker-overlay {
+  z-index: 700;
+}
+.modal.datepicker-modal {
+  max-width: 520px;
+}
+.datepicker-years {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  /* 8px arriba (y no 16) porque arriba puede estar el chip "Actual", que ya deja 16px. */
+  margin: 8px 0 12px;
+}
+.datepicker-year {
+  padding: 5px 16px;
+  border-radius: 20px;
+  border: 1px solid var(--border2);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  background: transparent;
+  color: var(--text2);
+  transition: all 0.15s;
+}
+.datepicker-year.active {
+  background: var(--accent);
+  color: #fff;
+}
+.datepicker-scroll {
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+/* Aviso del modal de fechas mientras /api/fechas todavía no respondió. El botón del header se
+   renderiza siempre, así que el modal se puede abrir antes de que lleguen las fechas. */
+.datepicker-empty {
+  padding: 32px 0;
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+}
+/* Chip "Actual" del modal de fechas: la planilla más nueva, la misma que muestra la vista
+   principal. Va fuera de la grilla (que es histórica) porque no navega a ?fecha= sino a "/", y
+   sólo se muestra mirando una fecha vieja.
+   Márgenes a propósito: 0 arriba para que quede junto al subtítulo (que ya deja 22px) y 16px
+   abajo para no quedar pegado a la grilla cuando el selector de año no aparece (hay un solo año). */
+.datepicker-actual {
+  display: inline-flex;
+  align-items: center;
+  margin: 0 0 16px;
+  padding: 5px 13px;
+  border-radius: 20px;
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--text2);
+  font-family: "Inter", sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.datepicker-actual:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.datepicker-month {
+  margin-bottom: 16px;
+}
+.datepicker-month-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text2);
+  margin-bottom: 8px;
+}
+.datepicker-days {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.datepicker-day {
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border2);
+  background: var(--bg2);
+  color: var(--text);
+  font-size: 12px;
+  font-family: "JetBrains Mono", monospace;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-variant-numeric: tabular-nums;
+}
+.datepicker-day:hover {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+/* ── Pantallas chicas: blancos de toque ───────────────────────────────────────────────────────
+   En el celular los controles de 32px (header) y 36px (barra de filtros) quedan por debajo de los
+   44px que recomiendan Apple y Google para tocar con el dedo. Se agrandan acá y no en cada archivo
+   porque utils.css es el último CSS de componentes que se carga (ver el orden en main.jsx): estos
+   overrides ganan a los de layout.css / auth.css / pagination.css sin subir la especificidad. El
+   corte de 640px es el mismo que ya usaba el bloque de arriba (.logo h1 / .kpi-val / .tab). */
+@media (max-width: 640px) {
+  .date-picker-btn,
+  .btn-refresh,
+  .btn-auth {
+    height: 44px;
+    padding: 0 14px;
+  }
+  .date-picker-btn {
+    font-size: 12px;
+  }
+  /* El avatar crece con el botón: si no, queda una caja de 44px con un círculo chico adentro. */
+  .auth-avatar {
+    width: 28px;
+    height: 28px;
+  }
+  /* 16px y no 13px en los campos: por debajo de 16px, iOS Safari hace zoom al enfocar el input. */
+  .search-wrap input,
+  .filter-bar select {
+    height: 44px;
+    font-size: 16px;
+  }
+  .btn-clear {
+    height: 44px;
+  }
+  /* Paginación: 36px y no 44 porque la fila (‹ 1 2 3 … 12 ›) no entraría a lo ancho y se partiría
+     en dos líneas. Igual queda bastante más cómoda que los 28px del escritorio. */
+  .pg,
+  .pg-dots,
+  .pg-size {
+    height: 36px;
+  }
+  .pg {
+    min-width: 36px;
+    font-size: 12px;
+  }
+
+  /* Header, fila 1: la marca. El badge CAFCI + el título corto "FCI - Argentina" entran juntos (en
+     escritorio el h1 muestra el título completo; acá se cambia por .logo-titulo-corto). En el celular
+     el header queda en tres filas: 1) marca · 2) meta a los dos márgenes · 3) los tres controles. */
+  .logo h1 {
+    font-size: 12px;
+  }
+  .logo-titulo-largo,
+  .meta-largo {
+    display: none;
+  }
+  .logo-titulo-corto,
+  .meta-corto {
+    display: inline;
+  }
+  /* Fila 2, a lo ancho: "Actualizado: 26/10/26" al margen izquierdo y "4.272 fondos" al derecho, con
+     la separación en el medio. Antes sólo tenía gap, así que los dos textos quedaban pegados del
+     mismo lado. Con flex-basis 100% la fila es propia (el logo queda arriba) y el meta puede llegar
+     a los dos márgenes; si hay un solo dato (todavía cargando) queda alineado a la izquierda. */
+  .header-meta {
+    flex: 1 1 100%;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  /* Header, fila 3: los tres controles (fecha, actualizar y sesión) ocupan una fila completa y en
+     tres columnas iguales. Siguen midiendo 44px, así que son más cómodos de tocar que en escritorio. */
+  .header-acciones {
+    flex: 1 1 100%;
+    gap: 8px;
+  }
+  .header-acciones .date-picker-btn,
+  .header-acciones .btn-refresh,
+  .header-acciones .auth-wrap {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  /* Los tres controles centran su contenido y ocupan el ancho de su columna. .btn-refresh estaba
+     afuera de esta regla y su contenido quedaba alineado a la izquierda: con ícono + texto casi no
+     se notaba, pero al consultar (queda sólo el spinner) se veía pegado al borde. */
+  .header-acciones .date-picker-btn,
+  .header-acciones .btn-refresh,
+  .header-acciones .btn-auth {
+    width: 100%;
+    justify-content: center;
+  }
+  .header-acciones .auth-wrap {
+    display: flex;
+  }
+  /* Los tres controles muestran ícono + texto ("Fecha", "Actualizar" y el avatar + iniciales de la
+     sesión), así quedan con la misma forma. Antes fecha y actualizar eran sólo ícono y la cuenta
+     avatar + iniciales: tres formas distintas en la misma fila.
+     El texto va en 11px (en escritorio es 12px) y puede encogerse con puntos suspensivos si el
+     idioma o la fuente lo estiran. */
+  .header-acciones .btn-label {
+    display: inline;
+    min-width: 0;
+    font-size: 11px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  /* Sólo el label largo y la flecha del date picker se ocultan: el corto ("Fecha") es el que se ve. */
+  .header-acciones .btn-label-largo,
+  .header-acciones .date-arrow {
+    display: none;
+  }
+  /* Mientras consulta, "Consultando…"/"Actualizando…" no entra junto al spinner: queda sólo el
+     spinner, que ya comunica que está trabajando. */
+  .header-acciones .btn-refresh[aria-busy="true"] .btn-label {
+    display: none;
+  }
+  /* Sesión: avatar + iniciales en lugar del nombre completo. */
+  .auth-nombre {
+    display: none;
+  }
+  .auth-iniciales {
+    display: inline;
+  }
+
+  /* Tabs: en el celular se oculta la fila y se usa un selector nativo de una sola fila (el picker
+     del sistema), en vez de 11 tabs partidos en 3-4 filas o un scroll horizontal. */
+  .tabs-row {
+    display: none;
+  }
+  /* Mismo estilo que el botón "Filtros" (.filtros-toggle): misma altura, borde, radio, fondo, color,
+     peso y flecha, para que los dos selectores del celular se vean iguales. El font-size queda en
+     16px (no en los 13px del botón) porque por debajo de eso iOS Safari hace zoom al enfocar. El
+     margen de abajo pasa al envoltorio: la flecha se posiciona contra él, no contra el select. */
+  .tabs-select-wrap {
+    display: block;
+    position: relative;
+    margin-bottom: 16px;
+  }
+  .tabs-select {
+    display: block;
+    width: 100%;
+    height: 44px;
+    /* appearance: none saca la flecha del navegador (distinta en cada uno y no se puede estilizar):
+       la de Lucide la dibuja .tabs-select-chev. */
+    appearance: none;
+    -webkit-appearance: none;
+    /* 34px a la derecha: el lugar que ocupa la flecha. */
+    padding: 0 34px 0 14px;
+    margin: 0;
+    border-radius: 6px;
+    border: 1px solid var(--border2);
+    background: var(--card);
+    color: var(--text2);
+    font-family: "Inter", sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  }
+  /* La flecha, igual que .filtros-chev del botón "Filtros": mismo ícono, mismo tamaño y mismo color.
+     pointer-events: none para que el toque siga llegando al select. */
+  .tabs-select-chev {
+    position: absolute;
+    top: 50%;
+    right: 14px;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    color: var(--text2);
+    pointer-events: none;
+  }
+
+  /* KPIs: con minmax(180px, 1fr) en ~312px de ancho las 4 cards caían una por fila (~90px cada
+     una). Pasan a una grilla de 2 columnas con padding y tipografía más chicos: el mismo dato en la
+     mitad del alto. */
+  .kpis {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin: 12px 0;
+  }
+  .kpi {
+    padding: 10px 12px 12px;
+  }
+  .kpi-label {
+    font-size: 10px;
+    margin-bottom: 4px;
+  }
+  .kpi-val {
+    font-size: 18px;
+  }
+  .kpi-sub {
+    font-size: 9.5px;
+    margin-top: 3px;
+  }
+
+  /* Barra de filtros: los selects se acomodan de a dos por fila (antes: buscador + 3 selects +
+     limpiar filtros = 4 filas). */
+  .filter-bar select {
+    flex: 1 1 45%;
+    min-width: 0;
+  }
+
+  /* Filtros colapsables (components/FilterBar.jsx): en el celular la barra completa queda detrás
+     del botón "Filtros" y sólo se despliega al tocarlo. Plegada ocupa una fila de 44px en lugar de
+     las tres que usaba (buscador + dos filas de selects + limpiar).
+     El plegado se resuelve con CSS y no con JS: al rotar el teléfono no hay que escuchar resize. */
+  .filtros-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    height: 44px;
+    margin-bottom: 12px;
+    padding: 0 14px;
+    border-radius: 6px;
+    border: 1px solid var(--border2);
+    background: var(--card);
+    color: var(--text2);
+    font-family: "Inter", sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .filtros-toggle.abierto {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  /* Cantidad de filtros activos: el ámbar del semáforo "atrasado", para que se note sin gritar. */
+  .filtros-n {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 9px;
+    background: var(--yellow);
+    color: #fff;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  /* La flecha se alinea a la derecha con margin-left:auto y gira cuando el panel está abierto. */
+  .filtros-chev {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+    transition: transform 0.15s;
+  }
+  .filtros-toggle.abierto .filtros-chev {
+    transform: rotate(180deg);
+  }
+  /* Plegada por defecto. El selector va acotado a .filtros para no afectar la barra de
+     PortfolioTab, que también usa .filter-bar. */
+  .filtros .filter-bar {
+    display: none;
+  }
+  .filtros .filter-bar.abierto {
+    display: flex;
+  }
+  /* El buscador ocupa la fila completa: compartiendo fila con los selects (que van de a dos)
+     quedaba a media anchura y el texto del placeholder no entraba. */
+  .filtros .search-wrap {
+    flex: 1 1 100%;
+  }
+  /* "Limpiar filtros" a lo ancho: con los selects de a dos por fila, el margin-left:auto lo dejaba
+     colgando a media anchura en una tercera fila. */
+  .filtros .btn-clear {
+    flex: 1 1 100%;
+    margin-left: 0;
+    justify-content: center;
+  }
+
+  /* Paginación: la fila de números sola ya ocupa casi todo el ancho, así que no entra junto con el
+     resumen y el selector. Se ordena en dos filas: números centrados arriba, resumen + selector
+     abajo (antes el dropdown caía a una fila suelta). */
+  .page-btns {
+    flex: 1 1 100%;
+    justify-content: center;
   }
 }
 

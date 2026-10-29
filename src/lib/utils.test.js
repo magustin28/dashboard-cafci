@@ -13,6 +13,7 @@ import {
   getTabGroup, CLASIF_MAP, filterRows, cacheVencida, CACHE_TTL_MS,
   parseFechaAPI, fmtMoney, fmtPat, fmtPct,
   formatFechaLabel, cnvLink, toast, formatPlazoLiq,
+  diasDesdeFecha, estadoFrescura, diasHabilesDeAtraso,
 } from "./utils.js";
 
 // Fila como la arma useFondos: objeto con nombres estables (categoria + clasificacion)
@@ -143,6 +144,61 @@ test("fmtPct: devuelve {value, display} y null si no es número", () => {
 test("formatFechaLabel: ISO → DD/MM/AAAA", () => {
   assert.equal(formatFechaLabel("2026-10-14"), "14/10/2026");
   assert.equal(formatFechaLabel("2026-01-03"), "03/01/2026");
+});
+
+test("diasDesdeFecha: cuenta días calendario y normaliza la hora", () => {
+  const hoy = new Date("2026-10-23T09:00:00");
+  assert.equal(diasDesdeFecha("2026-10-23", hoy), 0);
+  assert.equal(diasDesdeFecha("2026-10-22", hoy), 1);
+  assert.equal(diasDesdeFecha("22/10/2026", hoy), 1);
+  assert.equal(diasDesdeFecha("16/10/26", hoy), 7);
+  // Ayer a las 23:50 sigue siendo 1 día (no 0): se comparan fechas, no instantes.
+  assert.equal(diasDesdeFecha("2026-10-22", new Date("2026-10-23T23:50:00")), 1);
+});
+
+test("diasDesdeFecha: entradas vacías o inválidas → null", () => {
+  assert.equal(diasDesdeFecha(""), null);
+  assert.equal(diasDesdeFecha(null), null);
+  assert.equal(diasDesdeFecha("no es fecha"), null);
+});
+
+test("estadoFrescura: al día, atrasado y viejo", () => {
+  assert.equal(estadoFrescura(null), null);
+  assert.equal(estadoFrescura(0), "al-dia");
+  assert.equal(estadoFrescura(1), "al-dia");
+  assert.equal(estadoFrescura(2), "atrasado");
+  assert.equal(estadoFrescura(9), "atrasado");
+  assert.equal(estadoFrescura(10), "viejo");
+});
+
+test("diasHabilesDeAtraso: el fin de semana no infla la cuenta (lunes con la planilla del viernes)", () => {
+  const lunes = new Date("2026-10-26T09:00:00");
+  assert.equal(diasHabilesDeAtraso("2026-10-23", lunes), 0, "la del viernes es lo esperado un lunes");
+  assert.equal(diasHabilesDeAtraso("2026-10-22", lunes), 1, "se salteó el viernes");
+  assert.equal(diasHabilesDeAtraso("2026-10-21", lunes), 2, "se salteó jueves y viernes");
+});
+
+test("diasHabilesDeAtraso: en días de semana espera la planilla del día anterior", () => {
+  const miercoles = new Date("2026-10-21T10:00:00");
+  assert.equal(diasHabilesDeAtraso("2026-10-20", miercoles), 0, "la del martes es lo esperado");
+  assert.equal(diasHabilesDeAtraso("2026-10-21", miercoles), 0, "más nueva que lo esperado → 0");
+  assert.equal(diasHabilesDeAtraso("2026-10-19", miercoles), 1, "se salteó el martes");
+  // Sábado y domingo también miran al viernes
+  assert.equal(diasHabilesDeAtraso("2026-10-23", new Date("2026-10-24T12:00:00")), 0, "sábado");
+  assert.equal(diasHabilesDeAtraso("2026-10-23", new Date("2026-10-25T12:00:00")), 0, "domingo");
+});
+
+test("diasHabilesDeAtraso: una caída larga del cron llega a 'viejo'", () => {
+  const lunes = new Date("2026-10-26T09:00:00");
+  const atraso = diasHabilesDeAtraso("2026-10-05", lunes);
+  assert.equal(atraso, 14, "del lunes 5/10 al viernes 23/10 hay 14 días hábiles");
+  assert.equal(estadoFrescura(atraso), "viejo");
+});
+
+test("diasHabilesDeAtraso: entradas inválidas → null", () => {
+  assert.equal(diasHabilesDeAtraso(""), null);
+  assert.equal(diasHabilesDeAtraso(null), null);
+  assert.equal(diasHabilesDeAtraso("no es fecha"), null);
 });
 
 test("cnvLink: arma el link a CAFCI con los códigos codificados", () => {

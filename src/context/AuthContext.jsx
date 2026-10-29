@@ -13,8 +13,21 @@ function saveLocalFavs(arr) {
   localStorage.setItem(LOCAL_FAV_KEY, JSON.stringify(arr));
 }
 
+// Datos del usuario que muestra el header. Google manda full_name y avatar_url dentro de
+// user_metadata; si el proveedor no los trae, se cae al nombre del email y a la inicial.
+function userFromSession(session) {
+  const meta = session.user.user_metadata || {};
+  const email = session.user.email || '';
+  return {
+    id: session.user.id,
+    email,
+    nombre: meta.full_name || meta.name || email.split('@')[0] || '',
+    avatar: meta.avatar_url || meta.picture || null,
+  };
+}
+
 export function AuthProvider({ children }) {
-  const [user, setUser]           = useState(null);   // { id, email } | null
+  const [user, setUser]           = useState(null);   // { id, email, nombre, avatar } | null
   const [portfolio, setPortfolio] = useState([]);
   const [favs, setFavs]           = useState([]);
   const [authReady, setAuthReady] = useState(false);
@@ -72,7 +85,7 @@ export function AuthProvider({ children }) {
         // tomado y colgar después signOut() — que era justo lo que pasaba con "Cerrar sesión".
         // Los datos se cargan en el useEffect que observa `user` (más abajo).
         if (session) {
-          const u = { id: session.user.id, email: session.user.email };
+          const u = userFromSession(session);
           setUser(u);
           userRef.current = u;
         } else {
@@ -91,7 +104,7 @@ export function AuthProvider({ children }) {
         // En un refresh el id no cambia: alcanza con mantener el ref al día. Si acá se llamara a
         // setUser con un objeto nuevo, el useEffect de carga correría de nuevo sin motivo (el
         // token se refresca cada hora) y volvería a pedirle el portfolio a la base.
-        userRef.current = { id: session.user.id, email: session.user.email };
+        userRef.current = userFromSession(session);
       }
     });
     return () => subscription.unsubscribe();

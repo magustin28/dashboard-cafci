@@ -51,6 +51,23 @@
   font-size: 10.5px;
   color: var(--muted);
 }
+/* Puntos suspensivos de la paginación. Antes era un <span class="pg-info"> con padding inline: al
+   ser un flex item de .page-btns se estiraba a los 28px de alto (align-items por defecto = stretch)
+   y el texto quedaba pegado arriba, desalineado con los números de los costados. Ahora tiene la
+   misma caja que .pg (28px, centrada) pero sin borde ni fondo. */
+.pg-dots {
+  /* 14px y no 28: el "…" no tiene borde, así que con la misma caja que .pg quedaba flotando lejos
+     de los números (el glifo mide ~7px y el resto era aire repartido a los dos lados). */
+  min-width: 14px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  color: var(--muted2);
+  user-select: none;
+}
 .pg-size {
   font-family: "Inter", sans-serif;
   font-size: 11px;

@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { API_BASE, API_URL, API_FECHAS, cacheVencida } from "../lib/utils";
 
 // v3: las filas pasaron de array posicional a OBJETO con nombres estables, y se sumó plazoLiq
@@ -81,13 +81,22 @@ export function useFondos() {
   const [loading, setLoading] = useState(!useCache);
   const [error, setError] = useState(null);
   const [refs, setRefs] = useState(useCache ? cached.refs : {});
+  // Qué vista está pintada en este momento (null = los datos actuales). El pedido en curso es la
+  // fechaParam que recibe fetchData: comparando las dos, App sabe si está consultando OTRA fecha
+  // y por lo tanto si tiene que tapar la zona de datos con el overlay.
+  const [fechaCargada, setFechaCargada] = useState(null);
+  // Número de pedido: sirve para descartar la respuesta de una consulta que ya fue reemplazada
+  // por otra (cambiar de fecha y volver enseguida, o tocar Actualizar mientras carga).
+  const pedidoId = useRef(0);
 
   const loadFechas = useCallback(async () => {
     try {
       // Timeout: es un endpoint liviano, no vale la pena esperar más que esto
       const res = await fetch(API_FECHAS, { signal: AbortSignal.timeout(30 * 1000) });
       const data = await res.json();
-      setFechas(data.slice(0, -1).reverse());
+      // Se piden TODAS, incluida la más nueva: es la que muestra la vista principal y el selector
+      // la usa para el chip "Actual" (volver a los datos del día). Queda primera al invertir.
+      setFechas(data.slice().reverse());
     } catch (e) {
       console.warn("No se pudieron cargar fechas:", e);
     }
@@ -96,20 +105,39 @@ export function useFondos() {
   const fetchData = useCallback(
     async (fechaParam = null) => {
       const MAX = 7;
+      const id = ++pedidoId.current;
       // ?fields=slim → 22 campos con nombres estables (ver README de la API)
       const url = fechaParam
         ? `${API_BASE}/api/fondos/${fechaParam}?fields=slim`
         : `${API_URL}?fields=slim`;
 
       // Use cache on reload (only for main page, not historical)
-      if (!fechaParam && loadCache()) {
+      const cache = !fechaParam ? loadCache() : null;
+      if (cache) {
+        // La caché se APLICA y no se asume que ya está pintada: al volver de una fecha histórica,
+        // raw/apiFecha/refs siguen siendo los del día viejo. Sin esto, quitar la fecha no volvía a
+        // los datos actuales: la app mostraba la fecha vieja con el semáforo en rojo y "hace N
+        // días", aunque el chip de histórico ya hubiera desaparecido.
+        setRaw(cache.rows);
+        setApiFecha(cache.fecha || null);
+        setRefs(cache.refs || {});
         setLoading(false);
+        // La caché es siempre la vista actual: se realinean vista y pedido para que el overlay de
+        // consulta no quede encendido.
+        setFechaCargada(null);
         loadFechas();
         return;
       }
 
       setLoading(true);
       setError(null);
+
+      // Las fechas del selector son otro endpoint y es liviano: se piden YA, en paralelo con la
+      // planilla, así el botón "Ver fecha anterior" tiene datos apenas responde sin esperar al
+      // cold start de Render. Antes se pedían recién al final (cuando ya había llegado la
+      // planilla): en un hard refresh sin caché el selector quedaba vacío casi un minuto. Se piden
+      // también en las páginas históricas (?fecha=) para poder saltar de una fecha a otra.
+      loadFechas();
 
       for (let attempt = 1; attempt <= MAX; attempt++) {
         try {
@@ -119,6 +147,10 @@ export function useFondos() {
           const res = await fetch(url, { signal: AbortSignal.timeout(45 * 1000) });
           if (!res.ok) throw new Error("HTTP " + res.status);
           const data = await res.json();
+
+          // Respuesta de un pedido que ya fue reemplazado por otro: se descarta sin pintar ni
+          // cachear nada (el pedido nuevo ya está en camino).
+          if (id !== pedidoId.current) return;
 
           const r = data.datos.referencias || {};
           // En la respuesta slim, `campos` trae el orden de los 22 valores de cada fondo
@@ -198,12 +230,14 @@ export function useFondos() {
 
           setRaw(rows);
           setLoading(false);
-          if (!fechaParam) {
-            saveCache(rows, data.fecha, newRefs);
-            loadFechas();
-          }
+          setFechaCargada(fechaParam);
+          // Sólo se cachea la planilla del día: la de una fecha histórica no es "la actual".
+          // Las fechas del selector ya se pidieron al principio de fetchData (ver arriba).
+          if (!fechaParam) saveCache(rows, data.fecha, newRefs);
           return;
         } catch (e) {
+          // Falló un pedido que ya fue reemplazado por otro: no corresponde avisar por este.
+          if (id !== pedidoId.current) return;
           // Timeout/abort del fetch → mensaje entendible en vez de "signal timed out"
           const msg = e.name === "TimeoutError" || e.name === "AbortError"
             ? "La consulta tardó demasiado. Probá de nuevo con el botón Actualizar."
@@ -231,5 +265,5 @@ export function useFondos() {
     [fetchData],
   );
 
-  return { raw, apiFecha, fechas, loading, error, refs, fetchData, forceRefresh };
+  return { raw, apiFecha, fechas, loading, error, refs, fetchData, forceRefresh, fechaCargada };
 }

@@ -45,7 +45,9 @@ function MonBadge({ m }) {
 export default function FondosTable({ filtered, refs, onOpenSuscripcion, onFondoClick }) {
   const { user, favs, toggleFav } = useAuth();
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(50);
+  // 25 por hoja por defecto: con 50 la tabla quedaba en ~2.000px de scroll. El selector 25/50/100
+  // de la paginación sigue estando para quien quiera ver más de una vez.
+  const [pageSize, setPageSize] = useState(25);
   const [sortKey, setSortKey] = useState("fondo");
   const [sortDir, setSortDir] = useState(1);
 
@@ -240,9 +242,7 @@ export default function FondosTable({ filtered, refs, onOpenSuscripcion, onFondo
               }
               return pages.map((p, i) =>
                 p === "…" ? (
-                  <span key={i} className="pg-info" style={{ padding: "0 4px" }}>
-                    …
-                  </span>
+                  <span key={i} className="pg-dots">…</span>
                 ) : (
                   <button key={i} className={`pg${p === pagina ? " on" : ""}`} onClick={() => setPage(p)}>
                     {p}

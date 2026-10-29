@@ -122,6 +122,69 @@ export function formatFechaLabel(iso) {
   return `${d}/${m}/${y}`;
 }
 
+// Días calendario transcurridos desde la fecha de la planilla hasta hoy (0 = hoy).
+// Acepta lo mismo que parseFechaAPI (ISO y DD/MM/AAAA o DD/MM/AA) y devuelve null si no se
+// puede parsear. Se normalizan las dos fechas a medianoche para contar días calendario: si no,
+// "ayer 23:50" daría 0 días porque todavía no pasaron 24 horas.
+export function diasDesdeFecha(fecha, hoy = new Date()) {
+  const d = parseFechaAPI(fecha);
+  if (!d) return null;
+  const a = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+  const b = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  return Math.round((a - b) / 86400000);
+}
+
+// ¿Sábado o domingo? (getDay: 0 = domingo, 6 = sábado)
+function esFinDeSemana(fecha) {
+  const d = fecha.getDay();
+  return d === 0 || d === 6;
+}
+
+// Último día hábil ANTERIOR a `hoy`: lunes → el viernes anterior; sábado/domingo → el viernes.
+// Es la planilla más nueva que se puede esperar a esta hora: CAFCI publica los cierres a la noche
+// y el cron de la API corre de lunes a viernes (ver README de la API).
+function ultimoDiaHabil(hoy = new Date()) {
+  const d = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+  do {
+    d.setDate(d.getDate() - 1);
+  } while (esFinDeSemana(d));
+  return d;
+}
+
+// Días HÁBILES de atraso de la planilla contra el último día hábil esperado.
+//   0     → al día (o más nueva que lo esperado): un lunes, la planilla del viernes da 0
+//   N > 0 → se saltearon N actualizaciones esperadas del cron
+// Se cuentan días hábiles y no calendario a propósito: contando calendario, todos los lunes el
+// dato del viernes daba 3 y el semáforo quedaba en ámbar sin que nada estuviera roto. Devuelve
+// null si la fecha no se puede parsear.
+export function diasHabilesDeAtraso(fecha, hoy = new Date()) {
+  const planilla = parseFechaAPI(fecha);
+  if (!planilla) return null;
+  const fin = ultimoDiaHabil(hoy);
+  const cursor = new Date(planilla.getFullYear(), planilla.getMonth(), planilla.getDate());
+  let atraso = 0;
+  while (cursor < fin) {
+    cursor.setDate(cursor.getDate() + 1);
+    if (!esFinDeSemana(cursor)) atraso++;
+  }
+  return atraso;
+}
+
+// Estado de frescura del dato, para el semáforo del header. Recibe los DÍAS HÁBILES de atraso
+// (ver diasHabilesDeAtraso), no los días calendario. Umbrales holgados a propósito: 1 día de
+// gracia porque CAFCI publica la planilla del día a la noche, ámbar desde 2 actualizaciones
+// salteadas y rojo recién a las 10 (~2 semanas de caída del cron).
+//   null       → no hay fecha (todavía cargando)
+//   'al-dia'   → 0-1 día hábil de atraso
+//   'atrasado' → 2-9 días hábiles
+//   'viejo'    → 10 días hábiles o más
+export function estadoFrescura(dias) {
+  if (dias === null || dias === undefined) return null;
+  if (dias <= 1) return "al-dia";
+  if (dias <= 9) return "atrasado";
+  return "viejo";
+}
+
 // "Plazo Liq." viene del Excel expresado en DÍAS. Cómo se muestra:
 //   0 → Inmediato · 1..3 → 24/48/72 hs hábiles · 4..98 → N días hábiles
 //   99, 999, 9999, 99999, negativos y cualquier valor >= 99 → No aplica

@@ -1,64 +1,22 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { useAuth } from '../context/useAuth';
+import { useState, useEffect, useCallback } from 'react';
 import AuthModal from './AuthModal';
-import { formatFechaLabel } from '../lib/utils';
-import { useModalClose } from '../hooks/useModalClose';
-import {
-  IconCalendar, IconRefreshCw, IconChevronDown, IconLogIn,
-  IconLogOut, IconChartColumn, IconX, IconExternalLink,
-} from './Icons';
+import UserMenu from './UserMenu';
+import DatePickerModal from './DatePickerModal';
+import Logo from './Logo';
+import HeaderMeta from './HeaderMeta';
+import { IconCalendar, IconRefreshCw, IconChevronDown } from './Icons';
 
-const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-
-export default function Header({ apiFecha, totalFondos, fechas, fechaParam, onReload, loading = false }) {
-  const { user, logout } = useAuth();
+export default function Header({
+  apiFecha, totalFondos, fechas, fechaParam,
+  onReload, loading = false, consultando = false,
+  onVolverHoy, onElegirFecha,
+}) {
   const [showAuth, setShowAuth]       = useState(false);
-  const [menuOpen, setMenuOpen]       = useState(false);
   const [pickerOpen, setPickerOpen]   = useState(false);
-  const [anioElegido, setAnioElegido] = useState(null);
-
-  const menuRef = useRef(null);
-
-  // Agrupar fechas por año y mes
-  const grouped = useMemo(() => {
-    const map = {};
-    fechas.forEach(f => {
-      // f viene como YYYY-MM-DD
-      const [y, m] = f.split('-');
-      if (!map[y]) map[y] = {};
-      if (!map[y][m]) map[y][m] = [];
-      map[y][m].push(f);
-    });
-    return map;
-  }, [fechas]);
-
-  const anios = useMemo(() => Object.keys(grouped).sort((a, b) => b - a), [grouped]);
-
-  // Año seleccionado: el más reciente por defecto (derivado, sin estado ni effect)
-  const anioSel = anioElegido || anios[0] || null;
-
-  // Cierre animado del selector de fechas (hooks/useModalClose.js). El callback va envuelto en
-  // useCallback para que sea estable: si cambiara en cada render, requestClose también cambiaría
-  // y el listener de ESC se re-registraría todo el tiempo.
+  // Cierre animado del modal de fechas: el hook vive adentro de DatePickerModal, acá sólo
+  // hace falta un onClose estable. useCallback evita que el componente reciba una función nueva
+  // en cada render del Header (eso re-registraría el listener de ESC del modal sin necesidad).
   const cerrarPicker = useCallback(() => setPickerOpen(false), []);
-  const { closing: pickerClosing, requestClose: closePicker } = useModalClose(cerrarPicker);
-
-  // Cerrar con ESC
-  useEffect(() => {
-    if (!pickerOpen) return;
-    const handler = (e) => { if (e.key === 'Escape') closePicker(); };
-    document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
-  }, [pickerOpen, closePicker]);
-
-  // Cerrar menu usuario con clic fuera
-  useEffect(() => {
-    const handler = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
 
   // Abrir el modal de login cuando lo pide otra parte de la app. El banner de la pestaña Favoritos
   // ("Iniciá sesión con Google") despacha cafci:openauth y hasta ahora nadie lo escuchaba, así que
@@ -70,144 +28,61 @@ export default function Header({ apiFecha, totalFondos, fechas, fechaParam, onRe
     return () => window.removeEventListener('cafci:openauth', handler);
   }, []);
 
-  const label = user?.email?.split('@')[0] || '';
-
-  const mesesDelAnio = anioSel && grouped[anioSel]
-    ? Object.keys(grouped[anioSel]).sort((a, b) => b - a)
-    : [];
-
   return (
     <>
       <header>
-        <div className="logo">
-          <a className="logo-badge" href="https://www.cafci.org.ar/" target="_blank" rel="noopener noreferrer"
-            title="Ir al sitio de CAFCI (abre en una pestaña nueva)"
-            aria-label="Ir al sitio de CAFCI (abre en una pestaña nueva)">
-            CAFCI<IconExternalLink size={10} className="icon-inline" />
-          </a>
-          <h1>Fondos Comunes de Inversión &mdash; Argentina</h1>
-        </div>
+        <Logo />
         <div className="header-meta">
-          <div className="meta-item">
-            <span className="meta-dot"></span>
-            {fechaParam
-              ? <span className="meta-historico"><IconCalendar size={12} /> Histórico: {formatFechaLabel(fechaParam)}</span>
-              : <span>Actualizado: {apiFecha || 'Cargando…'}</span>
-            }
-          </div>
-          {totalFondos > 0 && (
-            <div className="meta-item">{totalFondos.toLocaleString('es-AR')} fondos totales</div>
-          )}
+          <HeaderMeta apiFecha={apiFecha} totalFondos={totalFondos} fechaParam={fechaParam}
+            onVolverHoy={onVolverHoy} />
 
-          {/* Date picker trigger */}
-          {fechas.length > 0 && (
-            <button className="date-picker-btn" onClick={() => setPickerOpen(true)}>
-              <IconCalendar size={12} /> Ver fecha anterior{' '}
+          {/* Los tres controles van juntos en .header-acciones para que en el celular ocupen una
+              fila completa, en tres columnas iguales (ver @media de styles/utils.css). En escritorio
+              es un flex más con el mismo gap de .header-meta, así que no cambia nada. */}
+          <div className="header-acciones">
+            {/* Trigger del selector de fechas. Se renderiza SIEMPRE, aunque las fechas todavía no
+                hayan llegado: antes aparecía recién cuando respondía /api/fechas, así que en un hard
+                refresh (sin caché y con el cold start de Render de por medio) el botón aparecía tarde
+                y el header se reacomodaba. Las fechas se piden en paralelo (ver useFondos) y el modal
+                muestra el aviso mientras tanto. */}
+            {/* El texto va en spans propios (.btn-label) con dos versiones: "Ver fecha anterior" en
+                escritorio y "Fecha" en el celular, que es lo que entra en un tercio de la fila. Así
+                los tres controles del header quedan con ícono + texto y la misma forma (antes fecha
+                y actualizar eran sólo ícono y la cuenta avatar + iniciales). El corto se oculta en
+                escritorio desde styles/layout.css y el aria-label repite el texto para lectores de
+                pantalla. */}
+            <button className="date-picker-btn" aria-label="Ver fecha anterior"
+              title="Ver datos de otra fecha" onClick={() => setPickerOpen(true)}>
+              <IconCalendar size={12} /> <span className="btn-label btn-label-largo">Ver fecha anterior</span><span className="btn-label btn-label-corto">Fecha</span>
               <span className="date-arrow"><IconChevronDown size={12} /></span>
             </button>
-          )}
 
-          {/* Mientras consulta la API el botón queda bloqueado y muestra el spinner: es el feedback
-              del refresco, que ahora no desmonta la app (App.jsx sólo pinta el overlay si no hay datos). */}
-          <button className="btn-refresh" onClick={onReload} disabled={loading} aria-busy={loading}
-            title={loading ? 'Consultando la API…' : 'Volver a consultar la API'}>
-            {loading
-              ? <><span className="btn-spinner" aria-hidden="true"></span>Actualizando…</>
-              : <><IconRefreshCw size={13} /> Actualizar</>}
-          </button>
+            {/* Mientras consulta la API el botón queda bloqueado y muestra el spinner: es el feedback
+                del refresco, que no desmonta la app. Si la consulta en curso es de OTRA fecha dice
+                "Consultando…" en vez de "Actualizando…": no es un refresco de lo que ya se ve. */}
+            <button className="btn-refresh" onClick={onReload} disabled={loading} aria-busy={loading}
+              aria-label={loading ? 'Consultando…' : 'Actualizar la API'}
+              title={loading ? 'Consultando la API…' : 'Volver a consultar la API'}>
+              {loading
+                ? <><span className="btn-spinner" aria-hidden="true"></span><span className="btn-label">{consultando ? 'Consultando…' : 'Actualizando…'}</span></>
+                : <><IconRefreshCw size={13} /> <span className="btn-label">Actualizar</span></>}
+            </button>
 
-          {/* Auth */}
-          <div className="auth-wrap" ref={menuRef}>
-            {user ? (
-              <>
-                <button className="btn-auth logged-in" onClick={() => setMenuOpen(o => !o)}>
-                  <span className="auth-avatar">{label[0]?.toUpperCase()}</span>
-                  {label} <span className="auth-arrow"><IconChevronDown size={11} /></span>
-                </button>
-                {menuOpen && (
-                  <div className="user-menu open">
-                    <div className="user-menu-header">
-                      <strong>{label}</strong>{user.email}
-                    </div>
-                    <button className="user-menu-item" onClick={() => { setMenuOpen(false); window.dispatchEvent(new CustomEvent('cafci:tab', { detail: 'Mi Portfolio' })); }}>
-                      <IconChartColumn size={13} /> Mi Portfolio
-                    </button>
-                    <button className="user-menu-item danger" onClick={() => { setMenuOpen(false); logout(); window.dispatchEvent(new CustomEvent('cafci:logout')); }}>
-                      <IconLogOut size={13} /> Cerrar sesión
-                    </button>
-                  </div>
-                )}
-              </>
-            ) : (
-              <button className="btn-auth" onClick={() => setShowAuth(true)}>
-                <IconLogIn size={13} /> Ingresar
-              </button>
-            )}
+            {/* Auth: el menú de usuario vive en components/UserMenu.jsx (avatar, nombre y dropdown). */}
+            <UserMenu onOpenAuth={() => setShowAuth(true)} />
           </div>
         </div>
       </header>
 
-      {/* Modal selector de fecha histórica */}
+      {/* Modal selector de fecha histórica: el componente vive en components/DatePickerModal.jsx.
+          onElegirFecha cambia la fecha en esta misma pestaña (App actualiza la URL y el estado). */}
       {pickerOpen && (
-        <div className={`modal-overlay${pickerClosing ? ' closing' : ''}`} style={{ display: 'flex', zIndex: 700 }}
-          onClick={e => { if (e.target === e.currentTarget) closePicker(); }}>
-          <div className="modal" style={{ maxWidth: 520, width: '95vw' }}>
-            <button className="modal-close" onClick={closePicker} aria-label="Cerrar"><IconX size={16} /></button>
-            <h2 className="modal-title" style={{ marginBottom: 4 }}><IconCalendar size={18} /> Fechas históricas</h2>
-            <p className="modal-subtitle">Seleccioná una fecha para ver los datos de ese día</p>
-
-            {/* Selector de año */}
-            {anios.length > 1 && (
-              <div style={{ display: 'flex', gap: 8, margin: '16px 0 12px' }}>
-                {anios.map(a => (
-                  <button key={a} onClick={() => setAnioElegido(a)}
-                    style={{
-                      padding: '5px 16px', borderRadius: 20, border: '1px solid var(--border2)',
-                      fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                      background: anioSel === a ? 'var(--accent)' : 'transparent',
-                      color: anioSel === a ? '#fff' : 'var(--text2)',
-                      transition: 'all 0.15s'
-                    }}>
-                    {a}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Grilla por mes */}
-            <div style={{ maxHeight: 420, overflowY: 'auto', paddingRight: 4 }}>
-              {mesesDelAnio.map(m => (
-                <div key={m} style={{ marginBottom: 16 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
-                    letterSpacing: '0.06em', color: 'var(--text2)', marginBottom: 8 }}>
-                    {MESES[parseInt(m, 10) - 1]}
-                  </div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                    {grouped[anioSel][m].map(f => {
-                      const [, , d] = f.split('-');
-                      return (
-                        <button key={f}
-                          onClick={() => { closePicker(); window.open(`?fecha=${f}`, '_blank'); }}
-                          style={{
-                            padding: '5px 12px', borderRadius: 6,
-                            border: '1px solid var(--border2)',
-                            background: 'var(--bg2)', color: 'var(--text)',
-                            fontSize: 12, fontFamily: "'JetBrains Mono', monospace",
-                            cursor: 'pointer', transition: 'all 0.15s',
-                            fontVariantNumeric: 'tabular-nums'
-                          }}
-                          onMouseOver={e => { e.currentTarget.style.background = 'var(--accent)'; e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = 'var(--accent)'; }}
-                          onMouseOut={e => { e.currentTarget.style.background = 'var(--bg2)'; e.currentTarget.style.color = 'var(--text)'; e.currentTarget.style.borderColor = 'var(--border2)'; }}>
-                          {d}/{m}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+        <DatePickerModal
+          fechas={fechas}
+          esHistorica={!!fechaParam}
+          onElegir={onElegirFecha}
+          onClose={cerrarPicker}
+        />
       )}
 
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}

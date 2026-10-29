@@ -208,8 +208,9 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
         style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, opacity: 0.5, padding: '2px 4px', transition: 'opacity 0.15s' }}
         onMouseOver={e => e.currentTarget.style.opacity = 1}
         onMouseOut={e => e.currentTarget.style.opacity = 0.5}><IconPencil size={13} /></button>
+      {/* El trash va en rojo para que se lea de inmediato como acción destructiva. */}
       <button onClick={onDelete} title="Eliminar"
-        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, opacity: 0.5, padding: '2px 4px', transition: 'opacity 0.15s' }}
+        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--red)', fontSize: 13, opacity: 0.5, padding: '2px 4px', transition: 'opacity 0.15s' }}
         onMouseOver={e => e.currentTarget.style.opacity = 1}
         onMouseOut={e => e.currentTarget.style.opacity = 0.5}><IconTrash2 size={13} /></button>
     </td>

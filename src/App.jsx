@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from './context/useAuth';
 import { useFondos } from './hooks/useFondos';
-import { getTabGroup, filterRows } from './lib/utils';
+import { getTabGroup, filterRows, formatFechaLabel } from './lib/utils';
 
 import Header from './components/Header';
+import FilterBar from './components/FilterBar';
 import Tabs from './components/Tabs';
 import KPIs from './components/KPIs';
 import FondosTable from './components/FondosTable';
@@ -13,11 +14,11 @@ import RescateModal from './components/RescateModal';
 import HistorialModal from './components/HistorialModal';
 import FondoPanel    from './components/FondoPanel';
 import TopTab        from './components/TopTab';
-import { IconX, IconRefreshCw, IconSearch, IconStar, IconAlertTriangle } from './components/Icons';
+import { IconRefreshCw, IconStar, IconAlertTriangle } from './components/Icons';
 
 export default function App() {
   const { user, authReady, favs } = useAuth();
-  const { raw, apiFecha, fechas, loading, error, refs, fetchData, forceRefresh } = useFondos();
+  const { raw, apiFecha, fechas, loading, error, refs, fetchData, forceRefresh, fechaCargada } = useFondos();
 
   // Al volver del login con Google la página se recarga y se pierde el dispatch de cafci:tab que
   // usaba el login por contraseña: AuthModal deja el tab destino en sessionStorage y acá se toma
@@ -34,7 +35,11 @@ export default function App() {
   const [rescModal,  setRescModal]  = useState(null);
   const [histModal,  setHistModal]  = useState(null); // fondoNombre | null
 
-  const fechaParam = new URLSearchParams(window.location.search).get('fecha');
+  // La fecha pedida vive como ESTADO y no se lee window.location.search en cada render: así se
+  // puede cambiar de día sin recargar. Antes un pushState solo no re-renderizaba, y la única forma
+  // de ver otra fecha era abrir `?fecha=…` en una pestaña nueva con window.open.
+  const [search, setSearch] = useState(window.location.search);
+  const fechaParam = new URLSearchParams(search).get('fecha');
 
   useEffect(() => { fetchData(fechaParam); }, [fechaParam, fetchData]);
 
@@ -61,12 +66,16 @@ export default function App() {
 
 
 
-  // El tab "Mi Portfolio" sólo existe con sesión (Tabs.jsx lo esconde). Si la sesión se cae justo
-  // cuando estábamos parados ahí (logout en otra pestaña, token vencido), activeTab queda apuntando
-  // a un tab invisible y App seguía renderizando PortfolioTab: el único caso en el que se veía el
-  // mensaje "Iniciá sesión para ver tu portafolio". Se deriva el tab efectivo en vez de resetear con
-  // un effect (el lint del proyecto no permite setState dentro de un effect).
-  const tabActual = !user && activeTab === 'Mi Portfolio' ? 'Todos' : activeTab;
+  // El tab "Mi Portfolio" existe sólo con sesión Y fuera del histórico (Tabs.jsx lo esconde en los
+  // dos casos). Si la sesión se cae estando ahí (logout en otra pestaña, token vencido) o si se pasa
+  // a una fecha histórica, activeTab queda apuntando a un tab invisible y App renderizaba
+  // PortfolioTab igual: ahí se veía el mensaje "Iniciá sesión para ver tu portafolio" o el portafolio
+  // en una fecha vieja sin botón para volver. Se deriva el tab efectivo —y al volver a los datos
+  // actuales se restaura solo— en vez de resetear con un effect: el lint del proyecto no permite
+  // setState dentro de un effect.
+  const esHistorica = !!fechaParam;
+  const tabActual =
+    activeTab === 'Mi Portfolio' && (esHistorica || !user) ? 'Todos' : activeTab;
 
   const filtered = useMemo(() => {
     if (!raw.length) return [];
@@ -97,6 +106,22 @@ export default function App() {
     clearFilters();
   };
 
+  // Cambiar de fecha sin recargar: se actualiza la URL con pushState (así el botón Atrás del
+  // navegador también funciona y el link queda copiable) y el estado dispara el re-render.
+  // null = datos actuales. Se cierra el panel de detalle porque guarda una fila de la fecha vieja.
+  const irA = (fecha) => {
+    const qs = fecha ? `?fecha=${fecha}` : '';
+    window.history.pushState({}, '', qs || window.location.pathname);
+    setSearch(qs);
+    setFondoPanel(null);
+  };
+
+  // Consulta en curso de OTRA fecha: mientras dure, la zona de datos (KPIs + filtros + tabla) va
+  // tapada por el overlay del final. Se apaga solo cuando la vista pintada alcanza lo pedido, así
+  // que un refresco de la MISMA fecha no lo dispara: ahí el feedback sigue yendo en el botón
+  // Actualizar, como antes. fechaCargada = qué vista está pintada (null = los datos actuales).
+  const consultando = loading && fechaCargada !== fechaParam;
+
   // Al cerrar sesión, volver a la pestaña principal
   useEffect(() => {
     const handler = () => setActiveTab('Todos');
@@ -104,27 +129,22 @@ export default function App() {
     return () => window.removeEventListener('cafci:logout', handler);
   }, []);
 
-  if (loading && fechaParam) {
-    const [y, m, d] = fechaParam.split('-');
-    const fechaLabel = `${d}/${m}/${y}`;
-    return (
-      <div id="loader-overlay" style={{ display: 'flex' }}>
-        <div className="spinner"></div>
-        <span id="loader-msg">Cargando datos del {fechaLabel}…</span>
-        <span id="loader-sub">Consultando datos históricos de la API.</span>
-      </div>
-    );
-  }
-
-  // Overlay de pantalla completa SÓLO en la primera carga (cuando todavía no hay datos). En un
-  // refresco (↻ Actualizar) la tabla sigue visible con los datos anteriores y el feedback va en el
-  // propio botón del header: antes cualquier refresco desmontaba la app entera y parecía una recarga.
+  // Pantalla completa SÓLO cuando todavía no hay ningún dato que mostrar (primera carga). Si ya hay
+  // datos, una consulta de OTRA fecha se avisa tapando únicamente la zona de datos (ver el overlay
+  // del final): antes cualquier consulta histórica reemplazaba la app entera por un spinner y no se
+  // podía volver atrás hasta que terminara.
   if (loading && raw.length === 0) {
     return (
       <div id="loader-overlay" style={{ display: 'flex' }}>
         <div className="spinner"></div>
-        <span id="loader-msg">Consultando la API…</span>
-        <span id="loader-sub">Esto puede tardar hasta 30 segundos si el servidor está iniciando.</span>
+        <span id="loader-msg">
+          {fechaParam ? `Consultando los datos del ${formatFechaLabel(fechaParam)}…` : 'Consultando la API…'}
+        </span>
+        <span id="loader-sub">
+          {fechaParam
+            ? 'Consultando datos históricos de la API.'
+            : 'Esto puede tardar hasta 30 segundos si el servidor está iniciando.'}
+        </span>
       </div>
     );
   }
@@ -157,96 +177,106 @@ export default function App() {
 
   return (
     <div className="wrap">
+      {/* Con una consulta de otra fecha en curso, apiFecha todavía es el de la vista anterior: al
+          volver a los datos actuales el header mostraba la fecha vieja con el semáforo en rojo y
+          "hace N días" mientras ya estaba cargando la actual. Se pasa null y queda
+          "Actualizado: Cargando…" con el punto neutro. En un refresco de la misma fecha no aplica
+          (consultando es false) y la fecha se ve como siempre. */}
       <Header
-        apiFecha={apiFecha}
+        apiFecha={consultando ? null : apiFecha}
         totalFondos={raw.length}
         fechas={fechas}
         fechaParam={fechaParam}
         onReload={() => forceRefresh(fechaParam)}
         loading={loading}
+        consultando={consultando}
+        onVolverHoy={() => irA(null)}
+        onElegirFecha={irA}
       />
 
-      <Tabs raw={raw} activeTab={tabActual} onSwitch={switchTab} />
+      <Tabs raw={raw} activeTab={tabActual} onSwitch={switchTab} esFechaHistorica={esHistorica} />
 
-      {!isPortfolio && !isTop && (
-        <KPIs filtered={isFavoritos ? favFiltered : filtered} />
-      )}
+      {/* Zona de datos: es la única parte que se tapa mientras se consulta OTRA fecha. El header y
+          las tabs quedan afuera justamente para poder seguir usando "Histórico: … ✕" y cambiar de
+          pestaña durante la consulta. */}
+      <div className="data-region">
+        {!isPortfolio && !isTop && (
+          <KPIs filtered={isFavoritos ? favFiltered : filtered} />
+        )}
 
-      {!isPortfolio && !isTop && (
-        <div className="filter-bar">
-          <div className="search-wrap">
-            <span className="search-icon"><IconSearch size={14} /></span>
-            <input type="search" placeholder="Buscar fondo o sociedad gerente…" autoComplete="off"
-              value={q} onChange={e => setQ(e.target.value)} />
+        {/* La barra vive en components/FilterBar.jsx: en el celular se pliega detrás del botón
+            "Filtros" (una fila de 44px en lugar de las cuatro que ocupaba) y en escritorio se ve
+            igual que antes. */}
+        {!isPortfolio && !isTop && (
+          <FilterBar
+            q={q} setQ={setQ}
+            moneda={moneda} setMoneda={setMoneda}
+            region={region} setRegion={setRegion}
+            horizonte={horizonte} setHorizonte={setHorizonte}
+            hasFilters={hasFilters} clearFilters={clearFilters}
+          />
+        )}
+
+        {isFavoritos && !user && (
+          <div className="favs-banner">
+            <span><IconStar size={13} /> Tus favoritos se guardan sólo en este navegador.</span>
+            {' '}<a href="#" onClick={e => { e.preventDefault(); window.dispatchEvent(new CustomEvent('cafci:openauth')); }}>Iniciá sesión con Google</a>
+            <span> para guardarlos en tu cuenta y acceder desde cualquier dispositivo.</span>
           </div>
-          <select value={moneda} onChange={e => setMoneda(e.target.value)}>
-            <option value="">Todas las monedas</option>
-            <option value="ARS">ARS — Pesos</option>
-            <option value="USD">USD — Dólar</option>
-            <option value="USB">USB — Dólar Billete</option>
-          </select>
-          <select value={region} onChange={e => setRegion(e.target.value)}>
-            <option value="">Todas las regiones</option>
-            <option value="Arg">Argentina</option>
-            <option value="Glo">Global</option>
-            <option value="Latam">Latinoamérica</option>
-            <option value="Bra">Brasil</option>
-            <option value="Eur">Europa</option>
-          </select>
-          <select value={horizonte} onChange={e => setHorizonte(e.target.value)}>
-            <option value="">Todos los horizontes</option>
-            <option value="Cor">Corto plazo</option>
-            <option value="Med">Mediano plazo</option>
-            <option value="Lar">Largo plazo</option>
-            <option value="Flex">Flexible</option>
-            <option value="Sasig">Sasig</option>
-          </select>
-          <button className="btn-clear" disabled={!hasFilters} onClick={clearFilters}><IconX size={12} /> Limpiar filtros</button>
-        </div>
-      )}
+        )}
 
-      {isFavoritos && !user && (
-        <div className="favs-banner">
-          <span><IconStar size={13} /> Tus favoritos se guardan sólo en este navegador.</span>
-          {' '}<a href="#" onClick={e => { e.preventDefault(); window.dispatchEvent(new CustomEvent('cafci:openauth')); }}>Iniciá sesión con Google</a>
-          <span> para guardarlos en tu cuenta y acceder desde cualquier dispositivo.</span>
-        </div>
-      )}
-
-      {isTop ? (
-        <TopTab
-          raw={raw}
-          refs={{ ...refs, apiFecha }}
-          onOpenSuscripcion={(fondo, mon) => setSuscModal({ fondo, moneda: mon })}
-          onFondoClick={(row) => setFondoPanel(row)}
-        />
-      ) : isPortfolio ? (
-        <>
-          <PortfolioTab
+        {isTop ? (
+          <TopTab
             raw={raw}
-            apiFecha={apiFecha}
-            refs={refs}
-            onOpenSuscripcion={(fondo, mon) => setSuscModal({ fondo: fondo || '', moneda: mon || 'ARS' })}
-            onOpenRescate={(fondo, mon) => setRescModal({ fondo, moneda: mon })}
-            onOpenHistorial={(fondo, mon) => setHistModal({ fondo, moneda: mon || 'ARS' })}
+            refs={{ ...refs, apiFecha }}
+            onOpenSuscripcion={(fondo, mon) => setSuscModal({ fondo, moneda: mon })}
             onFondoClick={(row) => setFondoPanel(row)}
           />
-          {/* FAB */}
-          {user && (
-            <button className="fab-add" onClick={() => setSuscModal({ fondo: '', moneda: 'ARS' })} title="Agregar suscripción">
-              <span className="fab-icon">+</span>
-            </button>
-          )}
-        </>
-      ) : (
-        <FondosTable
-          filtered={tableData}
-          activeTab={tabActual}
-          refs={{ ...refs, apiFecha }}
-          onOpenSuscripcion={(fondo, mon) => setSuscModal({ fondo, moneda: mon })}
-          onFondoClick={(row) => setFondoPanel(row)}
-        />
-      )}
+        ) : isPortfolio ? (
+          <>
+            <PortfolioTab
+              raw={raw}
+              apiFecha={apiFecha}
+              refs={refs}
+              onOpenSuscripcion={(fondo, mon) => setSuscModal({ fondo: fondo || '', moneda: mon || 'ARS' })}
+              onOpenRescate={(fondo, mon) => setRescModal({ fondo, moneda: mon })}
+              onOpenHistorial={(fondo, mon) => setHistModal({ fondo, moneda: mon || 'ARS' })}
+              onFondoClick={(row) => setFondoPanel(row)}
+            />
+            {/* FAB */}
+            {user && (
+              <button className="fab-add" onClick={() => setSuscModal({ fondo: '', moneda: 'ARS' })} title="Agregar suscripción">
+                <span className="fab-icon">+</span>
+              </button>
+            )}
+          </>
+        ) : (
+          <FondosTable
+            filtered={tableData}
+            activeTab={tabActual}
+            refs={{ ...refs, apiFecha }}
+            onOpenSuscripcion={(fondo, mon) => setSuscModal({ fondo, moneda: mon })}
+            onFondoClick={(row) => setFondoPanel(row)}
+          />
+        )}
+
+        {/* Consulta de OTRA fecha en curso: se tapa la zona de datos (KPIs + filtros + tabla) y el
+            header y las tabs quedan libres para volver con "Histórico: … ✕" o cambiar de pestaña. */}
+        {consultando && (
+          <div className="data-overlay">
+            <div className="data-overlay-box">
+              <div className="spinner"></div>
+              <span className="data-overlay-msg">
+                {/* En la vuelta a los datos actuales fechaParam ya es null: ahí no hay fecha que
+                    mostrar (formatFechaLabel(null) rompería) y el mensaje cambia. */}
+                {fechaParam
+                  ? `Consultando los datos del ${formatFechaLabel(fechaParam)}…`
+                  : 'Volviendo a los datos actuales…'}
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Modals */}
       {suscModal && (

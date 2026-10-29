@@ -6,7 +6,10 @@
   font-family: "Inter", sans-serif;
   font-size: 12px;
   font-weight: 500;
-  padding: 7px 14px;
+  /* 32px: la altura de control del header. Con el avatar de 20px y 7px de padding vertical este
+     botón medía 36px y descuadraba la fila. */
+  height: 32px;
+  padding: 0 14px;
   border-radius: 6px;
   border: 1px solid var(--accent);
   background: rgba(37, 99, 235, 0.07);
@@ -38,13 +41,25 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  /* 22px: entra con aire en los 32px del botón de sesión. */
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   background: var(--accent);
   color: #fff;
   font-size: 11px;
   font-weight: 700;
+}
+/* Cuando el avatar es la foto de Google llega como <img>: object-fit evita que se deforme
+   (las fotos de Google son cuadradas, pero no siempre). */
+img.auth-avatar {
+  object-fit: cover;
+  flex-shrink: 0;
+}
+/* Nombre e iniciales del usuario: en escritorio se ve el nombre completo y en el celular las
+   iniciales ("AM"), porque ahí el botón ocupa un tercio de la fila del header (ver utils.css). */
+.auth-iniciales {
+  display: none;
 }
 .auth-arrow {
   font-size: 10px;
