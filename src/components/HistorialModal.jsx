@@ -25,7 +25,13 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
   // Cierres animados (hooks/useModalClose.js): el modal principal y el diálogo de confirmación
   // tienen cada uno su propia animación de salida.
   const { closing, requestClose } = useModalClose(onClose);
-  const { closing: confirmClosing, requestClose: requestConfirmClose } = useModalClose(() => setConfirmDialog(null));
+  // El diálogo de confirmación se muestra con un estado propio y el hook se llama siempre que el
+  // modal está montado, así que se le pasa `!!confirmDialog`: con el diálogo cerrado no registra su
+  // capa en el historial (si no, el primer Atrás cerraría una capa invisible y no haría nada).
+  const { closing: confirmClosing, requestClose: requestConfirmClose } = useModalClose(
+    () => setConfirmDialog(null),
+    !!confirmDialog,
+  );
 
   // Cerrar con ESC
   useEffect(() => {

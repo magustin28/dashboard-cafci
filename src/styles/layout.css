@@ -111,6 +111,19 @@ a.logo-badge:hover {
   align-items: center;
   gap: 18px;
 }
+/* El bloque de sesión es hijo directo del header y NO de .header-acciones: así en el celular puede
+   subir a la fila de la marca (ver utils.css). El order lo deja al final de la fila en escritorio,
+   después de los datos y de los controles. */
+header > .auth-wrap {
+  order: 2;
+  flex-shrink: 0;
+}
+/* Con tres hijos en el header (marca, datos + controles y sesión) y justify-content: space-between,
+   sin este margin el bloque del medio quedaría centrado. Con margin-left: auto los datos y los
+   controles se pegan a la derecha, junto a la sesión. */
+.header-meta {
+  margin-left: auto;
+}
 .meta-dot {
   width: 6px;
   height: 6px;

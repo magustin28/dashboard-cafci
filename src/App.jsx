@@ -1,7 +1,8 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useAuth } from './context/useAuth';
 import { useFondos } from './hooks/useFondos';
 import { getTabGroup, filterRows, formatFechaLabel } from './lib/utils';
+import { activarGuardian, desactivarGuardian, navegarUrl } from './lib/historial';
 
 import Header from './components/Header';
 import FilterBar from './components/FilterBar';
@@ -15,6 +16,30 @@ import HistorialModal from './components/HistorialModal';
 import FondoPanel    from './components/FondoPanel';
 import TopTab        from './components/TopTab';
 import { IconRefreshCw, IconStar, IconAlertTriangle } from './components/Icons';
+
+// ── Gesto Atrás en el celular ──────────────────────────────────────────────────────────────────
+// Sólo se activa en el celular/PWA: en una pestaña de escritorio el Atrás tiene que seguir saliendo
+// de la página como siempre. pointer: coarse detecta pantallas táctiles y display-mode: standalone
+// la app instalada (que en iOS se reporta con navigator.standalone).
+function esCelular() {
+  return (
+    window.matchMedia('(pointer: coarse)').matches ||
+    window.matchMedia('(display-mode: standalone)').matches ||
+    window.navigator.standalone === true
+  );
+}
+
+// Cerrar la app desde un script no está garantizado: Chrome y Firefox lo ignoran en ventanas que no
+// abrió un script, e iOS no tiene API. Se intenta y, si el navegador no la cierra, el gesto queda
+// absorbido por el guardián (ver lib/historial.js): la app se queda donde está en vez de saltar a
+// la pantalla de Google que dejó el login.
+function intentarCerrarApp() {
+  try {
+    window.close();
+  } catch {
+    // Algunos navegadores lanzan en vez de ignorarlo.
+  }
+}
 
 export default function App() {
   const { user, authReady, favs } = useAuth();
@@ -42,6 +67,12 @@ export default function App() {
   const fechaParam = new URLSearchParams(search).get('fecha');
 
   useEffect(() => { fetchData(fechaParam); }, [fechaParam, fetchData]);
+
+  // La URL que la app está mostrando ahora mismo. El guardián del Atrás la compara con la del evento
+  // para distinguir un gesto que no cambia de vista (se consume y se intenta cerrar la app) de una
+  // navegación real, como volver de una fecha histórica.
+  const searchActual = useRef(search);
+  useEffect(() => { searchActual.current = search; }, [search]);
 
   useEffect(() => {
     if (apiFecha) {
@@ -106,12 +137,14 @@ export default function App() {
     clearFilters();
   };
 
-  // Cambiar de fecha sin recargar: se actualiza la URL con pushState (así el botón Atrás del
-  // navegador también funciona y el link queda copiable) y el estado dispara el re-render.
-  // null = datos actuales. Se cierra el panel de detalle porque guarda una fila de la fecha vieja.
+  // Cambiar de fecha sin recargar: se actualiza la URL (así el botón Atrás del navegador también
+  // funciona y el link queda copiable) y el estado dispara el re-render. null = datos actuales. Se
+  // cierra el panel de detalle porque guarda una fila de la fecha vieja.
+  // navegarUrl reemplaza en vez de apilar si el tope del historial es una capa nuestra (un modal
+  // abierto): esa entrada se saca enseguida y quedaría huérfana atrás.
   const irA = (fecha) => {
     const qs = fecha ? `?fecha=${fecha}` : '';
-    window.history.pushState({}, '', qs || window.location.pathname);
+    navegarUrl(qs || window.location.pathname);
     setSearch(qs);
     setFondoPanel(null);
   };
@@ -128,6 +161,32 @@ export default function App() {
     window.addEventListener('cafci:logout', handler);
     return () => window.removeEventListener('cafci:logout', handler);
   }, []);
+
+  // El gesto Atrás cambia la URL sin avisar a React: sin esto, volver desde una fecha histórica
+  // dejaba la URL en los datos actuales pero la tabla seguía mostrando la fecha vieja. Escucha
+  // también los back() del cierre de modales: ahí la URL no cambia y el setState con el mismo valor
+  // no re-renderiza.
+  useEffect(() => {
+    const handler = () => setSearch(window.location.search);
+    window.addEventListener('popstate', handler);
+    return () => window.removeEventListener('popstate', handler);
+  }, []);
+
+  // Guardián del gesto Atrás en el celular con sesión. Volver del login de Google deja su página en
+  // el historial, así que el gesto en la pantalla principal volvía al login en vez de cerrar la app:
+  // con el guardián instalado (lib/historial.js) el gesto se consume acá y se intenta cerrar.
+  useEffect(() => {
+    if (!authReady || !user || !esCelular()) return;
+    activarGuardian(() => {
+      // Si la URL del evento no es la que la app está mostrando, es una navegación real (volver de
+      // una fecha histórica): se deja pasar. Si es la misma vista, el gesto se consume y se intenta
+      // cerrar la app.
+      if (window.location.search !== searchActual.current) return false;
+      intentarCerrarApp();
+      return true;
+    });
+    return () => desactivarGuardian();
+  }, [authReady, user]);
 
   // Pantalla completa SÓLO cuando todavía no hay ningún dato que mostrar (primera carga). Si ya hay
   // datos, una consulta de OTRA fecha se avisa tapando únicamente la zona de datos (ver el overlay

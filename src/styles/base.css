@@ -27,6 +27,12 @@
 html {
   scroll-behavior: smooth;
   scrollbar-gutter: stable;
+  /* Sin pull-to-refresh: en el celular, arrastrar hacia abajo estando arriba de todo hacía que el
+     navegador recargara la página (y la app volviera al loader). overscroll-behavior-y: contain le
+     dice al navegador que no encadene ese gesto con la recarga ni con el gesto Atrás; el scroll
+     normal de la página no cambia. Va también en body porque Safari lo resuelve en el contenedor
+     que scrollea. */
+  overscroll-behavior-y: contain;
 }
 
 body {
@@ -37,6 +43,7 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: contain;
 }
 
 .wrap {

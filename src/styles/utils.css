@@ -343,9 +343,10 @@
     font-size: 12px;
   }
 
-  /* Header, fila 1: la marca. El badge CAFCI + el título corto "FCI - Argentina" entran juntos (en
-     escritorio el h1 muestra el título completo; acá se cambia por .logo-titulo-corto). En el celular
-     el header queda en tres filas: 1) marca · 2) meta a los dos márgenes · 3) los tres controles. */
+  /* Header, fila 1: la marca + la sesión. El badge CAFCI + el título corto "FCI - Argentina" entran
+     juntos (en escritorio el h1 muestra el título completo; acá se cambia por .logo-titulo-corto) y
+     el bloque de sesión va al margen derecho de esta misma fila. El header queda en tres filas:
+     1) marca + sesión · 2) meta a los dos márgenes · 3) fecha y actualizar. */
   .logo h1 {
     font-size: 12px;
   }
@@ -365,31 +366,43 @@
     flex: 1 1 100%;
     justify-content: space-between;
     gap: 8px;
+    /* Orden de las filas: marca y sesión arriba (order 0 y 1), los datos en el medio. */
+    order: 2;
   }
 
-  /* Header, fila 3: los tres controles (fecha, actualizar y sesión) ocupan una fila completa y en
-     tres columnas iguales. Siguen midiendo 44px, así que son más cómodos de tocar que en escritorio. */
+  /* Header, fila 1 derecha: la sesión. Antes era el tercer control de la fila de abajo y ahí se
+     confundía con "Fecha" y "Actualizar"; ahora sube a la fila de la marca, al margen derecho. Es
+     hijo directo del header (no de .header-acciones), así que se posiciona con order y no con las
+     reglas de abajo. El selector repite el `header >` de layout.css: con la misma especificidad,
+     esta regla gana por orden de carga y el order: 1 del celular no queda pisado por el order: 2
+     de escritorio. El margin-left: auto la empuja contra el borde derecho de la fila. */
+  header > .auth-wrap {
+    order: 1;
+    margin-left: auto;
+  }
+  /* Ancho del contenido: en la fila de la marca no se reparte el ancho con nadie. */
+  header > .auth-wrap .btn-auth {
+    width: auto;
+  }
+
+  /* Header, fila 3: los dos controles que quedan (fecha y actualizar) ocupan una fila completa y en
+     dos columnas iguales. Siguen midiendo 44px, así que son más cómodos de tocar que en escritorio. */
   .header-acciones {
     flex: 1 1 100%;
     gap: 8px;
   }
   .header-acciones .date-picker-btn,
-  .header-acciones .btn-refresh,
-  .header-acciones .auth-wrap {
+  .header-acciones .btn-refresh {
     flex: 1 1 0;
     min-width: 0;
   }
-  /* Los tres controles centran su contenido y ocupan el ancho de su columna. .btn-refresh estaba
+  /* Los dos controles centran su contenido y ocupan el ancho de su columna. .btn-refresh estaba
      afuera de esta regla y su contenido quedaba alineado a la izquierda: con ícono + texto casi no
      se notaba, pero al consultar (queda sólo el spinner) se veía pegado al borde. */
   .header-acciones .date-picker-btn,
-  .header-acciones .btn-refresh,
-  .header-acciones .btn-auth {
+  .header-acciones .btn-refresh {
     width: 100%;
     justify-content: center;
-  }
-  .header-acciones .auth-wrap {
-    display: flex;
   }
   /* Los tres controles muestran ícono + texto ("Fecha", "Actualizar" y el avatar + iniciales de la
      sesión), así quedan con la misma forma. Antes fecha y actualizar eran sólo ícono y la cuenta

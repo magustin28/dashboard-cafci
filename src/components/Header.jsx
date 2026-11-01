@@ -32,12 +32,17 @@ export default function Header({
     <>
       <header>
         <Logo />
+        {/* Sesión: en escritorio queda al final de la fila (después de los datos y los controles) y
+            en el celular sube a la fila de la marca, contra el margen derecho. Se consigue sacándola
+            de .header-acciones y ordenándola por CSS: ver `header > .auth-wrap` en styles/layout.css
+            y el bloque del celular en styles/utils.css. El menú vive en components/UserMenu.jsx. */}
+        <UserMenu onOpenAuth={() => setShowAuth(true)} />
         <div className="header-meta">
           <HeaderMeta apiFecha={apiFecha} totalFondos={totalFondos} fechaParam={fechaParam}
             onVolverHoy={onVolverHoy} />
 
-          {/* Los tres controles van juntos en .header-acciones para que en el celular ocupen una
-              fila completa, en tres columnas iguales (ver @media de styles/utils.css). En escritorio
+          {/* Fecha y actualizar van juntos en .header-acciones para que en el celular ocupen una
+              fila completa, en dos columnas iguales (ver @media de styles/utils.css). En escritorio
               es un flex más con el mismo gap de .header-meta, así que no cambia nada. */}
           <div className="header-acciones">
             {/* Trigger del selector de fechas. Se renderiza SIEMPRE, aunque las fechas todavía no
@@ -67,9 +72,6 @@ export default function Header({
                 ? <><span className="btn-spinner" aria-hidden="true"></span><span className="btn-label">{consultando ? 'Consultando…' : 'Actualizando…'}</span></>
                 : <><IconRefreshCw size={13} /> <span className="btn-label">Actualizar</span></>}
             </button>
-
-            {/* Auth: el menú de usuario vive en components/UserMenu.jsx (avatar, nombre y dropdown). */}
-            <UserMenu onOpenAuth={() => setShowAuth(true)} />
           </div>
         </div>
       </header>
