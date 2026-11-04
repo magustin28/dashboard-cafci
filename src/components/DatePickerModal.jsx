@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useModalClose } from '../hooks/useModalClose';
 import { IconCalendar, IconX } from './Icons';
 
@@ -15,8 +15,8 @@ const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto'
  *
  * El cierre (X, clic en el fondo y ESC) pasa por useModalClose igual que en el resto de
  * los modales: `closing` dispara la animación de salida y requestClose espera esos 240 ms
- * antes de llamar a onClose. El ESC se registra acá adentro, así que sólo existe mientras
- * el modal está montado.
+ * antes de llamar a onClose. El ESC lo atiende el hook, que sólo existe mientras el modal
+ * está montado.
  *
  * Props:
  *   fechas      fechas disponibles (YYYY-MM-DD), descendente: fechas[0] es la planilla más nueva,
@@ -33,13 +33,6 @@ export default function DatePickerModal({ fechas, esHistorica, onElegir, onClose
   const [, mesActual, diaActual] = fechaActual ? fechaActual.split('-') : [];
 
   const { closing, requestClose } = useModalClose(onClose);
-
-  // Cerrar con ESC, igual que la X y el clic en el fondo.
-  useEffect(() => {
-    const handler = (e) => { if (e.key === 'Escape') requestClose(); };
-    document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
-  }, [requestClose]);
 
   // Agrupar fechas por año y mes: { '2026': { '10': ['2026-10-18', ...], ... }, ... }
   const grouped = useMemo(() => {

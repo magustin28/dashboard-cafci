@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { abrirCapa, capaAbierta, sacarCapa, sacarEntradaDelHistorial } from "../lib/historial";
+import { abrirCapa, capaAbierta, capaSuperior, sacarCapa, sacarEntradaDelHistorial } from "../lib/historial";
 
 // Cierre animado para los modales/paneles.
 //
@@ -12,17 +12,27 @@ import { abrirCapa, capaAbierta, sacarCapa, sacarEntradaDelHistorial } from "../
 //   <div className={`modal-overlay${closing ? " closing" : ""}`} onClick={...requestClose}>
 // `closing` agrega la clase que dispara la animación de salida (ver styles/portfolio.css) y
 // `requestClose` reemplaza a onClose en TODOS los caminos (botón ✕, clic en el fondo, ESC,
-// cierre después de guardar): espera lo que dura la animación y recién ahí desmonta.
+// cierre después de guardar): espera lo que dura la animación y recién ahí desmonta. El ESC lo
+// atiende el propio hook (ver más abajo), así ningún modal repite su listener.
 // Debe coincidir con la duración de las animaciones de salida de styles/portfolio.css.
 // 240 ms: con 180 ms y un movimiento chico el cierre se veía casi igual que el corte seco.
 export const MODAL_CLOSE_MS = 240;
 
-// `activo` es para componentes que tienen un diálogo ADENTRO y lo muestran con un estado propio
-// (HistorialModal: el diálogo de confirmación). Esos hooks se llaman siempre —el componente está
-// montado— aunque el diálogo no esté visible. Con activo = false no se registra la capa: si no, el
-// primer Atrás del usuario cerraría una capa fantasma y no se vería nada. El default true es el
-// caso normal: el componente se monta justamente cuando el modal se abre.
-export function useModalClose(onClose, activo = true) {
+// El hook se usa en componentes que se montan al abrirse: montarse = estar visible. Un diálogo que
+// vive adentro de otro modal y se muestra con un estado propio (ConfirmDialog) usa su propio hook,
+// así no registra capas fantasma mientras no está visible.
+//
+// ESC se atiende acá, una sola vez por instancia: cierra la capa que está ARRIBA de la pila (la
+// misma que responde al gesto Atrás), así el modal de fondo no se cierra junto con el diálogo que
+// tiene encima. `alEscape` puede consumir la tecla devolviendo true: HistorialModal lo usa para
+// cancelar la edición de una fila en lugar de cerrarse.
+//
+// Mientras dura la animación de salida se ignora el ESC. Mantener la tecla apretada dispara un
+// keydown cada ~30 ms y, como la capa que se está cerrando ya salió de la pila, esas repeticiones
+// cerrarían el modal que quedó abajo.
+let ultimoCierreMs = 0;
+
+export function useModalClose(onClose, { alEscape } = {}) {
   const [closing, setClosing] = useState(false);
   const closingRef = useRef(false);
   const timerRef = useRef(null);
@@ -32,6 +42,9 @@ export function useModalClose(onClose, activo = true) {
   // Última versión de requestClose: la capa registrada en el historial la llama desde un evento del
   // navegador (el gesto Atrás), así que tiene que ver el onClose actual y no el del primer render.
   const requestCloseRef = useRef(null);
+  // Última versión de alEscape: el listener de ESC se registra una sola vez y tiene que ver la
+  // función del render actual (en HistorialModal depende de editSusc/editResc).
+  const alEscapeRef = useRef(alEscape);
 
   // Acepta argumentos a propósito: varios modales cierran con onClose(true) para avisarle al
   // padre que guardaron algo y hay que refrescar (p. ej. SuscripcionModal/RescateModal). Se
@@ -39,6 +52,7 @@ export function useModalClose(onClose, activo = true) {
   const requestClose = useCallback((...args) => {
     if (closingRef.current) return; // ignora el doble cierre (p. ej. ESC + clic en el fondo)
     closingRef.current = true;
+    ultimoCierreMs = Date.now();
     setClosing(true);
     // La capa sale de la pila AHORA y su entrada del historial se saca YA: si se dejara para el
     // desmontaje (240 ms después), el próximo Atrás del usuario gastaría un toque en una entrada
@@ -58,8 +72,6 @@ export function useModalClose(onClose, activo = true) {
   // monta → desmonta → monta el mismo efecto y, si no, cada modal dejaría dos entradas (una
   // fantasma). Por eso la lógica de reuso vive en el módulo y no acá.
   useEffect(() => {
-    // Con activo = false no hay capa: el diálogo no está visible (ver el comentario del parámetro).
-    if (!activo) return undefined;
     const capa = abrirCapa(() => requestCloseRef.current(), capaRef.current);
     capaRef.current = capa;
 
@@ -73,7 +85,23 @@ export function useModalClose(onClose, activo = true) {
         if (!capaAbierta(capa)) sacarEntradaDelHistorial(capa);
       });
     };
-  }, [activo]);
+  }, []);
+
+  useEffect(() => { alEscapeRef.current = alEscape; }, [alEscape]);
+
+  // ESC: una sola vez por instancia. Con dos capas abiertas se ejecutan los dos listeners, pero el
+  // de abajo se descarta porque capaSuperior() ya no es su capa.
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key !== "Escape") return;
+      if (Date.now() - ultimoCierreMs < MODAL_CLOSE_MS) return;
+      if (capaSuperior() !== capaRef.current) return;
+      if (alEscapeRef.current?.()) return;
+      requestCloseRef.current?.();
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, []);
 
   return { closing, requestClose };
 }

@@ -10,8 +10,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   getTabGroup, CLASIF_MAP, filterRows, cacheVencida, CACHE_TTL_MS,
-  parseFechaAPI, fmtMoney, fmtPat, fmtPct,
-  formatFechaLabel, cnvLink, toast, formatPlazoLiq,
+  parseFechaAPI, fmtMoney, fmtPat, cnvLink, toast, formatPlazoLiq,
   diasDesdeFecha, estadoFrescura, diasHabilesDeAtraso,
 } from "./utils.js";
 
@@ -127,22 +126,6 @@ test("fmtPat: patrimonios inválidos → guion; abrevia B/MM/M", () => {
   assert.equal(fmtPat(2.5e6), "$2.50M");
   assert.match(fmtPat(5000), /^\$5[.,]000$/);
   assert.equal(fmtPat("790407962"), "$790.41M"); // string, como llega del jsonb
-});
-
-test("fmtPct: devuelve {value, display} y null si no es número", () => {
-  assert.equal(fmtPct(null), null);
-  assert.equal(fmtPct(undefined), null);
-  assert.equal(fmtPct("x"), null);
-  assert.deepEqual(fmtPct("1.5"), { value: 1.5, display: "+1.50%" });
-  assert.deepEqual(fmtPct(1.234), { value: 1.234, display: "+1.23%" });
-  assert.deepEqual(fmtPct(-1.234), { value: -1.234, display: "-1.23%" });
-  assert.deepEqual(fmtPct(0), { value: 0, display: "0.00%" });
-  assert.deepEqual(fmtPct(1.2345, 1), { value: 1.2345, display: "+1.2%" });
-});
-
-test("formatFechaLabel: ISO → DD/MM/AAAA", () => {
-  assert.equal(formatFechaLabel("2026-10-14"), "14/10/2026");
-  assert.equal(formatFechaLabel("2026-01-03"), "03/01/2026");
 });
 
 test("diasDesdeFecha: cuenta días calendario y normaliza la hora", () => {

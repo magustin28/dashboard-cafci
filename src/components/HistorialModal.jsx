@@ -32,14 +32,16 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
 
   // Cierre animado del modal (hooks/useModalClose.js). El diálogo de confirmación usa su propio
   // ConfirmDialog, que registra su capa aparte mientras está visible.
-  const { closing, requestClose } = useModalClose(onClose);
-
-  // Cerrar con ESC
-  useEffect(() => {
-    const handler = (e) => { if (e.key === 'Escape') { if (editSusc || editResc) { setEditSusc(null); setEditResc(null); } else requestClose(); } };
-    document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
-  }, [requestClose, editSusc, editResc]);
+  // Cierre animado + ESC (hooks/useModalClose.js). Si hay una fila en edición, el primer ESC
+  // cancela la edición en lugar de cerrar el modal: alEscape devuelve true = tecla consumida.
+  const { closing, requestClose } = useModalClose(onClose, {
+    alEscape: () => {
+      if (!editSusc && !editResc) return false;
+      setEditSusc(null);
+      setEditResc(null);
+      return true;
+    },
+  });
 
   const reload = useCallback(async () => {
     if (!user) return;
@@ -62,8 +64,6 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
       setLoading(false);
     })();
   }, [user, fondoNombre, reload]);
-
-  // Formateadores: lib/format.js (fechaCorta, cuotapartes, precioCuotaparte, moneda).
 
   // ── Acciones suscripciones ──────────────────────────────────────
   const deleteSusc = async (id) => {

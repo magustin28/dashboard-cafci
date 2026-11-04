@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { useModalClose } from "../hooks/useModalClose";
 import { IconAlertTriangle } from "./Icons";
 
@@ -27,19 +26,6 @@ export default function ConfirmDialog({
   zIndex = 900,
 }) {
   const { closing, requestClose } = useModalClose(onClose);
-
-  // ESC en fase de captura y con stopPropagation: el diálogo está encima de otro modal y su
-  // listener de ESC (registrado antes, en fase de burbuja) cerraría el modal de fondo.
-  useEffect(() => {
-    const handler = (e) => {
-      if (e.key === "Escape") {
-        e.stopPropagation();
-        requestClose();
-      }
-    };
-    document.addEventListener("keydown", handler, true);
-    return () => document.removeEventListener("keydown", handler, true);
-  }, [requestClose]);
 
   return (
     <div

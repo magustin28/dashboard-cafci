@@ -1,14 +1,6 @@
-import { formatFechaLabel, diasDesdeFecha, diasHabilesDeAtraso, estadoFrescura } from '../lib/utils';
+import { diasDesdeFecha, diasHabilesDeAtraso, estadoFrescura } from '../lib/utils';
+import { fechaCorta, fechaCompleta } from '../lib/format';
 import { IconCalendar, IconX } from './Icons';
-
-/**
- * "2026-10-26" → "26/10/26". En el celular la fecha corta es lo que hace que la fila del meta
- * (fecha + fondos totales) entre en una sola línea: ver @media de styles/utils.css.
- */
-function fechaCorta(iso) {
-  const [y, m, d] = (iso || '').split('-');
-  return d ? `${d}/${m}/${y.slice(2)}` : (iso || '');
-}
 
 /**
  * Info de estado del header: semáforo de frescura + fecha del dato + total de fondos.
@@ -52,7 +44,7 @@ export default function HeaderMeta({ apiFecha, totalFondos, fechaParam, onVolver
                histórica (antes era un <span> y la salida era editar la URL o el botón Atrás). */
             <button className="meta-historico meta-volver-hoy" onClick={onVolverHoy}
               title="Volver a los datos actuales">
-              <IconCalendar size={12} /> Histórico: {formatFechaLabel(fechaParam)} <IconX size={11} />
+              <IconCalendar size={12} /> Histórico: {fechaCompleta(fechaParam)} <IconX size={11} />
             </button>
           )
           : (

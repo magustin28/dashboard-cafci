@@ -24,6 +24,8 @@ npm test        # node --test (runner de Node, sin dependencias nuevas)
 `src/lib/utils.test.js` cubre las utilidades puras de `src/lib/utils.js`:
 
 - `getTabGroup`: agrupa por **Código de Clasificación** (columna 23 de la fila de `useFondos`) con el título de la categoría (columna 12) como respaldo, incluido el aviso por consola cuando aparece un código desconocido. Hay un test que verifica que un **renombre de categoría** de CAFCI no manda los fondos a "Otros".
-- `parseFechaAPI`, `fmtMoney`, `fmtPat`, `fmtPct`, `formatFechaLabel` y `cnvLink`.
+- `parseFechaAPI`, `fmtMoney`, `fmtPat`, `cnvLink` y `formatPlazoLiq`.
+
+`src/lib/format.test.js` cubre los formateadores compartidos de `src/lib/format.js` (fechas, números, moneda y porcentajes).
 
 No valida render ni consultas a Supabase (eso requiere un test end-to-end con la base).

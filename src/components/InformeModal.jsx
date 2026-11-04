@@ -17,15 +17,6 @@ export default function InformeModal({ enriched, apiFecha, onClose }) {
   // animación de salida en styles/portfolio.css.
   const { closing, requestClose } = useModalClose(onClose);
 
-  // Cerrar con ESC
-  useEffect(() => {
-    const handler = (e) => {
-      if (e.key === "Escape") requestClose();
-    };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  }, [requestClose]);
-
   useEffect(() => {
     if (!user || !enriched?.length) return;
     (async () => {

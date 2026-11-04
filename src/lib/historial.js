@@ -51,6 +51,14 @@ export function capaAbierta(capa) {
   return !!capa && capas.includes(capa);
 }
 
+/**
+ * Capa que está arriba de la pila: la que responde al gesto Atrás y al ESC. Con dos capas abiertas
+ * (un modal con su diálogo de confirmación) sólo la de arriba se cierra.
+ */
+export function capaSuperior() {
+  return capas[capas.length - 1] || null;
+}
+
 function alVolverAtras() {
   // Un cierre programático (✕, ESC, clic en el fondo, guardar) hace history.back() para sacar su
   // entrada: ese popstate no debe cerrar otra capa ni despertar al guardián.

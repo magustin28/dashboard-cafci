@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "../context/useAuth";
 import { useModalClose } from "../hooks/useModalClose";
 import { IconX } from "./Icons";
@@ -12,15 +12,6 @@ export default function AuthModal({ onClose }) {
   // a onClose en TODOS los caminos (✕, clic en el fondo, ESC, login exitoso). Ver
   // hooks/useModalClose.js + las animaciones de salida en styles/portfolio.css.
   const { closing, requestClose } = useModalClose(onClose);
-
-  // Cerrar con ESC
-  useEffect(() => {
-    const handler = (e) => {
-      if (e.key === "Escape") requestClose();
-    };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  }, [requestClose]);
 
   // Google es el único método. supabase-js redirige a Google y al volver la página se recarga,
   // así que acá no hace falta cerrar el modal ni avisar del login: se deja anotado el tab

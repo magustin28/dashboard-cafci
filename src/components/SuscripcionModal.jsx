@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../context/useAuth';
 import { moneda as fmtMoneda } from '../lib/format';
 import { useModalClose } from '../hooks/useModalClose';
@@ -16,19 +16,6 @@ export default function SuscripcionModal({ fondoInicial, monedaInicial, raw, onC
   // Cierre animado (hooks/useModalClose.js). requestClose(true) al guardar: el hook reenvía el
   // argumento, así el padre sigue enterándose de que hay que refrescar el portfolio.
   const { closing, requestClose } = useModalClose(onClose);
-
-  // Cerrar con ESC — stopPropagation para no disparar modales de fondo
-  useEffect(() => {
-    const handler = (e) => {
-      if (e.key === 'Escape') {
-        e.stopPropagation();
-        requestClose();
-      }
-    };
-    document.addEventListener('keydown', handler, true); // capture phase
-    return () => document.removeEventListener('keydown', handler, true);
-  }, [requestClose]);
-
 
   const cant = parseFloat(cantidad);
   const prec = parseFloat(precio);

@@ -111,16 +111,6 @@ export function fmtPat(v) {
   return "$" + n.toLocaleString("es-AR");
 }
 
-export function fmtPct(v, d = 2) {
-  if (v === null || v === undefined || isNaN(v)) return null;
-  return { value: parseFloat(v), display: (parseFloat(v) > 0 ? "+" : "") + parseFloat(v).toFixed(d) + "%" };
-}
-
-export function formatFechaLabel(iso) {
-  const [y, m, d] = iso.split("-");
-  return `${d}/${m}/${y}`;
-}
-
 // Días calendario transcurridos desde la fecha de la planilla hasta hoy (0 = hoy).
 // Acepta lo mismo que parseFechaAPI (ISO y DD/MM/AAAA o DD/MM/AA) y devuelve null si no se
 // puede parsear. Se normalizan las dos fechas a medianoche para contar días calendario: si no,

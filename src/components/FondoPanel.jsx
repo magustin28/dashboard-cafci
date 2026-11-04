@@ -1,27 +1,12 @@
-import { useEffect } from 'react';
 import { REG_MAP, HOR_MAP, formatPlazoLiq } from '../lib/utils';
-import { numero, porcentaje, moneda, colorVariacion } from '../lib/format';
+import { numero, porcentaje, moneda, colorVariacion, fechaCompleta } from '../lib/format';
 import { useModalClose } from '../hooks/useModalClose';
 import { IconX } from './Icons';
-// Helpers de fecha: "27/02/26" → "27/02/2026"
-const fmtFechaLarga = (f) => {
-  if (!f) return f;
-  const parts = f.split('/');
-  if (parts.length === 3 && parts[2].length === 2) return `${parts[0]}/${parts[1]}/20${parts[2]}`;
-  return f;
-};
 
 export default function FondoPanel({ fondo, refs, apiFecha, onClose }) {
   // Cierre animado (hooks/useModalClose.js): el panel se desliza hacia la derecha y el fondo se
   // desvanece antes de desmontarse.
   const { closing, requestClose } = useModalClose(onClose);
-
-  // Cerrar con ESC (va antes del return temprano: los hooks no pueden ser condicionales)
-  useEffect(() => {
-    const handler = (e) => { if (e.key === 'Escape') requestClose(); };
-    document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
-  }, [requestClose]);
 
   if (!fondo) return null;
 
@@ -41,14 +26,12 @@ export default function FondoPanel({ fondo, refs, apiFecha, onClose }) {
   const var2  = fondo.varAnio;
   const var3  = fondo.varAnual;
 
-  // Fechas con año completo
-  const fechaActual   = fmtFechaLarga(apiFecha?.includes('-')
-    ? (() => { const [y,m,d] = apiFecha.split('-'); return `${d}/${m}/${y.slice(2)}`; })()
-    : apiFecha) || '—';
-  const fechaAnterior = fmtFechaLarga(refs?.fechaAnterior);
-  const fecha1        = fmtFechaLarga(refs?.fecha1);
-  const fecha2        = fmtFechaLarga(refs?.fecha2);
-  const fecha3        = fmtFechaLarga(refs?.fecha3);
+  // Fechas con año completo (lib/format.js): acepta ISO o DD/MM/AA.
+  const fechaActual   = fechaCompleta(apiFecha);
+  const fechaAnterior = refs?.fechaAnterior ? fechaCompleta(refs.fechaAnterior) : null;
+  const fecha1        = refs?.fecha1 ? fechaCompleta(refs.fecha1) : null;
+  const fecha2        = refs?.fecha2 ? fechaCompleta(refs.fecha2) : null;
+  const fecha3        = refs?.fecha3 ? fechaCompleta(refs.fecha3) : null;
 
   return (
     <>

@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useAuth } from './context/useAuth';
 import { useFondos } from './hooks/useFondos';
-import { getTabGroup, filterRows, formatFechaLabel } from './lib/utils';
+import { getTabGroup, filterRows } from './lib/utils';
+import { fechaCompleta } from './lib/format';
 import { activarGuardian, desactivarGuardian, navegarUrl } from './lib/historial';
 
 import Header from './components/Header';
@@ -74,18 +75,9 @@ export default function App() {
   const searchActual = useRef(search);
   useEffect(() => { searchActual.current = search; }, [search]);
 
+  // Título de la pestaña con el mismo formateador que el resto de la app (lib/format.js).
   useEffect(() => {
-    if (apiFecha) {
-      // apiFecha puede venir como YYYY-MM-DD o DD/MM/YYYY
-      let label = apiFecha;
-      if (apiFecha.includes('-')) {
-        const [y, m, d] = apiFecha.split('-');
-        label = `${d}/${m}/${y}`;
-      }
-      document.title = `Dashboard CAFCI - ${label}`;
-    } else {
-      document.title = 'Dashboard CAFCI';
-    }
+    document.title = apiFecha ? `Dashboard CAFCI - ${fechaCompleta(apiFecha)}` : 'Dashboard CAFCI';
   }, [apiFecha]);
 
   // Listen for tab switch events from Header
@@ -194,7 +186,7 @@ export default function App() {
   if (loading && raw.length === 0) {
     return (
       <LoaderOverlay
-        mensaje={fechaParam ? `Consultando los datos del ${formatFechaLabel(fechaParam)}…` : 'Consultando la API…'}
+        mensaje={fechaParam ? `Consultando los datos del ${fechaCompleta(fechaParam)}…` : 'Consultando la API…'}
         sub={fechaParam
           ? 'Consultando datos históricos de la API.'
           : 'Esto puede tardar hasta 30 segundos si el servidor está iniciando.'}
@@ -302,7 +294,7 @@ export default function App() {
         {consultando && (
           <DataOverlay
             mensaje={fechaParam
-              ? `Consultando los datos del ${formatFechaLabel(fechaParam)}…`
+              ? `Consultando los datos del ${fechaCompleta(fechaParam)}…`
               : 'Volviendo a los datos actuales…'}
           />
         )}

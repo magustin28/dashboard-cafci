@@ -2,6 +2,7 @@ import { useState } from "react";
 import InformeModal from "./InformeModal";
 import { useAuth } from "../context/useAuth";
 import { parseFechaAPI, fmtMoney, cnvLink } from "../lib/utils";
+import { fechaCorta } from "../lib/format";
 import { PctCell, MonBadge, MoneyCell, VActualCell } from "./TableCells";
 import ConfirmDialog from "./ConfirmDialog";
 import {
@@ -294,14 +295,7 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
                   Valor Actual
                   {apiFecha && (
                     <div style={{ fontSize: 9, fontWeight: 400, color: "var(--muted2)", marginTop: 2, fontFamily: "'JetBrains Mono', monospace" }}>
-                      {(() => {
-                        const f = apiFecha;
-                        if (f && f.includes("-")) {
-                          const [y, m, d] = f.split("-");
-                          return `${d}/${m}/${y.slice(2)}`;
-                        }
-                        return f;
-                      })()}
+                      {fechaCorta(apiFecha)}
                     </div>
                   )}
                 </th>

@@ -85,6 +85,9 @@ a.logo-badge:hover {
   align-items: center;
   gap: 18px;
   flex-wrap: wrap;
+  /* Con tres hijos en el header (marca, datos + controles y sesión) y justify-content:
+     space-between, sin este margin el bloque del medio quedaría centrado. */
+  margin-left: auto;
 }
 .meta-item {
   font-family: "JetBrains Mono", monospace;
@@ -117,12 +120,6 @@ a.logo-badge:hover {
 header > .auth-wrap {
   order: 2;
   flex-shrink: 0;
-}
-/* Con tres hijos en el header (marca, datos + controles y sesión) y justify-content: space-between,
-   sin este margin el bloque del medio quedaría centrado. Con margin-left: auto los datos y los
-   controles se pegan a la derecha, junto a la sesión. */
-.header-meta {
-  margin-left: auto;
 }
 .meta-dot {
   width: 6px;
