@@ -2,6 +2,10 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../context/useAuth";
 import { sb } from "../lib/supabase";
 import { toast } from "../lib/utils";
+import {
+  fechaCompleta, cuotapartes, precioCuotaparte, moneda, porcentaje, hoyCompleta,
+} from "../lib/format";
+import { abrirInformePDF } from "../lib/informePdf";
 import { useModalClose } from "../hooks/useModalClose";
 import { IconX, IconFileText } from "./Icons";
 
@@ -45,87 +49,18 @@ export default function InformeModal({ enriched, apiFecha, onClose }) {
     })();
   }, [user, enriched]);
 
-  const fmtDate = (d) => {
-    const [y, m, day] = d.split("-");
-    return `${day}/${m}/${y}`;
-  };
-  const fmtCp = (v) => parseFloat(v).toLocaleString("es-AR", { minimumFractionDigits: 4, maximumFractionDigits: 4 });
-  const fmtPrecio = (v) => parseFloat(v).toLocaleString("es-AR", { minimumFractionDigits: 4, maximumFractionDigits: 6 });
-  const fmtMon = (v, mon) =>
-    (mon === "ARS" ? "$ " : "U$S ") + Math.abs(parseFloat(v)).toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const fmtMonSigned = (v, mon) =>
-    (parseFloat(v) >= 0 ? "+" : "-") +
-    (mon === "ARS" ? "$ " : "U$S ") +
-    Math.abs(parseFloat(v)).toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const fmtPct = (v) => (v === null || isNaN(v) ? "—" : (v > 0 ? "+" : "") + parseFloat(v).toFixed(2) + "%");
-  const todayRaw = new Date();
-  const today = String(todayRaw.getDate()).padStart(2, "0") + "/" + String(todayRaw.getMonth() + 1).padStart(2, "0") + "/" + todayRaw.getFullYear();
-  const fechaData = (() => {
-    if (!apiFecha) return today;
-    if (apiFecha.includes("-")) {
-      const [y, m, d] = apiFecha.split("-");
-      return `${d.padStart(2, "0")}/${m.padStart(2, "0")}/${y}`;
-    }
-    // DD/MM/YY or DD/MM/YYYY — normalize to full year
-    const parts = apiFecha.split("/");
-    if (parts.length === 3) {
-      const yr = parts[2].length === 2 ? "20" + parts[2] : parts[2];
-      return `${parts[0].padStart(2, "0")}/${parts[1].padStart(2, "0")}/${yr}`;
-    }
-    return apiFecha;
-  })();
+  // Formateadores: lib/format.js. Los alias conservan los nombres que ya usaba el JSX.
+  const fmtDate = fechaCompleta;
+  const fmtCp = cuotapartes;
+  const fmtPrecio = precioCuotaparte;
+  const fmtMon = moneda;
+  const fmtPct = porcentaje;
+  const fmtMonSigned = (v, mon) => moneda(v, mon, { signo: true });
+  const today = hoyCompleta();
+  const fechaData = fechaCompleta(apiFecha || today);
 
-  const handleOpenPDF = () => {
-    const el = document.getElementById("informe-content");
-    if (!el) return;
-    const html = el.innerHTML;
-    const win = window.open("", "_blank");
-    win.document.write(`<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8"/>
-  <title>Informe Portafolio CAFCI</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #111827; background: white; padding: 24px 32px; font-size: 12px; }
-    .inf-header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 16px; border-bottom: 3px solid #16a34a; margin-bottom: 24px; }
-    .inf-title { font-size: 20px; font-weight: 700; }
-    .inf-subtitle { font-size: 11px; color: #6b7280; margin-top: 3px; }
-    .inf-logo { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
-    .inf-section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #16a34a; border-bottom: 2px solid #dcfce7; padding-bottom: 4px; margin: 22px 0 12px; page-break-after: avoid; }
-    .inf-kpis-grid { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
-    .inf-kpis-row { display: flex; gap: 10px; }
-    .inf-kpi { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 8px 14px; min-width: 150px; }
-    .inf-kpi-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.06em; color: #6b7280; font-weight: 600; margin-bottom: 3px; }
-    .inf-kpi-val { font-size: 14px; font-weight: 700; }
-    .inf-table { width: 100%; border-collapse: collapse; font-size: 8.5px; margin-bottom: 6px; }
-    .inf-table thead th { background: #f3f4f6; color: #374151; font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; padding: 5px 7px; text-align: right; white-space: nowrap; border-bottom: 2px solid #e5e7eb; }
-    .inf-table thead th:first-child { text-align: left; }
-    .inf-table tbody tr { border-bottom: 1px solid #f3f4f6; }
-    .inf-table tbody tr:last-child { border-bottom: 2px solid #e5e7eb; }
-    .inf-table td { padding: 5px 7px; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; color: #374151; }
-    .inf-table td:first-child { text-align: left; }
-    .inf-table-susc { width: auto !important; display: inline-block; }
-    .inf-table-susc thead th { padding: 5px 16px 5px 10px; }
-    .inf-table-susc td { padding: 5px 16px 5px 10px; }
-    .inf-fondo-block { margin-bottom: 14px; page-break-inside: avoid; border: 1px solid #e5e7eb; border-radius: 6px; padding: 10px 12px; }
-    .inf-fondo-name { font-size: 12px; font-weight: 600; margin-bottom: 5px; display: flex; align-items: center; gap: 7px; }
-    .inf-mon-badge { font-size: 9px; font-weight: 700; background: #dcfce7; color: #16a34a; border-radius: 3px; padding: 1px 5px; }
-    .inf-sub-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; margin: 7px 0 4px; }
-    .inf-empty { font-size: 11px; color: #9ca3af; padding: 6px 0; font-style: italic; }
-    .inf-footer { margin-top: 32px; padding-top: 12px; border-top: 1px solid #e5e7eb; font-size: 9px; color: #9ca3af; text-align: center; }
-    @media print {
-      body { padding: 0; }
-      .inf-fondo-block { page-break-inside: avoid; }
-      .inf-section-title { page-break-after: avoid; }
-    }
-  </style>
-</head>
-<body>${html}</body>
-</html>`);
-    win.document.close();
-    win.focus();
-  };
+  // La ventana de impresión vive en lib/informePdf.js: acá sólo se dispara.
+  const handleOpenPDF = () => abrirInformePDF("informe-content");
 
   const Logo = () => (
     <svg width="26" height="26" viewBox="0 0 32 32" style={{ verticalAlign: "middle", marginRight: 6 }}>

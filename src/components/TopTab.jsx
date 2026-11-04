@@ -1,23 +1,7 @@
 import { useAuth } from '../context/useAuth';
 import { cnvLink } from '../lib/utils';
+import { PctCell, PatCell } from './TableCells';
 import { IconChartColumn, IconTrophy, IconInfo, IconPlus } from './Icons';
-
-function PctCell({ v, decimals = 3 }) {
-  if (v === null || v === undefined || v === '') return <span className="td-mono zero">—</span>;
-  const n = parseFloat(v);
-  if (isNaN(n)) return <span className="td-mono zero">—</span>;
-  const cls = n > 0 ? 'pos' : n < 0 ? 'neg' : 'zero';
-  return <span className={`td-mono ${cls}`}>{n > 0 ? '+' : ''}{n.toFixed(decimals)}%</span>;
-}
-
-function PatCell({ v }) {
-  if (!v) return <span className="td-mono zero">—</span>;
-  const n = parseFloat(v);
-  if (isNaN(n) || n <= 0) return <span className="td-mono zero">—</span>;
-  if (n >= 1e9)  return <span className="td-mono">{'$' + (n / 1e9).toFixed(2) + 'MM'}</span>;
-  if (n >= 1e6)  return <span className="td-mono">{'$' + (n / 1e6).toFixed(2) + 'M'}</span>;
-  return <span className="td-mono">{'$' + n.toLocaleString('es-AR')}</span>;
-}
 
 function TopTable({ rows, refs, onOpenSuscripcion, onFondoClick, moneda }) {
   const { user, favs, toggleFav } = useAuth();
@@ -101,7 +85,7 @@ function TopTable({ rows, refs, onOpenSuscripcion, onFondoClick, moneda }) {
                 </td>
                 <td className="td-fondo">{r.fondo || '—'}</td>
                 <td style={{ textAlign: 'center' }}>
-                  <PctCell v={r.valorVarPct} />
+                  <PctCell v={r.valorVarPct} decimals={3} />
                 </td>
                 <td style={{ textAlign: 'center' }}>
                   {tna !== null

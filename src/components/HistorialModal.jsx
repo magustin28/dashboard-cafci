@@ -2,12 +2,20 @@ import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../context/useAuth';
 import { sb } from '../lib/supabase';
 import { toast } from '../lib/utils';
+import {
+  fechaCorta as fmtDate,
+  cuotapartes as fmtCp,
+  precioCuotaparte as fmtPrecio,
+  // Alias: el componente recibe un prop `moneda` (la del fondo), que taparía este import.
+  moneda as fmtMoneda,
+} from '../lib/format';
 import { useModalClose } from '../hooks/useModalClose';
 import SuscripcionModal from './SuscripcionModal';
 import RescateModal from './RescateModal';
+import ConfirmDialog from './ConfirmDialog';
 import {
   IconX, IconPencil, IconTrash2, IconDownload, IconUpload,
-  IconChevronUp, IconChevronDown, IconAlertTriangle,
+  IconChevronUp, IconChevronDown,
 } from './Icons';
 
 export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
@@ -22,16 +30,9 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
   const [showResc, setShowResc] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState(null);
 
-  // Cierres animados (hooks/useModalClose.js): el modal principal y el diálogo de confirmación
-  // tienen cada uno su propia animación de salida.
+  // Cierre animado del modal (hooks/useModalClose.js). El diálogo de confirmación usa su propio
+  // ConfirmDialog, que registra su capa aparte mientras está visible.
   const { closing, requestClose } = useModalClose(onClose);
-  // El diálogo de confirmación se muestra con un estado propio y el hook se llama siempre que el
-  // modal está montado, así que se le pasa `!!confirmDialog`: con el diálogo cerrado no registra su
-  // capa en el historial (si no, el primer Atrás cerraría una capa invisible y no haría nada).
-  const { closing: confirmClosing, requestClose: requestConfirmClose } = useModalClose(
-    () => setConfirmDialog(null),
-    !!confirmDialog,
-  );
 
   // Cerrar con ESC
   useEffect(() => {
@@ -62,9 +63,7 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
     })();
   }, [user, fondoNombre, reload]);
 
-  const fmtDate   = (d) => { const [y, m, day] = d.split('-'); return `${day}/${m}/${y.slice(2)}`; };
-  const fmtCp     = (v) => parseFloat(v).toLocaleString('es-AR', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
-  const fmtPrecio = (v) => parseFloat(v).toLocaleString('es-AR', { minimumFractionDigits: 4, maximumFractionDigits: 6 });
+  // Formateadores: lib/format.js (fechaCorta, cuotapartes, precioCuotaparte, moneda).
 
   // ── Acciones suscripciones ──────────────────────────────────────
   const deleteSusc = async (id) => {
@@ -179,8 +178,7 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
 
   const { suscs, rescates } = data || { suscs: [], rescates: [] };
   const mon = suscs[0]?.moneda || rescates[0]?.moneda || 'ARS';
-  const pfx = mon === 'ARS' ? '$ ' : 'U$S ';
-  const fmt = (v) => pfx + Math.abs(parseFloat(v)).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmt = (v) => fmtMoneda(v, mon);
 
   const totalInvertido  = suscs.reduce((s, x) => s + parseFloat(x.cantidad) * parseFloat(x.precio_compra), 0);
   const totalRescatadoV = rescates.reduce((s, x) => s + parseFloat(x.importe_venta), 0);
@@ -466,26 +464,13 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
         />
       )}
 
-      {/* Modal de confirmación */}
+      {/* Modal de confirmación (components/ConfirmDialog.jsx) */}
       {confirmDialog && (
-        <div className={`modal-overlay${confirmClosing ? ' closing' : ''}`} style={{ display: 'flex', zIndex: 900 }} onClick={e => { if (e.target === e.currentTarget) requestConfirmClose(); }}>
-          <div className="modal" style={{ maxWidth: 420, textAlign: 'center' }}>
-            <div style={{ marginBottom: 12, color: 'var(--yellow)' }}><IconAlertTriangle size={32} strokeWidth={1.75} /></div>
-            <p style={{ fontSize: 14, color: 'var(--text)', marginBottom: 24, lineHeight: 1.6 }}>{confirmDialog.msg}</p>
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
-              <button
-                onClick={requestConfirmClose}
-                style={{ padding: '8px 20px', borderRadius: 6, border: '1px solid var(--border2)', background: 'none', color: 'var(--text2)', cursor: 'pointer', fontSize: 13 }}>
-                Cancelar
-              </button>
-              <button
-                onClick={async () => { await confirmDialog.onConfirm(); requestConfirmClose(); }}
-                style={{ padding: '8px 20px', borderRadius: 6, border: 'none', background: '#dc2626', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
-                Eliminar
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmDialog
+          mensaje={confirmDialog.msg}
+          onConfirm={confirmDialog.onConfirm}
+          onClose={() => setConfirmDialog(null)}
+        />
       )}
     </div>
   );

@@ -134,9 +134,8 @@ export function useFondos() {
 
       // Las fechas del selector son otro endpoint y es liviano: se piden YA, en paralelo con la
       // planilla, así el botón "Ver fecha anterior" tiene datos apenas responde sin esperar al
-      // cold start de Render. Antes se pedían recién al final (cuando ya había llegado la
-      // planilla): en un hard refresh sin caché el selector quedaba vacío casi un minuto. Se piden
-      // también en las páginas históricas (?fecha=) para poder saltar de una fecha a otra.
+      // cold start de Render. Se piden también en las páginas históricas (?fecha=) para poder
+      // saltar de una fecha a otra.
       loadFechas();
 
       for (let attempt = 1; attempt <= MAX; attempt++) {

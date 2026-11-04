@@ -9,7 +9,6 @@ const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto'
 /**
  * Modal de fechas históricas del header: agrupa las fechas disponibles por año y mes y cambia la
  * vista al día elegido EN LA MISMA pestaña (onElegir → App, que actualiza la URL y el estado).
- * Antes abría `?fecha=…` en una pestaña nueva: cada consulta dejaba una pestaña abierta.
  *
  * Vive acá y no en Header.jsx porque el header ya mezclaba marca, meta, sesión y este
  * modal. El Header sólo guarda pickerOpen y monta este componente cuando hace falta.

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/useAuth';
+import { moneda as fmtMoneda, cuotapartes } from '../lib/format';
 import { useModalClose } from '../hooks/useModalClose';
 import { IconX } from './Icons';
 
@@ -31,7 +32,6 @@ export default function RescateModal({ fondoInicial, monedaInicial, onClose }) {
 
   const cant = parseFloat(cantidad);
   const prec = parseFloat(precio);
-  const pfx  = moneda === 'ARS' ? '$ ' : 'U$S ';
 
   const disponibles = portfolio
     .filter(s => s.fondo_nombre === fondo && s.moneda === moneda)
@@ -56,7 +56,8 @@ export default function RescateModal({ fondoInicial, monedaInicial, onClose }) {
     preview = { importeVenta, costoTotal, rendimiento, rendPct };
   }
 
-  const fmt = v => pfx + Math.abs(v).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  // Formateador compartido: mismo importe que en el resto de las pantallas (lib/format.js).
+  const fmt = (v) => fmtMoneda(v, moneda);
 
   const submit = async () => {
     if (!fondo)               return setError('Ingresá el nombre del fondo.');
@@ -83,7 +84,7 @@ export default function RescateModal({ fondoInicial, monedaInicial, onClose }) {
             placeholder="Nombre del fondo" list="fondos-datalist" autoComplete="off" />
           <div className="resc-disponibles">
             {fondo && (disponibles > 0
-              ? `Disponibles: ${disponibles.toLocaleString('es-AR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })} cuotapartes`
+              ? `Disponibles: ${cuotapartes(disponibles)} cuotapartes`
               : 'Sin cuotapartes disponibles para este fondo.')}
           </div>
         </div>

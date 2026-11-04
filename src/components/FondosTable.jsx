@@ -1,46 +1,8 @@
 import { useState } from "react";
 import { useAuth } from "../context/useAuth";
-import { REG_MAP, HOR_MAP, cnvLink } from "../lib/utils";
+import { REG_MAP, HOR_MAP, cnvLink, parseFechaAPI } from "../lib/utils";
+import { PctCell, PatCell, MonBadge } from "./TableCells";
 import { IconStar, IconInfo, IconPlus } from "./Icons";
-
-// Parse "DD/MM/YY" or "DD/MM/YYYY" → Date
-function parseApiDate(s) {
-  if (!s) return null;
-  const p = s.split("/");
-  if (p.length !== 3) return null;
-  const yr = p[2].length === 2 ? 2000 + parseInt(p[2], 10) : parseInt(p[2], 10);
-  return new Date(yr, parseInt(p[1], 10) - 1, parseInt(p[0], 10));
-}
-
-function PctCell({ v }) {
-  if (v === null || v === undefined || v === "") return <span className="td-mono zero">—</span>;
-  const n = parseFloat(v);
-  if (isNaN(n)) return <span className="td-mono zero">—</span>;
-  const cls = n > 0 ? "pos" : n < 0 ? "neg" : "zero";
-  return (
-    <span className={`td-mono ${cls}`}>
-      {n > 0 ? "+" : ""}
-      {n.toFixed(3)}%
-    </span>
-  );
-}
-
-function PatCell({ v }) {
-  if (!v) return <span className="td-mono zero">—</span>;
-  const n = parseFloat(v);
-  if (isNaN(n) || n <= 0) return <span className="td-mono zero">—</span>;
-  let s;
-  if (n >= 1e12) s = "$" + (n / 1e12).toFixed(2) + "B";
-  else if (n >= 1e9) s = "$" + (n / 1e9).toFixed(2) + "MM";
-  else if (n >= 1e6) s = "$" + (n / 1e6).toFixed(2) + "M";
-  else s = "$" + n.toLocaleString("es-AR");
-  return <span className="td-mono">{s}</span>;
-}
-
-function MonBadge({ m }) {
-  const c = { ARS: "ars", USD: "usd", USB: "usb" }[m] || "reg";
-  return <span className={`badge badge-${c}`}>{m}</span>;
-}
 
 export default function FondosTable({ filtered, refs, onOpenSuscripcion, onFondoClick }) {
   const { user, favs, toggleFav } = useAuth();
@@ -185,7 +147,7 @@ export default function FondosTable({ filtered, refs, onOpenSuscripcion, onFondo
                       <span className="badge badge-hor">{HOR_MAP[r.horizonte] || r.horizonte || "—"}</span>
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      <PctCell v={r.valorVarPct} />
+                      <PctCell v={r.valorVarPct} decimals={3} />
                       {r.valorVarPct != null && (
                         <div style={{ fontSize: 9, color: "var(--text2)", marginTop: 1 }}>~ {(parseFloat(r.valorVarPct) * 360).toFixed(2)}% TNA ~</div>
                       )}
@@ -194,8 +156,8 @@ export default function FondosTable({ filtered, refs, onOpenSuscripcion, onFondo
                       {(() => {
                         const pct = parseFloat(r.varAnio);
                         if (isNaN(pct)) return <span className="td-mono zero">—</span>;
-                        const apiFechaDate = parseApiDate(refs?.apiFecha);
-                        const baseAnio = parseApiDate(refs?.fecha2);
+                        const apiFechaDate = parseFechaAPI(refs?.apiFecha);
+                        const baseAnio = parseFechaAPI(refs?.fecha2);
                         const dias = apiFechaDate && baseAnio ? Math.max(1, Math.round((apiFechaDate - baseAnio) / 86400000)) : 365;
                         const tna = (pct / dias) * 360;
                         const cls = tna > 0 ? "pos" : tna < 0 ? "neg" : "zero";
@@ -208,7 +170,7 @@ export default function FondosTable({ filtered, refs, onOpenSuscripcion, onFondo
                       })()}
                     </td>
                     <td>
-                      <PctCell v={r.varAnual} />
+                      <PctCell v={r.varAnual} decimals={3} />
                     </td>
                     <td>
                       <PatCell v={r.patrimonio} />

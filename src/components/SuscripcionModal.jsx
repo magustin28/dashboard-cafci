@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/useAuth';
+import { moneda as fmtMoneda } from '../lib/format';
 import { useModalClose } from '../hooks/useModalClose';
 import { IconX } from './Icons';
 
@@ -32,7 +33,6 @@ export default function SuscripcionModal({ fondoInicial, monedaInicial, raw, onC
   const cant = parseFloat(cantidad);
   const prec = parseFloat(precio);
   const total = !isNaN(cant) && !isNaN(prec) && cant > 0 && prec > 0 ? cant * prec : null;
-  const pfx = moneda === 'ARS' ? '$ ' : 'U$S ';
 
   const submit = async () => {
     if (!fondo)               return setError('Ingresá el nombre del fondo.');
@@ -92,7 +92,7 @@ export default function SuscripcionModal({ fondoInicial, monedaInicial, raw, onC
 
         <div className="modal-calc">
           {total !== null
-            ? <>Inversión total: <strong style={{ color: 'var(--text)', fontSize: 13 }}>{pfx}{total.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></>
+            ? <>Inversión total: <strong style={{ color: 'var(--text)', fontSize: 13 }}>{fmtMoneda(total, moneda)}</strong></>
             : 'Completá cantidad y precio para ver el total.'}
         </div>
 

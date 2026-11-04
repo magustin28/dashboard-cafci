@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { REG_MAP, HOR_MAP, formatPlazoLiq } from '../lib/utils';
+import { numero, porcentaje, moneda, colorVariacion } from '../lib/format';
 import { useModalClose } from '../hooks/useModalClose';
 import { IconX } from './Icons';
 // Helpers de fecha: "27/02/26" → "27/02/2026"
@@ -12,7 +13,7 @@ const fmtFechaLarga = (f) => {
 
 export default function FondoPanel({ fondo, refs, apiFecha, onClose }) {
   // Cierre animado (hooks/useModalClose.js): el panel se desliza hacia la derecha y el fondo se
-  // desvanece antes de desmontarse. Antes abría con slideIn y al cerrar desaparecía de golpe.
+  // desvanece antes de desmontarse.
   const { closing, requestClose } = useModalClose(onClose);
 
   // Cerrar con ESC (va antes del return temprano: los hooks no pueden ser condicionales)
@@ -27,11 +28,13 @@ export default function FondoPanel({ fondo, refs, apiFecha, onClose }) {
 
   const mon      = fondo.moneda;
   const monSym   = mon === 'ARS' ? '$' : 'U$S';
-  const fmtNum   = (v, dec = 2) => v != null ? parseFloat(v).toLocaleString('es-AR', { minimumFractionDigits: dec, maximumFractionDigits: dec }) : '—';
-  const fmtPct   = (v) => v != null ? (parseFloat(v) > 0 ? '+' : '') + fmtNum(v, 3) + '%' : '—';
-  const fmtMon   = (v, sym) => v != null ? `${sym} ${fmtNum(v)}` : '—';
-  const fmtMon4  = (v, sym) => v != null ? `${sym} ${fmtNum(v, 4)}` : '—';
-  const clrPct   = (v) => v == null ? '' : parseFloat(v) >= 0 ? '#16a34a' : '#dc2626';
+  // Formateadores compartidos (lib/format.js): las mismas reglas que el resto de las pantallas.
+  // Los alias conservan las firmas que ya usaba el JSX de este panel.
+  const fmtNum   = numero;
+  const fmtPct   = (v) => porcentaje(v, 3, { agrupado: true });
+  const fmtMon   = (v, sym) => moneda(v, sym === '$' ? 'ARS' : 'USD', { absoluto: false });
+  const fmtMon4  = (v, sym) => moneda(v, sym === '$' ? 'ARS' : 'USD', { absoluto: false, dec: 4 });
+  const clrPct   = colorVariacion;
 
   const varD  = fondo.valorVarPct;
   const var1  = fondo.varMes;

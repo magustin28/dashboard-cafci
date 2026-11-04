@@ -2,54 +2,12 @@ import { useState } from "react";
 import InformeModal from "./InformeModal";
 import { useAuth } from "../context/useAuth";
 import { parseFechaAPI, fmtMoney, cnvLink } from "../lib/utils";
+import { PctCell, MonBadge, MoneyCell, VActualCell } from "./TableCells";
+import ConfirmDialog from "./ConfirmDialog";
 import {
   IconX, IconSearch, IconFileText, IconChartColumn,
   IconInfo, IconTrash2, IconAlertTriangle,
 } from "./Icons";
-
-function MoneyCell({ v, mon, colored }) {
-  if (v === null || isNaN(v)) return <span className="td-mono zero">—</span>;
-  const pfx = mon === "ARS" ? "$ " : "U$S ";
-  const val = Math.abs(v).toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const cls = colored ? (v > 0 ? "pos" : v < 0 ? "neg" : "zero") : "";
-  const sign = colored ? (v > 0 ? "+" : v < 0 ? "-" : "") : "";
-  return (
-    <span className={`td-mono ${cls}`} style={{ whiteSpace: "nowrap" }}>
-      {sign}
-      {pfx}
-      {val}
-    </span>
-  );
-}
-
-function VActualCell({ v, costo, mon }) {
-  if (v === null || isNaN(v)) return <span className="td-mono zero">—</span>;
-  const cls = v > costo ? "pos" : v < costo ? "neg" : "zero";
-  const pfx = mon === "ARS" ? "$ " : "U$S ";
-  const val = v.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  return (
-    <span className={`td-mono ${cls}`} style={{ whiteSpace: "nowrap", fontWeight: 600 }}>
-      {pfx}
-      {val}
-    </span>
-  );
-}
-
-function PctCell({ v, d = 2 }) {
-  if (v === null || isNaN(v)) return <span className="td-mono zero">—</span>;
-  const cls = v > 0 ? "pos" : v < 0 ? "neg" : "zero";
-  return (
-    <span className={`td-mono ${cls}`}>
-      {v > 0 ? "+" : ""}
-      {v.toFixed(d)}%
-    </span>
-  );
-}
-
-function MonBadge({ m }) {
-  const c = { ARS: "ars", USD: "usd", USB: "usb" }[m] || "reg";
-  return <span className={`badge badge-${c}`}>{m}</span>;
-}
 
 export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, onOpenRescate, onOpenHistorial, onFondoClick }) {
   const { portfolio, deleteSuscripcion } = useAuth();
@@ -57,6 +15,9 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
   const [q, setQ] = useState("");
   const [showInforme, setShowInforme] = useState(false);
   const [filterMoneda, setFilterMoneda] = useState("");
+  // Confirmación de borrado: { mensaje, onConfirm } | null. El diálogo es ConfirmDialog, el mismo
+  // que usa HistorialModal.
+  const [confirm, setConfirm] = useState(null);
   const hasFilters = q || filterMoneda;
   const clearFilters = () => {
     setQ("");
@@ -186,10 +147,13 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
       n > 1
         ? `¿Eliminar "${item.fondo_nombre}" del portafolio? Se eliminarán ${n} suscripciones. Esta acción es irreversible.`
         : `¿Eliminar "${item.fondo_nombre}" del portafolio? Esta acción es irreversible.`;
-    if (confirm(msg)) {
-      const ids = item._suscripciones?.map((s) => s.id) || [item.id];
-      ids.forEach((id) => deleteSuscripcion(id));
-    }
+    setConfirm({
+      mensaje: msg,
+      onConfirm: () => {
+        const ids = item._suscripciones?.map((s) => s.id) || [item.id];
+        ids.forEach((id) => deleteSuscripcion(id));
+      },
+    });
   };
 
   return (
@@ -506,6 +470,13 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
           </table>
         </div>
       </div>
+      {confirm && (
+        <ConfirmDialog
+          mensaje={confirm.mensaje}
+          onConfirm={confirm.onConfirm}
+          onClose={() => setConfirm(null)}
+        />
+      )}
       {showInforme && <InformeModal enriched={enriched} apiFecha={apiFecha} onClose={() => setShowInforme(false)} />}
     </>
   );

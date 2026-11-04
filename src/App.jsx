@@ -15,7 +15,8 @@ import RescateModal from './components/RescateModal';
 import HistorialModal from './components/HistorialModal';
 import FondoPanel    from './components/FondoPanel';
 import TopTab        from './components/TopTab';
-import { IconRefreshCw, IconStar, IconAlertTriangle } from './components/Icons';
+import { LoaderOverlay, ErrorState, DataOverlay } from './components/EstadoPantalla';
+import { IconStar } from './components/Icons';
 
 // ── Gesto Atrás en el celular ──────────────────────────────────────────────────────────────────
 // Sólo se activa en el celular/PWA: en una pestaña de escritorio el Atrás tiene que seguir saliendo
@@ -61,8 +62,7 @@ export default function App() {
   const [histModal,  setHistModal]  = useState(null); // fondoNombre | null
 
   // La fecha pedida vive como ESTADO y no se lee window.location.search en cada render: así se
-  // puede cambiar de día sin recargar. Antes un pushState solo no re-renderizaba, y la única forma
-  // de ver otra fecha era abrir `?fecha=…` en una pestaña nueva con window.open.
+  // puede cambiar de día sin recargar (un pushState solo no re-renderiza).
   const [search, setSearch] = useState(window.location.search);
   const fechaParam = new URLSearchParams(search).get('fecha');
 
@@ -117,9 +117,8 @@ export default function App() {
     return filterRows(rows, { q, moneda, region, horizonte });
   }, [raw, tabActual, q, moneda, region, horizonte]);
 
-  // Los favoritos pasan por la MISMA función de filtros que el resto de las pestañas. Antes este
-  // memo sólo miraba `favs`: el buscador y los selects se veían en la barra pero no filtraban
-  // nada (tipear el nombre de un fondo no hacía efecto).
+  // Los favoritos pasan por la MISMA función de filtros que el resto de las pestañas: así el
+  // buscador y los selects también los filtran.
   const favFiltered = useMemo(
     () => filterRows(raw.filter(r => favs.includes(r.fondo)), { q, moneda, region, horizonte }),
     [raw, favs, q, moneda, region, horizonte]
@@ -194,42 +193,21 @@ export default function App() {
   // podía volver atrás hasta que terminara.
   if (loading && raw.length === 0) {
     return (
-      <div id="loader-overlay" style={{ display: 'flex' }}>
-        <div className="spinner"></div>
-        <span id="loader-msg">
-          {fechaParam ? `Consultando los datos del ${formatFechaLabel(fechaParam)}…` : 'Consultando la API…'}
-        </span>
-        <span id="loader-sub">
-          {fechaParam
-            ? 'Consultando datos históricos de la API.'
-            : 'Esto puede tardar hasta 30 segundos si el servidor está iniciando.'}
-        </span>
-      </div>
+      <LoaderOverlay
+        mensaje={fechaParam ? `Consultando los datos del ${formatFechaLabel(fechaParam)}…` : 'Consultando la API…'}
+        sub={fechaParam
+          ? 'Consultando datos históricos de la API.'
+          : 'Esto puede tardar hasta 30 segundos si el servidor está iniciando.'}
+      />
     );
   }
 
   if (!authReady) {
-    return (
-      <div id="loader-overlay" style={{ display: 'flex' }}>
-        <div className="spinner"></div>
-        <span id="loader-msg">Conectando con la API…</span>
-        <span id="loader-sub">Esto puede tardar hasta 30 segundos si el servidor está iniciando.</span>
-      </div>
-    );
+    return <LoaderOverlay mensaje="Conectando con la API…" />;
   }
 
   if (error) {
-    return (
-      <div className="wrap">
-        <div className="table-wrap">
-          <div style={{ textAlign: 'center', padding: 40 }}>
-            <div style={{ marginBottom: 12, color: 'var(--red)' }}><IconAlertTriangle size={32} strokeWidth={1.75} /></div>
-            <p>No se pudieron cargar los datos.<br /><small>{error}</small></p>
-            <button className="btn-retry" onClick={() => fetchData(fechaParam)}><IconRefreshCw size={13} /> Reintentar</button>
-          </div>
-        </div>
-      </div>
-    );
+    return <ErrorState error={error} onRetry={() => fetchData(fechaParam)} />;
   }
 
   const tableData = isFavoritos ? favFiltered : filtered;
@@ -322,18 +300,11 @@ export default function App() {
         {/* Consulta de OTRA fecha en curso: se tapa la zona de datos (KPIs + filtros + tabla) y el
             header y las tabs quedan libres para volver con "Histórico: … ✕" o cambiar de pestaña. */}
         {consultando && (
-          <div className="data-overlay">
-            <div className="data-overlay-box">
-              <div className="spinner"></div>
-              <span className="data-overlay-msg">
-                {/* En la vuelta a los datos actuales fechaParam ya es null: ahí no hay fecha que
-                    mostrar (formatFechaLabel(null) rompería) y el mensaje cambia. */}
-                {fechaParam
-                  ? `Consultando los datos del ${formatFechaLabel(fechaParam)}…`
-                  : 'Volviendo a los datos actuales…'}
-              </span>
-            </div>
-          </div>
+          <DataOverlay
+            mensaje={fechaParam
+              ? `Consultando los datos del ${formatFechaLabel(fechaParam)}…`
+              : 'Volviendo a los datos actuales…'}
+          />
         )}
       </div>
 

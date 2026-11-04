@@ -110,9 +110,9 @@ export function AuthProvider({ children }) {
     return () => subscription.unsubscribe();
   }, [loadFavsFromDB, loadPortfolio]);
 
-  // Favoritos y portfolio en cuanto hay usuario logueado. Antes esto se hacía dentro del callback
-  // de onAuthStateChange (con await adentro): al sacarlo, el lock del cliente de Supabase queda
-  // libre enseguida y signOut() no se cuelga.
+  // Favoritos y portfolio en cuanto hay usuario logueado. Va fuera del callback de
+  // onAuthStateChange: así el lock del cliente de Supabase queda libre enseguida y signOut() no se
+  // cuelga.
   useEffect(() => {
     if (!user) return;
     loadFavsFromDB(user.id);
@@ -137,9 +137,8 @@ export function AuthProvider({ children }) {
   }, []);
 
   // Cerrar sesión. Dos cosas importantes:
-  // 1) Se limpia el estado ANTES de hablar con Supabase. Antes se limpiaba después del await, así
-  //    que si signOut() no resolvía (el cliente se queda esperando su lock del navegador) el botón
-  //    parecía no hacer nada y la sesión seguía abierta.
+  // 1) Se limpia el estado ANTES de hablar con Supabase: si signOut() no resuelve (el cliente se
+  //    queda esperando su lock del navegador), el botón igual responde y la sesión local se cierra.
   // 2) scope 'local' no depende de la red. Si aun así no responde en 2 s, se borra el token del
   //    storage a mano para que al recargar la app no vuelva logueado.
   const logout = useCallback(async () => {

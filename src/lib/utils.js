@@ -46,13 +46,12 @@ export function getTabGroup(row) {
 }
 
 // Vencimiento de la caché de datos del dashboard (sessionStorage, ver hooks/useFondos.js).
-// Antes no vencía nunca: con la pestaña abierta se seguía mostrando la planilla guardada y ni se
-// consultaba la API. 1 hora de TTL es el balance elegido: evita esperar la consulta (~3 s) en
-// recargas seguidas y, como máximo, muestra la planilla anterior durante 1 hora.
+// 1 hora de TTL: evita esperar la consulta (~3 s) en recargas seguidas y, como máximo, muestra la
+// planilla anterior durante 1 hora.
 export const CACHE_TTL_MS = 60 * 60 * 1000;
 
 export function cacheVencida(ts, ahora = Date.now(), ttl = CACHE_TTL_MS) {
-  // Sin marca de tiempo (cachés guardadas antes de este cambio) → se considera vencida
+  // Sin marca de tiempo → se considera vencida
   if (typeof ts !== "number" || ts <= 0) return true;
   return ahora - ts > ttl;
 }

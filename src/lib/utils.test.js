@@ -4,8 +4,7 @@
 //
 //  Foco en getTabGroup: agrupa por "Código de Clasificación" (columna 23 de la
 //  fila que arma useFondos) y usa el título de la categoría (columna 12) como
-//  respaldo. Antes agrupaba SOLO por el título con regex: si CAFCI renombraba
-//  una categoría, esos fondos caían en "Otros" sin que nadie se enterara.
+//  respaldo: si CAFCI renombra una categoría, esos fondos no caen en "Otros".
 // ─────────────────────────────────────────────────────────────
 import test from "node:test";
 import assert from "node:assert/strict";
