@@ -3,6 +3,22 @@
   max-width: 1150px !important;
   width: 95vw !important;
   padding: 24px 20px 20px !important;
+  /* Nunca supera el alto de la ventana: antes crecía con la cantidad de movimientos y, con muchos,
+     se salía de la pantalla. El encabezado queda fijo y sólo scrollea el cuerpo (.hist-scroll).
+     dvh cubre la barra del navegador en el celular; si el navegador no lo soporta, gana la regla vh. */
+  display: flex !important;
+  flex-direction: column !important;
+  max-height: calc(100vh - 40px);
+  max-height: calc(100dvh - 40px);
+}
+.hist-head {
+  flex: 0 0 auto;
+}
+.hist-scroll {
+  flex: 1 1 auto;
+  min-height: 0; /* sin esto, un hijo flex con overflow no scrollea */
+  overflow-y: auto;
+  padding-right: 4px; /* la barra de scroll no se monta sobre las cifras */
 }
 .hist-summary {
   display: flex;
