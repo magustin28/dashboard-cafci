@@ -19,13 +19,21 @@ export default function UserMenu({ onOpenAuth }) {
 
   const menuRef = useRef(null);
 
-  // Cerrar el menú al hacer clic fuera de él.
+  // Cerrar el menú al hacer clic fuera de él o al presionar ESC. El menú de perfil no es un modal
+  // con overlay (no usa useModalClose), así que su cierre por teclado se atiende acá.
   useEffect(() => {
-    const handler = (e) => {
+    const onMouseDown = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false);
     };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') setMenuOpen(false);
+    };
+    document.addEventListener('mousedown', onMouseDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', onMouseDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
   }, []);
 
   // Nombre visible: el de Google si existe (user_metadata.full_name) y si no el del email.
