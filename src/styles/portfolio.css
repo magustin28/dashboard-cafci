@@ -241,3 +241,29 @@
   display: table-row;
 }
 
+/* Sub-pestañas de "Mi Portfolio" (Tenencia Actual / Histórica). Antes eran dos objetos de estilo
+   inline idénticos salvo el estado activo; el contador "(N)" también iba inline. */
+.subtabs {
+  display: flex;
+  gap: 6px;
+  margin: 0 0 14px;
+}
+.subtab {
+  padding: 5px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  background: transparent;
+  color: var(--text2);
+  transition: all 0.15s;
+}
+.subtab.on {
+  background: var(--accent);
+  color: #fff;
+}
+.subtab-n {
+  opacity: 0.8;
+}
+

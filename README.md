@@ -28,4 +28,6 @@ npm test        # node --test (runner de Node, sin dependencias nuevas)
 
 `src/lib/format.test.js` cubre los formateadores compartidos de `src/lib/format.js` (fechas, números, moneda y porcentajes).
 
+`src/lib/portfolio.test.js` cubre la lógica de "Mi Portfolio" extraída a `src/lib/portfolio.js` (filtros, agrupación, enriquecimiento y totales de cartera).
+
 No valida render ni consultas a Supabase (eso requiere un test end-to-end con la base).

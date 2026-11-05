@@ -18,6 +18,61 @@ import {
   IconChevronUp, IconChevronDown,
 } from './Icons';
 
+// ── Piezas compartidas por las dos tablas ────────────────────────────────────────────────────
+// Estaban dentro del componente y se recreaban en cada render; son puras y no dependen del
+// estado, así que viven a nivel de módulo.
+
+const pctSpan = (v) => {
+  if (v === null || v === undefined) return <span style={{ color: 'var(--text2)' }}>—</span>;
+  const n = parseFloat(v);
+  const col = n > 0 ? 'var(--pos)' : n < 0 ? 'var(--neg)' : 'var(--text2)';
+  return <span style={{ color: col }}>{n > 0 ? '+' : ''}{n.toFixed(2)}%</span>;
+};
+
+// Encabezado de columna numérica (derecha por defecto, center=true lo centra).
+const th = (label, center = false) => (
+  <th style={{ textAlign: center ? 'center' : 'right', whiteSpace: 'nowrap' }}>{label}</th>
+);
+// Celda numérica alineada a la derecha (o centrada con center=true).
+const td = (content, center = false) => (
+  <td style={{ textAlign: center ? 'center' : 'right' }}>{content}</td>
+);
+
+// Botones de acción de una fila (editar / eliminar).
+const ActionBtns = ({ onEdit, onDelete }) => (
+  <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
+    <button onClick={onEdit} title="Editar"
+      style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, opacity: 0.5, padding: '2px 4px', transition: 'opacity 0.15s' }}
+      onMouseOver={e => e.currentTarget.style.opacity = 1}
+      onMouseOut={e => e.currentTarget.style.opacity = 0.5}><IconPencil size={13} /></button>
+    {/* El trash va en rojo para que se lea de inmediato como acción destructiva. */}
+    <button onClick={onDelete} title="Eliminar"
+      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--red)', fontSize: 13, opacity: 0.5, padding: '2px 4px', transition: 'opacity 0.15s' }}
+      onMouseOver={e => e.currentTarget.style.opacity = 1}
+      onMouseOut={e => e.currentTarget.style.opacity = 0.5}><IconTrash2 size={13} /></button>
+  </td>
+);
+
+// Input inline compacto de la edición en la fila.
+const InlineInput = ({ type = 'text', value, onChange, style = {} }) => (
+  <input type={type} value={value} onChange={e => onChange(e.target.value)}
+    style={{ width: '100%', fontSize: 11, padding: '2px 4px', border: '1px solid var(--accent)', borderRadius: 4, background: 'var(--bg)', color: 'var(--text1)', ...style }} />
+);
+
+// Guardar/Cancelar de una fila en edición: las dos tablas repetían el mismo par con estilos inline.
+const BotonesEdicion = ({ onSave, onCancel, saving }) => (
+  <>
+    <button onClick={onSave} disabled={saving}
+      style={{ marginRight: 6, padding: '3px 10px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 11 }}>
+      {saving ? '…' : '✓ Guardar'}
+    </button>
+    <button onClick={onCancel}
+      style={{ padding: '3px 10px', background: 'none', border: '1px solid var(--border2)', borderRadius: 4, cursor: 'pointer', fontSize: 11 }}>
+      Cancelar
+    </button>
+  </>
+);
+
 export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
   const { user, reloadPortfolio } = useAuth();
   const [data, setData]         = useState(null);
@@ -30,8 +85,6 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
   const [showResc, setShowResc] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState(null);
 
-  // Cierre animado del modal (hooks/useModalClose.js). El diálogo de confirmación usa su propio
-  // ConfirmDialog, que registra su capa aparte mientras está visible.
   // Cierre animado + ESC (hooks/useModalClose.js). Si hay una fila en edición, el primer ESC
   // cancela la edición en lugar de cerrar el modal: alEscape devuelve true = tecla consumida.
   const { closing, requestClose } = useModalClose(onClose, {
@@ -191,41 +244,6 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
     .map(r => (parseFloat(r.rendimiento) / parseFloat(r.costo_total)) / r.rescate_detalles[0].dias * 360 * 100);
   const tnaPromedio = tnasValidas.length ? tnasValidas.reduce((a, b) => a + b, 0) / tnasValidas.length : null;
 
-  const pctSpan = (v) => {
-    if (v === null || v === undefined) return <span style={{ color: 'var(--text2)' }}>—</span>;
-    const n = parseFloat(v);
-    const col = n > 0 ? 'var(--pos)' : n < 0 ? 'var(--neg)' : 'var(--text2)';
-    return <span style={{ color: col }}>{n > 0 ? '+' : ''}{n.toFixed(2)}%</span>;
-  };
-
-  const th = (label, center = false) => (
-    <th style={{ textAlign: center ? 'center' : 'right', whiteSpace: 'nowrap' }}>{label}</th>
-  );
-  const td = (content, center = false) => (
-    <td style={{ textAlign: center ? 'center' : 'right' }}>{content}</td>
-  );
-
-  // Botones de acción reutilizables
-  const ActionBtns = ({ onEdit, onDelete }) => (
-    <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
-      <button onClick={onEdit} title="Editar"
-        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, opacity: 0.5, padding: '2px 4px', transition: 'opacity 0.15s' }}
-        onMouseOver={e => e.currentTarget.style.opacity = 1}
-        onMouseOut={e => e.currentTarget.style.opacity = 0.5}><IconPencil size={13} /></button>
-      {/* El trash va en rojo para que se lea de inmediato como acción destructiva. */}
-      <button onClick={onDelete} title="Eliminar"
-        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--red)', fontSize: 13, opacity: 0.5, padding: '2px 4px', transition: 'opacity 0.15s' }}
-        onMouseOver={e => e.currentTarget.style.opacity = 1}
-        onMouseOut={e => e.currentTarget.style.opacity = 0.5}><IconTrash2 size={13} /></button>
-    </td>
-  );
-
-  // Input inline compacto
-  const InlineInput = ({ type = 'text', value, onChange, style = {} }) => (
-    <input type={type} value={value} onChange={e => onChange(e.target.value)}
-      style={{ width: '100%', fontSize: 11, padding: '2px 4px', border: '1px solid var(--accent)', borderRadius: 4, background: 'var(--bg)', color: 'var(--text1)', ...style }} />
-  );
-
   return (
     <div className={`modal-overlay${closing ? ' closing' : ''}`} style={{ display: 'flex' }} onClick={e => { if (e.target === e.currentTarget) requestClose(); }}>
       <div className="modal modal-wide" style={{ maxWidth: 1150, width: '95vw' }}>
@@ -287,12 +305,7 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
                           <td><InlineInput type="number" value={editSusc.cantidad} onChange={v => setEditSusc(p => ({ ...p, cantidad: v }))} /></td>
                           <td><InlineInput type="number" value={editSusc.precio_compra} onChange={v => setEditSusc(p => ({ ...p, precio_compra: v }))} /></td>
                           <td colSpan={2} style={{ textAlign: 'center' }}>
-                            <button onClick={saveSusc} disabled={saving} style={{ marginRight: 6, padding: '3px 10px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 11 }}>
-                              {saving ? '…' : '✓ Guardar'}
-                            </button>
-                            <button onClick={() => setEditSusc(null)} style={{ padding: '3px 10px', background: 'none', border: '1px solid var(--border2)', borderRadius: 4, cursor: 'pointer', fontSize: 11 }}>
-                              Cancelar
-                            </button>
+                            <BotonesEdicion onSave={saveSusc} onCancel={() => setEditSusc(null)} saving={saving} />
                           </td>
                         </>
                       ) : (
@@ -363,12 +376,7 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
                           {td(fmtPrecio(precPond))}
                           <td><InlineInput type="number" value={editResc.precio_rescate} onChange={v => setEditResc(p => ({ ...p, precio_rescate: v }))} /></td>
                           <td colSpan={7} style={{ textAlign: 'left', paddingLeft: 8 }}>
-                            <button onClick={saveResc} disabled={saving} style={{ marginRight: 6, padding: '3px 10px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 11 }}>
-                              {saving ? '…' : '✓ Guardar'}
-                            </button>
-                            <button onClick={() => setEditResc(null)} style={{ padding: '3px 10px', background: 'none', border: '1px solid var(--border2)', borderRadius: 4, cursor: 'pointer', fontSize: 11 }}>
-                              Cancelar
-                            </button>
+                            <BotonesEdicion onSave={saveResc} onCancel={() => setEditResc(null)} saving={saving} />
                           </td>
                         </>
                       ) : (
