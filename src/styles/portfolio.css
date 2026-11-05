@@ -167,6 +167,25 @@
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
+/* Campos fijados por contexto (p. ej. Fondo y Moneda en "Agregar suscripción" cuando el modal se
+   abrió desde un fondo concreto): se ven pero no se editan. readOnly/disabled ya lo impiden; esto
+   sólo lo comunica: fondo plano, borde punteado y cursor de "no permitido". */
+.modal-field input[readonly],
+.modal-field select:disabled {
+  background: var(--bg2);
+  color: var(--text2);
+  border-style: dashed;
+  cursor: not-allowed;
+}
+.modal-hint {
+  font-size: 11px;
+  color: var(--text2);
+  margin-top: 5px;
+}
+/* El candado de los campos fijos va pegado al texto del label (.modal-field label no es flex). */
+.modal-field label .icon {
+  margin-left: 4px;
+}
 .modal-row {
   display: flex;
   gap: 12px;

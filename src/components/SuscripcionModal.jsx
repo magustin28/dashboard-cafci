@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../context/useAuth';
 import { moneda as fmtMoneda } from '../lib/format';
 import { useModalClose } from '../hooks/useModalClose';
-import { IconX } from './Icons';
+import { IconLock, IconX } from './Icons';
 
 export default function SuscripcionModal({ fondoInicial, monedaInicial, raw, onClose }) {
   const { addSuscripcion } = useAuth();
@@ -13,6 +13,11 @@ export default function SuscripcionModal({ fondoInicial, monedaInicial, raw, onC
   const [precio,   setPrecio]   = useState('');
   const [error,    setError]    = useState('');
   const [loading,  setLoading]  = useState(false);
+  // Fondo y moneda identifican la posición donde se carga la compra. Cuando el modal se abre desde
+  // un fondo concreto (acción de fila, historial) vienen preseleccionados y quedan fijos: así no se
+  // puede cargar la suscripción en otro fondo/otra moneda por error. Sólo son editables cuando se
+  // abre "en blanco" (botón + de Agregar suscripción, que llega con fondo vacío).
+  const bloqueado = Boolean(fondoInicial);
   // Cierre animado (hooks/useModalClose.js). requestClose(true) al guardar: el hook reenvía el
   // argumento, así el padre sigue enterándose de que hay que refrescar el portfolio.
   const { closing, requestClose } = useModalClose(onClose);
@@ -41,18 +46,25 @@ export default function SuscripcionModal({ fondoInicial, monedaInicial, raw, onC
         <p className="modal-subtitle">Registrá una compra de cuotapartes</p>
 
         <div className="modal-field">
-          <label>Fondo</label>
-          <input type="text" value={fondo} onChange={e => setFondo(e.target.value)}
-            placeholder="Nombre del fondo" list="fondos-datalist" autoComplete="off" />
-          <datalist id="fondos-datalist">
-            {raw.map((r, i) => <option key={i} value={r.fondo} />)}
-          </datalist>
+          <label>Fondo {bloqueado && <IconLock size={11} />}</label>
+          {bloqueado ? (
+            <input type="text" value={fondo} readOnly />
+          ) : (
+            <>
+              <input type="text" value={fondo} onChange={e => setFondo(e.target.value)}
+                placeholder="Nombre del fondo" list="fondos-datalist" autoComplete="off" />
+              <datalist id="fondos-datalist">
+                {raw.map((r, i) => <option key={i} value={r.fondo} />)}
+              </datalist>
+            </>
+          )}
+          {bloqueado && <div className="modal-hint">Fijado al fondo que estás viendo.</div>}
         </div>
 
         <div className="modal-row">
           <div className="modal-field">
-            <label>Moneda</label>
-            <select value={moneda} onChange={e => setMoneda(e.target.value)}>
+            <label>Moneda {bloqueado && <IconLock size={11} />}</label>
+            <select value={moneda} onChange={e => setMoneda(e.target.value)} disabled={bloqueado}>
               <option value="ARS">ARS — Pesos</option>
               <option value="USD">USD — Dólar</option>
               <option value="USB">USB — Dólar Billete</option>
