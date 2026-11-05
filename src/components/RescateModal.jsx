@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../context/useAuth';
 import { moneda as fmtMoneda, cuotapartes } from '../lib/format';
 import { useModalClose } from '../hooks/useModalClose';
-import { IconX } from './Icons';
+import { IconLock, IconX } from './Icons';
 
 export default function RescateModal({ fondoInicial, monedaInicial, onClose }) {
   const { portfolio, addRescate } = useAuth();
@@ -13,6 +13,10 @@ export default function RescateModal({ fondoInicial, monedaInicial, onClose }) {
   const [precio,   setPrecio]   = useState('');
   const [error,    setError]    = useState('');
   const [loading,  setLoading]  = useState(false);
+  // El rescate siempre sale de un fondo concreto (acción de fila o Historial), así que Fondo y
+  // Moneda llegan preseleccionados y quedan fijos: se rescata de la posición que se está mirando y
+  // no de otra. Cantidad y precio siguen editables (son los datos del rescate).
+  const bloqueado = Boolean(fondoInicial);
   // Cierre animado (hooks/useModalClose.js). requestClose(true) al guardar: el hook reenvía el
   // argumento, así el padre sigue enterándose de que hay que refrescar el portfolio.
   const { closing, requestClose } = useModalClose(onClose);
@@ -66,20 +70,21 @@ export default function RescateModal({ fondoInicial, monedaInicial, onClose }) {
         <p className="modal-subtitle">Vendé cuotapartes — se aplica método FIFO</p>
 
         <div className="modal-field">
-          <label>Fondo</label>
-          <input type="text" value={fondo} onChange={e => setFondo(e.target.value)}
+          <label>Fondo {bloqueado && <IconLock size={11} />}</label>
+          <input type="text" value={fondo} onChange={e => setFondo(e.target.value)} readOnly={bloqueado}
             placeholder="Nombre del fondo" list="fondos-datalist" autoComplete="off" />
           <div className="resc-disponibles">
             {fondo && (disponibles > 0
               ? `Disponibles: ${cuotapartes(disponibles)} cuotapartes`
               : 'Sin cuotapartes disponibles para este fondo.')}
           </div>
+          {bloqueado && <div className="modal-hint">Fijado al fondo que estás viendo.</div>}
         </div>
 
         <div className="modal-row">
           <div className="modal-field">
-            <label>Moneda</label>
-            <select value={moneda} onChange={e => setMoneda(e.target.value)}>
+            <label>Moneda {bloqueado && <IconLock size={11} />}</label>
+            <select value={moneda} onChange={e => setMoneda(e.target.value)} disabled={bloqueado}>
               <option value="ARS">ARS — Pesos</option>
               <option value="USD">USD — Dólar</option>
               <option value="USB">USB — Dólar Billete</option>
