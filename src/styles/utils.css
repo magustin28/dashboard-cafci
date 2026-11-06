@@ -507,8 +507,9 @@
   }
 
   /* Barra de filtros: los selects se acomodan de a dos por fila (antes: buscador + 3 selects +
-     limpiar filtros = 4 filas). */
-  .filter-bar select {
+     limpiar filtros = 4 filas). El flex va en el envoltorio (.sel-wrap de components/Select.jsx):
+     el <select> ya no es hijo directo de la barra. */
+  .filter-bar .sel-wrap {
     flex: 1 1 45%;
     min-width: 0;
   }

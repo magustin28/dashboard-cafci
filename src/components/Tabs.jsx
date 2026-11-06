@@ -1,5 +1,5 @@
 import { useAuth } from "../context/useAuth";
-import { TAB_GROUPS, getTabGroup } from "../lib/utils";
+import { TAB_GROUPS, getTabGroup, contarFondos } from "../lib/utils";
 import { IconChartColumn, IconChevronDown, IconStar, IconTrophy } from "./Icons";
 
 // esFechaHistorica llega por prop y ya no se lee de window.location.search: la fecha pasó a ser
@@ -21,7 +21,9 @@ export default function Tabs({ raw, activeTab, onSwitch, esFechaHistorica = fals
     ...TAB_GROUPS.map((g) => ({
       id: g.id,
       label: g.label,
-      n: g.id === "Todos" ? raw.length : raw.filter((r) => getTabGroup(r) === g.id).length,
+      // contarFondos (no raw.length) porque raw trae una fila por CLASE: con raw.length, "Todos"
+      // mostraría la cantidad de clases en lugar de la cantidad de fondos. Ver lib/utils.js.
+      n: contarFondos(g.id === "Todos" ? raw : raw.filter((r) => getTabGroup(r) === g.id)),
     })),
   ];
   // Si la pestaña activa no está en la lista (por ejemplo "Mi Portfolio" sin sesión), el select
@@ -57,7 +59,8 @@ export default function Tabs({ raw, activeTab, onSwitch, esFechaHistorica = fals
         <IconTrophy size={13} /> Top 10
       </button>
       {TAB_GROUPS.map((g) => {
-        const n = g.id === "Todos" ? raw.length : raw.filter((r) => getTabGroup(r) === g.id).length;
+        // Mismo criterio que el selector del celular: contar FONDOS (grupos), no clases.
+        const n = contarFondos(g.id === "Todos" ? raw : raw.filter((r) => getTabGroup(r) === g.id));
         return (
           <button key={g.id} className={`tab${activeTab === g.id ? " active" : ""}`} onClick={() => onSwitch(g.id)}>
             {g.label}

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { IconSearch, IconX, IconSlidersHorizontal, IconChevronDown } from "./Icons";
+import Select from "./Select";
 
 /**
  * Barra de filtros de la tabla principal: buscador + moneda + región + horizonte + limpiar.
@@ -60,28 +61,30 @@ export default function FilterBar({
           <input type="search" placeholder="Buscar fondo o sociedad gerente…" autoComplete="off"
             value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
-        <select value={moneda} onChange={(e) => setMoneda(e.target.value)} aria-label="Moneda">
+        {/* Los tres selects usan components/Select.jsx: la flecha nativa del navegador se oculta
+            con appearance: none y se dibuja la de Lucide, igual que en el selector del celular. */}
+        <Select value={moneda} onChange={(e) => setMoneda(e.target.value)} ariaLabel="Moneda">
           <option value="">Todas las monedas</option>
           <option value="ARS">ARS — Pesos</option>
           <option value="USD">USD — Dólar</option>
           <option value="USB">USB — Dólar Billete</option>
-        </select>
-        <select value={region} onChange={(e) => setRegion(e.target.value)} aria-label="Región">
+        </Select>
+        <Select value={region} onChange={(e) => setRegion(e.target.value)} ariaLabel="Región">
           <option value="">Todas las regiones</option>
           <option value="Arg">Argentina</option>
           <option value="Glo">Global</option>
           <option value="Latam">Latinoamérica</option>
           <option value="Bra">Brasil</option>
           <option value="Eur">Europa</option>
-        </select>
-        <select value={horizonte} onChange={(e) => setHorizonte(e.target.value)} aria-label="Horizonte">
+        </Select>
+        <Select value={horizonte} onChange={(e) => setHorizonte(e.target.value)} ariaLabel="Horizonte">
           <option value="">Todos los horizontes</option>
           <option value="Cor">Corto plazo</option>
           <option value="Med">Mediano plazo</option>
           <option value="Lar">Largo plazo</option>
           <option value="Flex">Flexible</option>
           <option value="Sasig">Sasig</option>
-        </select>
+        </Select>
         <button className="btn-clear" disabled={!hasFilters} onClick={clearFilters}>
           <IconX size={12} /> Limpiar filtros
         </button>

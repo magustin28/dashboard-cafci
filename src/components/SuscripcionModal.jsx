@@ -1,18 +1,18 @@
-import { useState } from 'react';
-import { useAuth } from '../context/useAuth';
-import { moneda as fmtMoneda } from '../lib/format';
-import { useModalClose } from '../hooks/useModalClose';
-import { IconLock, IconX } from './Icons';
+import { useState } from "react";
+import { useAuth } from "../context/useAuth";
+import { moneda as fmtMoneda } from "../lib/format";
+import { useModalClose } from "../hooks/useModalClose";
+import { IconLock, IconX } from "./Icons";
 
 export default function SuscripcionModal({ fondoInicial, monedaInicial, raw, onClose }) {
   const { addSuscripcion } = useAuth();
-  const [fondo,    setFondo]    = useState(fondoInicial || '');
-  const [moneda,   setMoneda]   = useState(monedaInicial || 'ARS');
-  const [fecha,    setFecha]    = useState(new Date().toISOString().slice(0, 10));
-  const [cantidad, setCantidad] = useState('');
-  const [precio,   setPrecio]   = useState('');
-  const [error,    setError]    = useState('');
-  const [loading,  setLoading]  = useState(false);
+  const [fondo, setFondo] = useState(fondoInicial || "");
+  const [moneda, setMoneda] = useState(monedaInicial || "ARS");
+  const [fecha, setFecha] = useState(new Date().toISOString().slice(0, 10));
+  const [cantidad, setCantidad] = useState("");
+  const [precio, setPrecio] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   // Fondo y moneda identifican la posición donde se carga la compra. Cuando el modal se abre desde
   // un fondo concreto (acción de fila, historial) vienen preseleccionados y quedan fijos: así no se
   // puede cargar la suscripción en otro fondo/otra moneda por error. Sólo son editables cuando se
@@ -27,10 +27,10 @@ export default function SuscripcionModal({ fondoInicial, monedaInicial, raw, onC
   const total = !isNaN(cant) && !isNaN(prec) && cant > 0 && prec > 0 ? cant * prec : null;
 
   const submit = async () => {
-    if (!fondo)               return setError('Ingresá el nombre del fondo.');
-    if (!fecha)               return setError('Ingresá la fecha de compra.');
-    if (isNaN(cant) || cant <= 0) return setError('Ingresá una cantidad válida.');
-    if (isNaN(prec) || prec <= 0) return setError('Ingresá un precio válido.');
+    if (!fondo) return setError("Ingresá el nombre del fondo.");
+    if (!fecha) return setError("Ingresá la fecha de compra.");
+    if (isNaN(cant) || cant <= 0) return setError("Ingresá una cantidad válida.");
+    if (isNaN(prec) || prec <= 0) return setError("Ingresá un precio válido.");
     setLoading(true);
     const result = await addSuscripcion({ fondoNombre: fondo, moneda, fechaCompra: fecha, cantidad: cant, precioCompra: prec });
     setLoading(false);
@@ -39,32 +39,52 @@ export default function SuscripcionModal({ fondoInicial, monedaInicial, raw, onC
   };
 
   return (
-    <div className={`modal-overlay modal-overlay-top${closing ? ' closing' : ''}`} style={{ display: 'flex' }} onClick={e => { if (e.target === e.currentTarget) requestClose(); }}>
+    <div
+      className={`modal-overlay modal-overlay-top${closing ? " closing" : ""}`}
+      style={{ display: "flex" }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) requestClose();
+      }}
+    >
       <div className="modal">
-        <button className="modal-close" onClick={requestClose} aria-label="Cerrar"><IconX size={16} /></button>
+        <button className="modal-close" onClick={requestClose} aria-label="Cerrar">
+          <IconX size={16} />
+        </button>
         <h2 className="modal-title">Agregar suscripción</h2>
         <p className="modal-subtitle">Registrá una compra de cuotapartes</p>
 
         <div className="modal-field">
-          <label>Fondo {bloqueado && <IconLock size={11} />}</label>
+          {/* La leyenda va en el mismo renglón del título: antes ocupaba una línea aparte debajo
+              del input y se perdía. Sólo el Fondo la lleva; Moneda muestra el candado solo. */}
+          <label>
+            Fondo {bloqueado && <IconLock size={11} />}
+            {bloqueado && <span className="modal-hint-inline">Fijado al fondo que estás viendo.</span>}
+          </label>
           {bloqueado ? (
             <input type="text" value={fondo} readOnly />
           ) : (
             <>
-              <input type="text" value={fondo} onChange={e => setFondo(e.target.value)}
-                placeholder="Nombre del fondo" list="fondos-datalist" autoComplete="off" />
+              <input
+                type="text"
+                value={fondo}
+                onChange={(e) => setFondo(e.target.value)}
+                placeholder="Nombre del fondo"
+                list="fondos-datalist"
+                autoComplete="off"
+              />
               <datalist id="fondos-datalist">
-                {raw.map((r, i) => <option key={i} value={r.fondo} />)}
+                {raw.map((r, i) => (
+                  <option key={i} value={r.fondo} />
+                ))}
               </datalist>
             </>
           )}
-          {bloqueado && <div className="modal-hint">Fijado al fondo que estás viendo.</div>}
         </div>
 
         <div className="modal-row">
           <div className="modal-field">
             <label>Moneda {bloqueado && <IconLock size={11} />}</label>
-            <select value={moneda} onChange={e => setMoneda(e.target.value)} disabled={bloqueado}>
+            <select value={moneda} onChange={(e) => setMoneda(e.target.value)} disabled={bloqueado}>
               <option value="ARS">ARS — Pesos</option>
               <option value="USD">USD — Dólar</option>
               <option value="USB">USB — Dólar Billete</option>
@@ -72,32 +92,34 @@ export default function SuscripcionModal({ fondoInicial, monedaInicial, raw, onC
           </div>
           <div className="modal-field">
             <label>Fecha de suscripción</label>
-            <input type="date" value={fecha} onChange={e => setFecha(e.target.value)} />
+            <input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
           </div>
         </div>
 
         <div className="modal-row">
           <div className="modal-field">
-            <label>Cuotapartes suscritas</label>
-            <input type="number" value={cantidad} onChange={e => setCantidad(e.target.value)}
-              placeholder="ej: 1250.50" min={0} step="any" />
+            <label>Cuotapartes suscriptas</label>
+            <input type="number" value={cantidad} onChange={(e) => setCantidad(e.target.value)} placeholder="ej: 1250.50" min={0} step="any" />
           </div>
           <div className="modal-field">
             <label>Precio por cuotaparte</label>
-            <input type="number" value={precio} onChange={e => setPrecio(e.target.value)}
-              placeholder="ej: 1250.4832" min={0} step="any" />
+            <input type="number" value={precio} onChange={(e) => setPrecio(e.target.value)} placeholder="ej: 1250.4832" min={0} step="any" />
           </div>
         </div>
 
         <div className="modal-calc">
-          {total !== null
-            ? <>Inversión total: <strong style={{ color: 'var(--text)', fontSize: 13 }}>{fmtMoneda(total, moneda)}</strong></>
-            : 'Completá cantidad y precio para ver el total.'}
+          {total !== null ? (
+            <>
+              Inversión total: <strong style={{ color: "var(--text)", fontSize: 13 }}>{fmtMoneda(total, moneda)}</strong>
+            </>
+          ) : (
+            "Completá cantidad y precio para ver el total."
+          )}
         </div>
 
         {error && <p className="modal-error">{error}</p>}
         <button className="modal-submit" onClick={submit} disabled={loading}>
-          {loading ? 'Guardando…' : 'Guardar suscripción'}
+          {loading ? "Guardando…" : "Guardar suscripción"}
         </button>
       </div>
     </div>

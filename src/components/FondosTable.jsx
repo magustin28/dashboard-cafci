@@ -1,10 +1,26 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { useAuth } from "../context/useAuth";
-import { REG_MAP, HOR_MAP, cnvLink, parseFechaAPI } from "../lib/utils";
+import { REG_MAP, HOR_MAP, cnvLink, parseFechaAPI, agruparFondos, claseFondo } from "../lib/utils";
 import { PctCell, PatCell, MonBadge } from "./TableCells";
-import { IconStar, IconInfo, IconPlus } from "./Icons";
+import { IconStar, IconInfo, IconPlus, IconChevronDown, IconChevronUp } from "./Icons";
 
-export default function FondosTable({ filtered, refs, onOpenSuscripcion, onFondoClick }) {
+// ── Agrupación por clase ──────────────────────────────────────────────────────
+// CAFCI publica una fila por CLASE (código CNV propio: comisiones y rendimiento distintos), así
+// que un mismo fondo ocupa 3-4 filas y tapa al resto de la tabla. Acá se agrupa por nombre base +
+// moneda (ver lib/utils.js: agruparFondos) y se muestra UNA fila por fondo con su mejor clase.
+//
+// DECISIONES (acordadas con el usuario):
+//   · "Mejor" = mayor Var. Diaria % (la TEA sólo existe en Mi Portfolio, no en esta planilla).
+//   · Sólo se agrupa cuando hay MÁS DE UNA clase. Con una sola clase no hay nada que comparar y
+//     la fila se dibuja normal, sin desplegable.
+//   · Los botones de acción (favorito, info, agregar) van en CADA fila de clase, no en el
+//     resumen: lo que se agrega o se consulta es el fondo concreto (una clase), no el grupo.
+//     El resumen sólo lleva el botón de abrir/cerrar las clases.
+//   · Favoritos y Mi Portfolio NO se agrupan (esas pestañas tienen su propia lógica y el usuario
+//     puede tener una clase puntual, que desaparecería si se mostrara la "mejor").
+// activeTab llega desde App.jsx y sólo se usa para decidir si se agrupa: en "Favoritos" no se
+// agrupa (el favorito es una clase puntual y agrupar le mostraría otra).
+export default function FondosTable({ filtered, refs, activeTab, onOpenSuscripcion, onFondoClick }) {
   const { user, favs, toggleFav } = useAuth();
   const [page, setPage] = useState(1);
   // 25 por hoja por defecto: con 50 la tabla quedaba en ~2.000px de scroll. El selector 25/50/100
@@ -12,6 +28,9 @@ export default function FondosTable({ filtered, refs, onOpenSuscripcion, onFondo
   const [pageSize, setPageSize] = useState(25);
   const [sortKey, setSortKey] = useState("fondo");
   const [sortDir, setSortDir] = useState(1);
+  // Claves de los grupos con las clases desplegadas. Set y no array: se consulta por clave en cada
+  // fila y con array sería un .includes() por cada render de cada grupo.
+  const [abiertos, setAbiertos] = useState(() => new Set());
 
   const handleSort = (key) => {
     if (sortKey === key) setSortDir((d) => d * -1);
@@ -22,11 +41,31 @@ export default function FondosTable({ filtered, refs, onOpenSuscripcion, onFondo
     setPage(1);
   };
 
-  const sorted = [...filtered].sort((a, b) => {
+  const toggleAbierto = (key) =>
+    setAbiertos((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+
+  // Un grupo por nombre base + moneda. Cada grupo trae su "mejor" clase (mayor var. diaria) y la
+  // lista completa de clases para el desplegable.
+  //
+  // EXCEPCIÓN: Favoritos no se agrupa. El usuario guardó clases puntuales (el favorito es el nombre
+  // de la clase, no del fondo base); agrupar le mostraría otra clase —la "mejor"— y le ocultaría
+  // justo la que eligió. Cada favorito se dibuja como fila suelta con sus botones de acción.
+  const grupos = activeTab === "Favoritos"
+    ? filtered.map((r) => ({ key: `${r.fondo}|${r.moneda}`, nombre: r.fondo, moneda: r.moneda, clases: [r], mejor: r, n: 1 }))
+    : agruparFondos(filtered);
+
+  // El orden se resuelve por el MEJOR de cada grupo: si el usuario ordena por Var. Diaria, un fondo
+  // se ubica por su clase más rendidora. Ordenar por "fondo" usa el nombre base (sin la clase).
+  const sorted = [...grupos].sort((a, b) => {
     const campo = { fondo: "fondo", var_d: "valorVarPct", var_anio: "varAnio", var_12: "varAnual", pat: "patrimonio" }[sortKey];
-    if (sortKey === "fondo") return (a.fondo || "").localeCompare(b.fondo || "", "es") * sortDir;
-    const av = parseFloat(a[campo]) || -Infinity;
-    const bv = parseFloat(b[campo]) || -Infinity;
+    if (sortKey === "fondo") return (a.nombre || "").localeCompare(b.nombre || "", "es") * sortDir;
+    const av = parseFloat(a.mejor[campo]) || -Infinity;
+    const bv = parseFloat(b.mejor[campo]) || -Infinity;
     return (av - bv) * sortDir;
   });
 
@@ -34,12 +73,18 @@ export default function FondosTable({ filtered, refs, onOpenSuscripcion, onFondo
   // rango y mostrar una página vacía. Se recorta durante el render (derivando la página válida)
   // en lugar de resetear con un useEffect: el effect dispara un render en cascada y el lint de
   // react-hooks lo marca como error.
+  // La paginación cuenta FONDOS (grupos), no clases: "de 2.041" es la cantidad de fondos reales.
   const total = Math.max(1, Math.ceil(sorted.length / pageSize));
   const pagina = Math.min(page, total);
 
   const slice = sorted.slice((pagina - 1) * pageSize, pagina * pageSize);
 
   const arrow = (key) => (sortKey === key ? (sortDir === 1 ? " ↑" : " ↓") : " ↕");
+
+  // Props que comparten las filas de clase: la fila normal de un grupo de una sola clase y las
+  // filas de detalle de un grupo abierto. Se arma una vez por render en lugar de repetir ocho
+  // props en cada llamada a <FilaClase>.
+  const filaProps = { refs, favs, user, toggleFav, onOpenSuscripcion, onFondoClick };
 
   return (
     <div className="table-wrap">
@@ -109,79 +154,57 @@ export default function FondosTable({ filtered, refs, onOpenSuscripcion, onFondo
                 </td>
               </tr>
             ) : (
-              slice.map((r, i) => {
-                const isFaved = favs.includes(r.fondo);
+              slice.map((g) => {
+                // Una sola clase: no hay nada que agrupar. Fila normal con todos sus botones.
+                if (g.n === 1) return <FilaClase key={g.key} r={g.mejor} {...filaProps} />;
+
+                const abierto = abiertos.has(g.key);
+                const etiqueta = claseFondo(g.mejor.fondo);
                 return (
-                  <tr key={i}>
-                    <td style={{ verticalAlign: "middle" }}>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 3, width: 52, margin: "0 auto" }}>
+                  <Fragment key={g.key}>
+                    {/* Resumen del fondo: nombre base, la clase que se muestra y el botón de
+                        abrir/cerrar. Sin botones de acción: lo que se agrega o se consulta es
+                        el fondo concreto (una clase), y eso vive en las filas de abajo. */}
+                    <tr className="tr-grupo">
+                      <td style={{ textAlign: "center", verticalAlign: "middle" }}>
                         <button
-                          className={`btn-fav${isFaved ? " active" : ""}`}
-                          onClick={() => toggleFav(r.fondo)}
-                          title={isFaved ? "Quitar de favoritos" : "Agregar a favoritos"}
-                          style={{ fontSize: 13 }}
-                        ><IconStar size={13} /></button>
-                        <button
-                          className="btn-port-action btn-info"
-                          onClick={() => onFondoClick && onFondoClick(r)}
-                          title="Ver detalle del fondo"
-                        ><IconInfo size={13} /></button>
-                        {user ? (
-                          <button
-                            className="btn-port-action btn-susc"
-                            onClick={() => onOpenSuscripcion(r.fondo, r.moneda)}
-                            title="Agregar a mi portfolio"
-                            style={{ gridColumn: "span 2" }}
-                          ><IconPlus size={13} /></button>
-                        ) : <span />}
-                      </div>
-                    </td>
-                    <td className="td-fondo">{r.fondo || "—"}</td>
-                    <td>
-                      <MonBadge m={r.moneda} />
-                    </td>
-                    <td>
-                      <span className="badge badge-reg">{REG_MAP[r.region] || r.region || "—"}</span>
-                    </td>
-                    <td>
-                      <span className="badge badge-hor">{HOR_MAP[r.horizonte] || r.horizonte || "—"}</span>
-                    </td>
-                    <td style={{ textAlign: "center" }}>
-                      <PctCell v={r.valorVarPct} decimals={3} />
-                      {r.valorVarPct != null && (
-                        <div style={{ fontSize: 9, color: "var(--text2)", marginTop: 1 }}>~ {(parseFloat(r.valorVarPct) * 360).toFixed(2)}% TNA ~</div>
-                      )}
-                    </td>
-                    <td style={{ textAlign: "center" }}>
-                      {(() => {
-                        const pct = parseFloat(r.varAnio);
-                        if (isNaN(pct)) return <span className="td-mono zero">—</span>;
-                        const apiFechaDate = parseFechaAPI(refs?.apiFecha);
-                        const baseAnio = parseFechaAPI(refs?.fecha2);
-                        const dias = apiFechaDate && baseAnio ? Math.max(1, Math.round((apiFechaDate - baseAnio) / 86400000)) : 365;
-                        const tna = (pct / dias) * 360;
-                        const cls = tna > 0 ? "pos" : tna < 0 ? "neg" : "zero";
-                        return (
-                          <span className={"td-mono " + cls}>
-                            {tna > 0 ? "+" : ""}
-                            {tna.toFixed(2)}%
-                          </span>
-                        );
-                      })()}
-                    </td>
-                    <td>
-                      <PctCell v={r.varAnual} decimals={3} />
-                    </td>
-                    <td>
-                      <PatCell v={r.patrimonio} />
-                    </td>
-                    <td className="td-gerente">{r.socGerente || "—"}</td>
-                    <td>
-                      <a className="btn-cnv" href={cnvLink(r.cafci || "", r.cnv || "")} target="_blank" rel="noopener" title="Ver en CAFCI">
-                        ↗
-                      </a>
-                    </td>
-                  </tr>
+                          className={`btn-expand${abierto ? " on" : ""}`}
+                          onClick={() => toggleAbierto(g.key)}
+                          title={abierto ? "Ocultar las demás clases" : `Ver las ${g.n} clases`}
+                          aria-expanded={abierto}
+                        >
+                          {abierto ? <IconChevronUp size={13} /> : <IconChevronDown size={13} />}
+                        </button>
+                      </td>
+                      <td className="td-fondo">
+                        <span className="grupo-nombre">{g.nombre || "—"}</span>
+                        <span className="badge badge-clase" title={`Se muestra la mejor clase por Var. Diaria: Clase ${etiqueta}`}>
+                          Clase {etiqueta || "—"} · {g.n}
+                        </span>
+                      </td>
+                      <td><MonBadge m={g.mejor.moneda} /></td>
+                      <td><span className="badge badge-reg">{REG_MAP[g.mejor.region] || g.mejor.region || "—"}</span></td>
+                      <td><span className="badge badge-hor">{HOR_MAP[g.mejor.horizonte] || g.mejor.horizonte || "—"}</span></td>
+                      <td style={{ textAlign: "center" }}>
+                        <PctCell v={g.mejor.valorVarPct} decimals={3} />
+                        {g.mejor.valorVarPct != null && (
+                          <div style={{ fontSize: 9, color: "var(--text2)", marginTop: 1 }}>~ {(parseFloat(g.mejor.valorVarPct) * 360).toFixed(2)}% TNA ~</div>
+                        )}
+                      </td>
+                      <td style={{ textAlign: "center" }}><VarAnioCell r={g.mejor} refs={refs} /></td>
+                      <td><PctCell v={g.mejor.varAnual} decimals={3} /></td>
+                      <td><PatCell v={g.mejor.patrimonio} /></td>
+                      <td className="td-gerente">{g.mejor.socGerente || "—"}</td>
+                      <td>
+                        <a className="btn-cnv" href={cnvLink(g.mejor.cafci || "", g.mejor.cnv || "")} target="_blank" rel="noopener" title="Ver en CAFCI">↗</a>
+                      </td>
+                    </tr>
+                    {/* Clases restantes: cada una es un fondo con su código CNV propio y sus
+                        botones de acción. Sólo se dibujan con el grupo abierto. */}
+                    {abierto && g.clases.map((r) => (
+                      <FilaClase key={`${g.key}|${r.cnv || r.fondo}`} r={r} {...filaProps} indentada />
+                    ))}
+                  </Fragment>
                 );
               })
             )}
@@ -235,5 +258,101 @@ export default function FondosTable({ filtered, refs, onOpenSuscripcion, onFondo
         </div>
       )}
     </div>
+  );
+}
+
+// Celda de "Var. Inicio Año %" convertida a TNA anualizada. Estaba inline en la fila con una IIFE
+// y se repetía en el resumen del grupo y en las filas de detalle: acá queda en un solo lugar.
+// La TNA se deriva del % acumulado del año dividido por los días transcurridos, proyectado a 360.
+function VarAnioCell({ r, refs }) {
+  const pct = parseFloat(r && r.varAnio);
+  if (isNaN(pct)) return <span className="td-mono zero">—</span>;
+  const apiFechaDate = parseFechaAPI(refs?.apiFecha);
+  const baseAnio = parseFechaAPI(refs?.fecha2);
+  const dias = apiFechaDate && baseAnio ? Math.max(1, Math.round((apiFechaDate - baseAnio) / 86400000)) : 365;
+  const tna = (pct / dias) * 360;
+  const cls = tna > 0 ? "pos" : tna < 0 ? "neg" : "zero";
+  return (
+    <span className={"td-mono " + cls}>
+      {tna > 0 ? "+" : ""}
+      {tna.toFixed(2)}%
+    </span>
+  );
+}
+
+// Fila de una clase concreta: es el "fondo" en el sentido de CAFCI (una fila = un código CNV, con
+// su comisión y su rendimiento). La usan tanto los fondos de una sola clase como las filas de
+// detalle de un grupo abierto.
+//   conAcciones = false → sólo la fila de resumen del grupo, que lleva el botón de abrir/cerrar.
+//   indentada   = true  → fila de detalle: se sangra el nombre para que se lea como "sub-ítem" del
+//                         grupo y se muestra sólo la clase (el nombre base ya está arriba).
+function FilaClase({ r, refs, favs, user, toggleFav, onOpenSuscripcion, onFondoClick, conAcciones = true, indentada = false }) {
+  const isFaved = favs.includes(r.fondo);
+  const clase = claseFondo(r.fondo);
+  return (
+    <tr className={indentada ? "tr-clase" : undefined}>
+      <td style={{ verticalAlign: "middle" }}>
+        {conAcciones && (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 3, width: 52, margin: "0 auto" }}>
+            <button
+              className={`btn-fav${isFaved ? " active" : ""}`}
+              onClick={() => toggleFav(r.fondo)}
+              title={isFaved ? "Quitar de favoritos" : "Agregar a favoritos"}
+              style={{ fontSize: 13 }}
+            ><IconStar size={13} /></button>
+            <button
+              className="btn-port-action btn-info"
+              onClick={() => onFondoClick && onFondoClick(r)}
+              title="Ver detalle del fondo"
+            ><IconInfo size={13} /></button>
+            {user ? (
+              <button
+                className="btn-port-action btn-susc"
+                onClick={() => onOpenSuscripcion(r.fondo, r.moneda)}
+                title="Agregar a mi portfolio"
+                style={{ gridColumn: "span 2" }}
+              ><IconPlus size={13} /></button>
+            ) : <span />}
+          </div>
+        )}
+      </td>
+      <td className={indentada ? "td-fondo td-fondo-clase" : "td-fondo"}>
+        {indentada ? (
+          <span className="clase-etiqueta">Clase {clase || "—"}</span>
+        ) : (
+          r.fondo || "—"
+        )}
+      </td>
+      <td>
+        <MonBadge m={r.moneda} />
+      </td>
+      <td>
+        <span className="badge badge-reg">{REG_MAP[r.region] || r.region || "—"}</span>
+      </td>
+      <td>
+        <span className="badge badge-hor">{HOR_MAP[r.horizonte] || r.horizonte || "—"}</span>
+      </td>
+      <td style={{ textAlign: "center" }}>
+        <PctCell v={r.valorVarPct} decimals={3} />
+        {r.valorVarPct != null && (
+          <div style={{ fontSize: 9, color: "var(--text2)", marginTop: 1 }}>~ {(parseFloat(r.valorVarPct) * 360).toFixed(2)}% TNA ~</div>
+        )}
+      </td>
+      <td style={{ textAlign: "center" }}>
+        <VarAnioCell r={r} refs={refs} />
+      </td>
+      <td>
+        <PctCell v={r.varAnual} decimals={3} />
+      </td>
+      <td>
+        <PatCell v={r.patrimonio} />
+      </td>
+      <td className="td-gerente">{r.socGerente || "—"}</td>
+      <td>
+        <a className="btn-cnv" href={cnvLink(r.cafci || "", r.cnv || "")} target="_blank" rel="noopener" title="Ver en CAFCI">
+          ↗
+        </a>
+      </td>
+    </tr>
   );
 }

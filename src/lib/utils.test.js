@@ -12,6 +12,7 @@ import {
   getTabGroup, CLASIF_MAP, filterRows, cacheVencida, CACHE_TTL_MS,
   parseFechaAPI, fmtMoney, fmtPat, cnvLink, toast, formatPlazoLiq,
   diasDesdeFecha, estadoFrescura, diasHabilesDeAtraso,
+  nombreBaseFondo, claseFondo, claveGrupoFondo, contarFondos, agruparFondos,
 } from "./utils.js";
 
 // Fila como la arma useFondos: objeto con nombres estables (categoria + clasificacion)
@@ -276,6 +277,86 @@ test("cacheVencida: el TTL se puede acortar (parámetro)", () => {
   assert.equal(cacheVencida(ahora - 5000, ahora, 1000), true);
   assert.equal(cacheVencida(ahora - 500, ahora, 1000), false);
   assert.equal(CACHE_TTL_MS, 60 * 60 * 1000, "el TTL por defecto es 1 hora");
+});
+
+// ── Agrupación por clase ──────────────────────────────────────────────────────
+// CAFCI publica una fila por clase: "BAVSA Renta Balanceado IX - Clase A" y "… - Clase B" son el
+// MISMO fondo con distinto código CNV. La tabla los agrupa para no mostrar 3-4 filas por fondo.
+
+test("nombreBaseFondo: saca el sufijo de clase con guion, en guion largo y sin guion", () => {
+  assert.equal(nombreBaseFondo("BAVSA Renta Balanceado IX - Clase A"), "BAVSA Renta Balanceado IX");
+  assert.equal(nombreBaseFondo("BAVSA Renta Balanceado IX – Clase B"), "BAVSA Renta Balanceado IX", "guion largo");
+  assert.equal(nombreBaseFondo("BAVSA Renta Balanceado IX — Clase C"), "BAVSA Renta Balanceado IX", "guion em");
+  assert.equal(nombreBaseFondo("Fondo Compass Clase D"), "Fondo Compass", "sin guion");
+  assert.equal(nombreBaseFondo("Premier Renta Fija"), "Premier Renta Fija", "sin clase: no cambia");
+  assert.equal(nombreBaseFondo(""), "");
+  assert.equal(nombreBaseFondo(null), "");
+});
+
+test("claseFondo: extrae la letra de la clase (o cadena vacía si no tiene)", () => {
+  assert.equal(claseFondo("BAVSA Renta Balanceado IX - Clase A"), "A");
+  assert.equal(claseFondo("BAVSA Renta Balanceado IX - Clase b"), "B", "se normaliza a mayúsculas");
+  assert.equal(claseFondo("Fondo Compass Clase D"), "D");
+  assert.equal(claseFondo("Premier Renta Fija"), "");
+  assert.equal(claseFondo(null), "");
+});
+
+test("claveGrupoFondo: mismo nombre base + misma moneda = mismo grupo; distinta moneda = otro grupo", () => {
+  const a = { fondo: "BAVSA Renta Balanceado IX - Clase A", moneda: "ARS" };
+  const b = { fondo: "BAVSA Renta Balanceado IX - Clase B", moneda: "ARS" };
+  const c = { fondo: "BAVSA Renta Balanceado IX - Clase A", moneda: "USD" };
+  assert.equal(claveGrupoFondo(a), claveGrupoFondo(b), "dos clases en ARS agrupan juntas");
+  assert.notEqual(claveGrupoFondo(a), claveGrupoFondo(c), "el mismo fondo en USD es otro grupo");
+  assert.equal(claveGrupoFondo(null), "|");
+});
+
+test("contarFondos: cuenta fondos (grupos), no filas de clase", () => {
+  const rows = [
+    { fondo: "BAVSA Renta Balanceado IX - Clase A", moneda: "ARS" },
+    { fondo: "BAVSA Renta Balanceado IX - Clase B", moneda: "ARS" },
+    { fondo: "BAVSA Renta Balanceado IX - Clase C", moneda: "ARS" },
+    { fondo: "Premier Renta Fija", moneda: "ARS" },
+  ];
+  assert.equal(rows.length, 4, "son 4 filas (clases)");
+  assert.equal(contarFondos(rows), 2, "pero sólo 2 fondos: BAVSA (3 clases) y Premier");
+  assert.equal(contarFondos([]), 0);
+  assert.equal(contarFondos(null), 0);
+});
+
+test("agruparFondos: agrupa por nombre base + moneda y elige la mejor clase por Var. Diaria", () => {
+  const rows = [
+    { fondo: "BAVSA Renta Balanceado IX - Clase A", moneda: "ARS", valorVarPct: "0.1", cnv: "1" },
+    { fondo: "BAVSA Renta Balanceado IX - Clase B", moneda: "ARS", valorVarPct: "0.35", cnv: "2" },
+    { fondo: "BAVSA Renta Balanceado IX - Clase C", moneda: "ARS", valorVarPct: "0.2", cnv: "3" },
+    { fondo: "Premier Renta Fija", moneda: "ARS", valorVarPct: "0.05", cnv: "4" },
+  ];
+  const grupos = agruparFondos(rows);
+  assert.equal(grupos.length, 2, "dos fondos");
+  const bavsa = grupos.find((g) => g.nombre === "BAVSA Renta Balanceado IX");
+  assert.ok(bavsa);
+  assert.equal(bavsa.n, 3, "tres clases");
+  assert.equal(bavsa.clases.length, 3);
+  assert.equal(bavsa.mejor.valorVarPct, "0.35", "gana la clase con mayor Var. Diaria");
+  assert.equal(bavsa.mejor.cnv, "2");
+  const premier = grupos.find((g) => g.nombre === "Premier Renta Fija");
+  assert.equal(premier.n, 1, "una sola clase: no se agrupa");
+});
+
+test("agruparFondos: una clase sin dato de Var. Diaria no gana por descarte", () => {
+  const rows = [
+    { fondo: "Fondo X - Clase A", moneda: "ARS", valorVarPct: "0.2" },
+    { fondo: "Fondo X - Clase B", moneda: "ARS", valorVarPct: null },
+  ];
+  const g = agruparFondos(rows)[0];
+  assert.equal(g.mejor.valorVarPct, "0.2", "el null no se queda con el primer puesto");
+});
+
+test("agruparFondos: no mezcla ARS con USD aunque el nombre base sea el mismo", () => {
+  const rows = [
+    { fondo: "Fondo Y - Clase A", moneda: "ARS", valorVarPct: "0.1" },
+    { fondo: "Fondo Y - Clase A", moneda: "USD", valorVarPct: "0.2" },
+  ];
+  assert.equal(agruparFondos(rows).length, 2, "monedas distintas son grupos distintos");
 });
 
 

@@ -80,6 +80,78 @@ export function cnvLink(cnvCode, cafciCode) {
   return `https://estadisticas.cafci.org.ar/fondos/${q}?clase=${w}`;
 }
 
+// ── Agrupación por clase ──────────────────────────────────────────────────────
+// El nombre del fondo trae la clase pegada al final: "BAVSA Renta Balanceado IX - Clase A".
+// Cada clase es una fila con código CNV propio (comisiones y rendimiento distintos), así que un
+// mismo fondo ocupa 3-4 filas y tapa al resto de la tabla. La agrupación muestra una sola fila
+// por fondo (la mejor clase) y deja las demás accesibles con un desplegable.
+//
+// OJO: se agrupa por nombre base + MONEDA. Sin la moneda se mezclarían el mismo fondo en ARS y en
+// USD, que son productos distintos (distinto valor de cuotaparte).
+const RE_CLASE = /\s*[-–—]\s*Clase\s+[A-Za-z0-9]+\s*$/i;
+const RE_CLASE_SIN_GUION = /\s+Clase\s+[A-Za-z0-9]+\s*$/i;
+
+// "BAVSA Renta Balanceado IX - Clase A" → "BAVSA Renta Balanceado IX"
+// Si el nombre no trae clase, se devuelve igual (esos fondos no se agrupan).
+export function nombreBaseFondo(fondo) {
+  if (!fondo) return "";
+  return String(fondo).replace(RE_CLASE, "").replace(RE_CLASE_SIN_GUION, "").trim();
+}
+
+// "BAVSA Renta Balanceado IX - Clase A" → "A". Sin clase → "".
+export function claseFondo(fondo) {
+  if (!fondo) return "";
+  const m = String(fondo).match(/\bClase\s+([A-Za-z0-9]+)\s*$/i);
+  return m ? m[1].toUpperCase() : "";
+}
+
+// Clave de grupo: nombre base + moneda. Es la que usan la tabla y los contadores.
+export function claveGrupoFondo(row) {
+  return `${nombreBaseFondo(row && row.fondo)}|${(row && row.moneda) || ""}`;
+}
+
+// Cantidad de FONDOS (no de filas/clases) de una lista. La usan los contadores de las pestañas
+// y la paginación: si no, "Todos" diría 4.283 (filas) en lugar de los fondos reales.
+export function contarFondos(rows) {
+  const set = new Set();
+  for (const r of rows || []) set.add(claveGrupoFondo(r));
+  return set.size;
+}
+
+// Agrupa una lista de filas en "fondos": un grupo por nombre base + moneda. Cada grupo expone la
+// fila de la MEJOR clase (mayor variación diaria %; si no hay dato comparable, la primera) y la
+// lista completa de clases para el desplegable.
+//   { key, nombre, moneda, clases: [row], mejor: row, n: clases.length }
+// Los grupos con una sola clase quedan con n === 1: la tabla los dibuja como una fila normal, sin
+// desplegable (no tiene sentido ofrecer "ver las demás" cuando no hay demás).
+export function agruparFondos(rows) {
+  const grupos = new Map();
+  for (const r of rows || []) {
+    const key = claveGrupoFondo(r);
+    let g = grupos.get(key);
+    if (!g) {
+      g = { key, nombre: nombreBaseFondo(r && r.fondo), moneda: (r && r.moneda) || "", clases: [] };
+      grupos.set(key, g);
+    }
+    g.clases.push(r);
+  }
+
+  for (const g of grupos.values()) {
+    g.n = g.clases.length;
+    // "Mejor" = mayor Var. Diaria %. Los fondos sin dato (null/NaN) van al final para no ganar
+    // por descarte. Con empate se queda la primera, así el orden de la planilla manda.
+    g.mejor = g.clases.reduce((best, r) => {
+      const v = parseFloat(r && r.valorVarPct);
+      const b = parseFloat(best && best.valorVarPct);
+      if (isNaN(v)) return best;
+      if (isNaN(b)) return r;
+      return v > b ? r : best;
+    }, g.clases[0]);
+  }
+
+  return [...grupos.values()];
+}
+
 export function parseFechaAPI(str) {
   if (!str) return null;
   const iso = str.match(/^(\d{4})-(\d{2})-(\d{2})/);

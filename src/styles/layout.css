@@ -442,7 +442,32 @@ select option {
    compacto a propósito y mide 28px, y los selects de los modales tienen su propio alto. */
 .filter-bar select {
   height: 36px;
-  padding: 0 8px;
+  /* appearance: none saca la flecha nativa del navegador (cada uno dibuja la suya y no se puede
+     estilizar): la de Lucide la dibuja .sel-chev. 26px a la derecha es el lugar que ocupa. */
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 0 26px 0 10px;
+}
+/* Envoltorio de los selects de la barra de filtros (components/Select.jsx): mismo patrón que el
+   selector de secciones del celular (.tabs-select-wrap / .tabs-select-chev). El envoltorio es el
+   que se lleva el ancho/flex de la barra; el <select> lo llena. */
+.sel-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.sel-wrap select {
+  width: 100%;
+}
+.sel-chev {
+  position: absolute;
+  top: 50%;
+  right: 9px;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  color: var(--text2);
+  pointer-events: none;
 }
 .btn-clear {
   display: inline-flex;

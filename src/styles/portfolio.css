@@ -177,10 +177,27 @@
   border-style: dashed;
   cursor: not-allowed;
 }
-.modal-hint {
-  font-size: 11px;
-  color: var(--text2);
-  margin-top: 5px;
+/* El select bloqueado conservaba la flecha nativa del navegador y parecía que se podía abrir: se
+   oculta con appearance: none. Sin flecha no hace falta el espacio de la derecha. */
+.modal-field select:disabled {
+  appearance: none;
+  -webkit-appearance: none;
+}
+/* Leyenda del campo Fondo cuando está fijado (Suscripción y Rescate): va en el mismo renglón del
+   título, en itálica y en caja baja —el label es uppercase, así que sin text-transform: none se
+   leía todo en mayúsculas y pesaba demasiado—. Sólo la lleva el Fondo; Moneda muestra el candado.
+   El punto separador va como ::before para no tener que repetirlo en el JSX de los dos modales. */
+.modal-hint-inline {
+  margin-left: 6px;
+  font-style: italic;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--muted2);
+}
+.modal-hint-inline::before {
+  content: "·";
+  margin-right: 6px;
 }
 /* El candado de los campos fijos va pegado al texto del label (.modal-field label no es flex). */
 .modal-field label .icon {
@@ -189,6 +206,9 @@
 .modal-row {
   display: flex;
   gap: 12px;
+  /* Los inputs se alinean por abajo: si un label ocupa dos líneas (por ejemplo uno largo con una
+     aclaración entre paréntesis), su input arrancaría más abajo y la fila quedaría despareja. */
+  align-items: flex-end;
 }
 .modal-calc {
   background: var(--bg2);

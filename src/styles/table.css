@@ -225,3 +225,76 @@ tbody td:nth-child(2) {
   line-height: 1.7;
 }
 
+/* ── Agrupación por clase (FondosTable) ── */
+/* Un fondo con varias clases ocupa una fila de resumen (nombre base + badge "Clase A · N" +
+   botón de abrir/cerrar) y, al desplegarla, una fila por clase con sus botones de acción.
+   El resumen NO lleva botones de acción: lo que se agrega o se consulta es el fondo concreto. */
+
+/* Botón de abrir/cerrar las clases. Reusa el lenguaje visual de .btn-fav (borde suave, sin fondo)
+   para no introducir un estilo nuevo en la tabla. */
+.btn-expand {
+  background: none;
+  border: 1px solid var(--border2);
+  border-radius: 5px;
+  cursor: pointer;
+  padding: 3px 6px;
+  line-height: 1;
+  color: var(--text2);
+  transition: all 0.15s;
+}
+.btn-expand:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--text);
+}
+.btn-expand.on {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* Fila de resumen: tinte apenas visible para separarla de las filas normales sin recargar. */
+tr.tr-grupo {
+  background: rgba(37, 99, 235, 0.025);
+}
+tr.tr-grupo:hover {
+  background: rgba(37, 99, 235, 0.06);
+}
+/* .td-fondo de table.css es font-weight 500 y text-align left: acá se sube el peso para que el
+   nombre del grupo se distinga de las clases del detalle. */
+tr.tr-grupo .td-fondo {
+  font-weight: 600;
+}
+/* El nombre del grupo se muestra en negrita y el badge de clase va al lado; con el nombre largo,
+   el badge baja de renglón en vez de empujar el ancho de la columna. */
+.grupo-nombre {
+  display: inline;
+}
+
+/* Badge "Clase A · 3": hereda .badge de table.css y sólo cambia colores. */
+.badge-clase {
+  margin-left: 8px;
+  background: rgba(37, 99, 235, 0.08);
+  color: #1d4ed8;
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  cursor: default;
+}
+
+/* Filas de detalle (una clase concreta). El nombre se sangra con una barra vertical fina SOBRE EL
+   CONTENIDO de la celda y no sobre el <td>: en una tabla, margin/padding en el <td> mueven el
+   contenido de esa celda respecto de las demás columnas y el texto queda desalineado con las
+   filas de arriba. */
+tr.tr-clase {
+  background: rgba(0, 0, 0, 0.012);
+}
+tr.tr-clase:hover {
+  background: rgba(0, 0, 0, 0.035);
+}
+.clase-etiqueta {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  border-left: 2px solid var(--border2);
+  padding-left: 10px;
+  margin-left: 2px;
+}
+

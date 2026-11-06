@@ -6,6 +6,7 @@ import { fechaCorta } from "../lib/format";
 import { filtrarCartera, enriquecerCartera, dividirTenencias, resumenCartera } from "../lib/portfolio";
 import { PctCell, MonBadge, MoneyCell, VActualCell } from "./TableCells";
 import ConfirmDialog from "./ConfirmDialog";
+import Select from "./Select";
 import {
   IconX, IconSearch, IconFileText, IconChartColumn,
   IconInfo, IconTrash2, IconAlertTriangle,
@@ -122,12 +123,14 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
           <span className="search-icon"><IconSearch size={14} /></span>
           <input type="search" placeholder="Buscar fondo…" autoComplete="off" value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
-        <select value={filterMoneda} onChange={(e) => setFilterMoneda(e.target.value)}>
+        {/* Mismo Select que la barra de filtros principal (components/Select.jsx): flecha de Lucide
+            en lugar de la nativa del navegador. */}
+        <Select value={filterMoneda} onChange={(e) => setFilterMoneda(e.target.value)} ariaLabel="Moneda">
           <option value="">Todas las monedas</option>
           <option value="ARS">ARS — Pesos</option>
           <option value="USD">USD — Dólar</option>
           <option value="USB">USB — Dólar Billete</option>
-        </select>
+        </Select>
         <button className="btn-clear" disabled={!hasFilters} onClick={clearFilters}>
           <IconX size={12} /> Limpiar filtros
         </button>
