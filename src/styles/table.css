@@ -251,12 +251,17 @@ tbody td:nth-child(2) {
   border-color: var(--accent);
 }
 
-/* Fila de resumen: tinte apenas visible para separarla de las filas normales sin recargar. */
+/* Fila de resumen: tinte apenas visible para separarla de las filas normales sin recargar. Es
+   clickeable (toda ella abre/cierra el acordeón), de ahí el cursor de mano. */
 tr.tr-grupo {
   background: rgba(37, 99, 235, 0.025);
+  cursor: pointer;
 }
 tr.tr-grupo:hover {
   background: rgba(37, 99, 235, 0.06);
+}
+tr.tr-grupo.abierto {
+  background: rgba(37, 99, 235, 0.09);
 }
 /* .td-fondo de table.css es font-weight 500 y text-align left: acá se sube el peso para que el
    nombre del grupo se distinga de las clases del detalle. */
@@ -278,22 +283,34 @@ tr.tr-grupo .td-fondo {
   cursor: default;
 }
 
-/* Filas de detalle (una clase concreta). El nombre se sangra con una barra vertical fina SOBRE EL
-   CONTENIDO de la celda y no sobre el <td>: en una tabla, margin/padding en el <td> mueven el
-   contenido de esa celda respecto de las demás columnas y el texto queda desalineado con las
-   filas de arriba. */
+/* Filas de detalle (una clase concreta). Se "hunden" respecto del resumen para que no se lean como
+   una continuación de la tabla: fondo gris (--bg2), texto más chico y tenue, y una barra vertical a
+   la izquierda (box-shadow inset sobre el primer <td>, que dibuja el borde de todo el renglón y,
+   con varias filas seguidas, forma una línea continua que abraza al grupo).
+   El nombre se sangra con una barra vertical fina SOBRE EL CONTENIDO de la celda y no sobre el
+   <td>: en una tabla, margin/padding en el <td> mueven el contenido de esa celda respecto de las
+   demás columnas y el texto queda desalineado con las filas de arriba. */
 tr.tr-clase {
-  background: rgba(0, 0, 0, 0.012);
+  background: var(--bg2);
 }
 tr.tr-clase:hover {
-  background: rgba(0, 0, 0, 0.035);
+  background: var(--border);
+}
+tr.tr-clase td {
+  font-size: 11px;
+  padding-top: 7px;
+  padding-bottom: 7px;
+  color: var(--text2);
+}
+tr.tr-clase td:first-child {
+  box-shadow: inset 3px 0 0 rgba(37, 99, 235, 0.45);
 }
 .clase-etiqueta {
   display: inline-block;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--muted);
-  border-left: 2px solid var(--border2);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text2);
+  border-left: 2px solid var(--accent);
   padding-left: 10px;
   margin-left: 2px;
 }

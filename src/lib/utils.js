@@ -88,8 +88,12 @@ export function cnvLink(cnvCode, cafciCode) {
 //
 // OJO: se agrupa por nombre base + MONEDA. Sin la moneda se mezclarían el mismo fondo en ARS y en
 // USD, que son productos distintos (distinto valor de cuotaparte).
-const RE_CLASE = /\s*[-–—]\s*Clase\s+[A-Za-z0-9]+\s*$/i;
-const RE_CLASE_SIN_GUION = /\s+Clase\s+[A-Za-z0-9]+\s*$/i;
+// El corte va en el separador que precede a "Clase", NO al final del nombre: muchas clases traen el
+// régimen legal pegado ("Clase B Art. 11 Decreto 99/2019 y mod", "Clase B Ley N° 27.743", "Clase
+// Ley N° 27.743"). Exigiendo el fin de cadena, esos fondos conservaban el nombre entero y no se
+// agrupaban con sus hermanas: "1822 Raices Dólares Plus" quedaba partido en 3 grupos en vez de uno.
+const RE_CLASE = /\s*[-–—]\s*Clase\b.*$/i;
+const RE_CLASE_SIN_GUION = /\s+Clase\b.*$/i;
 
 // "BAVSA Renta Balanceado IX - Clase A" → "BAVSA Renta Balanceado IX"
 // Si el nombre no trae clase, se devuelve igual (esos fondos no se agrupan).
@@ -99,10 +103,21 @@ export function nombreBaseFondo(fondo) {
 }
 
 // "BAVSA Renta Balanceado IX - Clase A" → "A". Sin clase → "".
+//
+// La clase no siempre cierra el nombre: puede traer el régimen legal detrás ("Clase B Ley N°
+// 27.743", "Clase RAP Ley N° 27.743"). Y algunas filas no tienen letra, sólo la ley ("Clase Ley N°
+// 27.743", "Clase N° 27.743", "Clase Art. 11 Decreto 99/2019"): ahí el primer "token" es una
+// palabra legal, no una clase, así que se devuelve "" (la fila se muestra como "Clase —").
+const PALABRAS_LEGALES = new Set(["LEY", "ART", "ARTICULO", "DECRETO"]);
 export function claseFondo(fondo) {
   if (!fondo) return "";
-  const m = String(fondo).match(/\bClase\s+([A-Za-z0-9]+)\s*$/i);
-  return m ? m[1].toUpperCase() : "";
+  const s = String(fondo);
+  const m = s.match(/\bClase\s+([A-Za-z0-9]+)/i);
+  if (!m) return "";
+  // "Clase N° 27.743": el token es la N de "N°" (número), no una clase.
+  if (/^\s*[°º]/.test(s.slice(m.index + m[0].length))) return "";
+  const token = m[1].toUpperCase();
+  return PALABRAS_LEGALES.has(token) ? "" : token;
 }
 
 // Clave de grupo: nombre base + moneda. Es la que usan la tabla y los contadores.

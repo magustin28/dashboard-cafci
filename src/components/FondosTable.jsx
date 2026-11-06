@@ -1,6 +1,7 @@
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useAuth } from "../context/useAuth";
 import { REG_MAP, HOR_MAP, cnvLink, parseFechaAPI, agruparFondos, claseFondo } from "../lib/utils";
+import { capaSuperior } from "../lib/historial";
 import { PctCell, PatCell, MonBadge } from "./TableCells";
 import { IconStar, IconInfo, IconPlus, IconChevronDown, IconChevronUp } from "./Icons";
 
@@ -28,9 +29,9 @@ export default function FondosTable({ filtered, refs, activeTab, onOpenSuscripci
   const [pageSize, setPageSize] = useState(25);
   const [sortKey, setSortKey] = useState("fondo");
   const [sortDir, setSortDir] = useState(1);
-  // Claves de los grupos con las clases desplegadas. Set y no array: se consulta por clave en cada
-  // fila y con array sería un .includes() por cada render de cada grupo.
-  const [abiertos, setAbiertos] = useState(() => new Set());
+  // Clave del grupo con las clases desplegadas. Uno solo por vez (abrir un acordeón cierra el
+  // anterior, como pidió el usuario). null = ninguno abierto. Antes era un Set y permitía varios.
+  const [abierto, setAbierto] = useState(null);
 
   const handleSort = (key) => {
     if (sortKey === key) setSortDir((d) => d * -1);
@@ -41,13 +42,20 @@ export default function FondosTable({ filtered, refs, activeTab, onOpenSuscripci
     setPage(1);
   };
 
-  const toggleAbierto = (key) =>
-    setAbiertos((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
+  const toggleAbierto = (key) => setAbierto((prev) => (prev === key ? null : key));
+
+  // ESC cierra el acordeón abierto. Se ignora si hay un modal arriba (capaSuperior() no es null):
+  // en ese caso la tecla es para el modal, no para la tabla.
+  useEffect(() => {
+    if (!abierto) return;
+    const onKey = (e) => {
+      if (e.key !== "Escape") return;
+      if (capaSuperior()) return;
+      setAbierto(null);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [abierto]);
 
   // Un grupo por nombre base + moneda. Cada grupo trae su "mejor" clase (mayor var. diaria) y la
   // lista completa de clases para el desplegable.
@@ -158,22 +166,27 @@ export default function FondosTable({ filtered, refs, activeTab, onOpenSuscripci
                 // Una sola clase: no hay nada que agrupar. Fila normal con todos sus botones.
                 if (g.n === 1) return <FilaClase key={g.key} r={g.mejor} {...filaProps} />;
 
-                const abierto = abiertos.has(g.key);
+                const estaAbierto = abierto === g.key;
                 const etiqueta = claseFondo(g.mejor.fondo);
                 return (
                   <Fragment key={g.key}>
                     {/* Resumen del fondo: nombre base, la clase que se muestra y el botón de
                         abrir/cerrar. Sin botones de acción: lo que se agrega o se consulta es
-                        el fondo concreto (una clase), y eso vive en las filas de abajo. */}
-                    <tr className="tr-grupo">
+                        el fondo concreto (una clase), y eso vive en las filas de abajo.
+                        Toda la fila abre/cierra el acordeón; el botón y el link a CAFCI frenan la
+                        propagación para no dispararlo dos veces o sin querer. */}
+                    <tr
+                      className={`tr-grupo${estaAbierto ? " abierto" : ""}`}
+                      onClick={() => toggleAbierto(g.key)}
+                    >
                       <td style={{ textAlign: "center", verticalAlign: "middle" }}>
                         <button
-                          className={`btn-expand${abierto ? " on" : ""}`}
-                          onClick={() => toggleAbierto(g.key)}
-                          title={abierto ? "Ocultar las demás clases" : `Ver las ${g.n} clases`}
-                          aria-expanded={abierto}
+                          className={`btn-expand${estaAbierto ? " on" : ""}`}
+                          onClick={(e) => { e.stopPropagation(); toggleAbierto(g.key); }}
+                          title={estaAbierto ? "Ocultar las demás clases" : `Ver las ${g.n} clases`}
+                          aria-expanded={estaAbierto}
                         >
-                          {abierto ? <IconChevronUp size={13} /> : <IconChevronDown size={13} />}
+                          {estaAbierto ? <IconChevronUp size={13} /> : <IconChevronDown size={13} />}
                         </button>
                       </td>
                       <td className="td-fondo">
@@ -196,12 +209,12 @@ export default function FondosTable({ filtered, refs, activeTab, onOpenSuscripci
                       <td><PatCell v={g.mejor.patrimonio} /></td>
                       <td className="td-gerente">{g.mejor.socGerente || "—"}</td>
                       <td>
-                        <a className="btn-cnv" href={cnvLink(g.mejor.cafci || "", g.mejor.cnv || "")} target="_blank" rel="noopener" title="Ver en CAFCI">↗</a>
+                        <a className="btn-cnv" href={cnvLink(g.mejor.cafci || "", g.mejor.cnv || "")} onClick={(e) => e.stopPropagation()} target="_blank" rel="noopener" title="Ver en CAFCI">↗</a>
                       </td>
                     </tr>
                     {/* Clases restantes: cada una es un fondo con su código CNV propio y sus
                         botones de acción. Sólo se dibujan con el grupo abierto. */}
-                    {abierto && g.clases.map((r) => (
+                    {estaAbierto && g.clases.map((r) => (
                       <FilaClase key={`${g.key}|${r.cnv || r.fondo}`} r={r} {...filaProps} indentada />
                     ))}
                   </Fragment>
@@ -316,7 +329,7 @@ function FilaClase({ r, refs, favs, user, toggleFav, onOpenSuscripcion, onFondoC
           </div>
         )}
       </td>
-      <td className={indentada ? "td-fondo td-fondo-clase" : "td-fondo"}>
+      <td className={indentada ? "td-fondo td-fondo-clase" : "td-fondo"} title={indentada ? r.fondo : undefined}>
         {indentada ? (
           <span className="clase-etiqueta">Clase {clase || "—"}</span>
         ) : (

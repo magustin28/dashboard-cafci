@@ -359,4 +359,38 @@ test("agruparFondos: no mezcla ARS con USD aunque el nombre base sea el mismo", 
   assert.equal(agruparFondos(rows).length, 2, "monedas distintas son grupos distintos");
 });
 
+// ── Texto legal pegado a la clase (casos reales de la planilla de CAFCI) ──
+// Muchas clases traen el régimen legal detrás del nombre: "Clase B Art. 11 Decreto 99/2019 y mod",
+// "Clase B Ley N° 27.743". Antes el corte exigía que "Clase X" cerrara el nombre, así que esos
+// fondos quedaban sin agrupar. Caso testigo: "1822 Raices Dólares Plus".
+
+test("nombreBaseFondo: corta aunque después de la clase venga texto legal", () => {
+  assert.equal(
+    nombreBaseFondo("1822 Raices Dólares Plus - Clase B Art. 11 Decreto 99/2019 y mod"),
+    "1822 Raices Dólares Plus"
+  );
+  assert.equal(
+    nombreBaseFondo("1822 Raices Dólares Plus - Clase B Ley N° 27.743"),
+    "1822 Raices Dólares Plus"
+  );
+  assert.equal(nombreBaseFondo("SBS Acciones Brasil - Clase Ley N° 27.743"), "SBS Acciones Brasil");
+  assert.equal(nombreBaseFondo("MEGAQM Acciones- Clase Ley Nº 27.743"), "MEGAQM Acciones", "sin espacio antes del guion");
+});
+
+test("claveGrupoFondo: dos clases del mismo fondo con distinto texto legal agrupan juntas", () => {
+  const a = { fondo: "1822 Raices Dólares Plus - Clase B Art. 11 Decreto 99/2019 y mod", moneda: "ARS" };
+  const b = { fondo: "1822 Raices Dólares Plus - Clase B Ley N° 27.743", moneda: "ARS" };
+  assert.equal(claveGrupoFondo(a), claveGrupoFondo(b), "es el mismo fondo en la misma moneda");
+});
+
+test("claseFondo: no toma palabras legales como letra de clase", () => {
+  // Sin letra: sólo el régimen legal → "" (se muestra como "Clase —")
+  assert.equal(claseFondo("SBS Acciones Brasil - Clase Ley N° 27.743"), "");
+  assert.equal(claseFondo("MAF Mix I - Clase  Art. 11 Decreto 99/2019 y mod"), "");
+  assert.equal(claseFondo("Toronto Trust Renta Fija Plus - Clase N° 27.743"), "", "la N es de N° (número)");
+  // Con letra (aunque traiga texto legal detrás) → la letra
+  assert.equal(claseFondo("1822 Raices Dólares Plus - Clase B Ley N° 27.743"), "B");
+  assert.equal(claseFondo("MAF Acciones Argentinas - Clase RAP Ley N° 27.743"), "RAP", "clases multi-letra");
+});
+
 
