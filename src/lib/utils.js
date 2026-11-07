@@ -369,6 +369,19 @@ export function fmtPat(v, mon = "ARS") {
   return pfx + n.toLocaleString("es-AR");
 }
 
+// Variante de fmtPat que expresa SIEMPRE el importe en millones ("M"). Sirve para tablas donde
+// conviene comparar todos los valores en la misma unidad (ej. tooltip del modal de Sociedades
+// Gerentes) y así evitar el salto a un número "crudo" (ej. "22.500") al lado de otros abreviados.
+// Usa separador de miles es-AR y hasta 2 decimales (sin ceros de más). Sin moneda asume $ (ARS).
+export function fmtPatM(v, mon = "ARS") {
+  if (v === null || v === undefined) return "—";
+  const n = parseFloat(v);
+  if (isNaN(n) || n <= 0) return "—";
+  const pfx = mon === "ARS" ? "$" : "U$S ";
+  const s = (n / 1e6).toLocaleString("es-AR", { maximumFractionDigits: 2 });
+  return pfx + s + " M";
+}
+
 // Días calendario transcurridos desde la fecha de la planilla hasta hoy (0 = hoy).
 // Acepta lo mismo que parseFechaAPI (ISO y DD/MM/AAAA o DD/MM/AA) y devuelve null si no se
 // puede parsear. Se normalizan las dos fechas a medianoche para contar días calendario: si no,

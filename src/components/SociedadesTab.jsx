@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { agruparPorGerente, agruparFondosPorPatrimonio, nombreClase, treemapSquarified, colorVariacion, fmtPat } from '../lib/utils';
+import { agruparPorGerente, agruparFondosPorPatrimonio, nombreClase, treemapSquarified, colorVariacion, fmtPat, fmtPatM } from '../lib/utils';
 import { IconBuilding2, IconX } from './Icons';
 import { useModalClose } from '../hooks/useModalClose';
 
@@ -300,7 +300,7 @@ function GerenteModal({ g, moneda, onClose }) {
                         <span className="gm-tip-rank">{i < 3 ? `${i + 1}.` : ''}</span>
                         <span className="gm-tip-fondo-txt">{nombreClase(c.fondo) || c.fondo}</span>
                       </td>
-                      <td className="gm-tip-pat">{fmtPat(c.patrimonio, moneda)}</td>
+                      <td className="gm-tip-pat">{fmtPatM(c.patrimonio, moneda)}</td>
                       <td className="gm-tip-var" style={{ color: colorVariacion(c.valorVarPct, maxAbs) }}>
                         {formatearPct(c.valorVarPct)}
                       </td>
@@ -308,7 +308,7 @@ function GerenteModal({ g, moneda, onClose }) {
                   ))}
                 <tr className="gm-tip-total">
                   <td>Total</td>
-                  <td className="gm-tip-pat">{fmtPat(hover.f.patrimonio, moneda)}</td>
+                  <td className="gm-tip-pat">{fmtPatM(hover.f.patrimonio, moneda)}</td>
                   <td className="gm-tip-var" style={{ color: colorVariacion(hover.f.varPct, maxAbs) }}>
                     {formatearPct(hover.f.varPct)}
                   </td>

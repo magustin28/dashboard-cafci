@@ -10,7 +10,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   getTabGroup, CLASIF_MAP, filterRows, cacheVencida, CACHE_TTL_MS,
-  parseFechaAPI, fmtMoney, fmtPat, cnvLink, toast, formatPlazoLiq,
+  parseFechaAPI, fmtMoney, fmtPat, fmtPatM, cnvLink, toast, formatPlazoLiq,
   diasDesdeFecha, estadoFrescura, diasHabilesDeAtraso,
   nombreBaseFondo, nombreClase, claveGrupoFondo, contarFondos, agruparFondos,
   agruparPorGerente, agruparFondosPorPatrimonio, treemapSquarified, colorVariacion,
@@ -136,6 +136,15 @@ test("fmtPat: usa el símbolo de la moneda (U$S para USD)", () => {
   assert.match(fmtPat(5000, "USD"), /^U\$S 5[.,]000$/);
   // Sin moneda sigue siendo ARS (comportamiento previo de las tablas).
   assert.equal(fmtPat(3.2e9), "$3.20MM");
+});
+
+test("fmtPatM: expresa el patrimonio siempre en millones (M)", () => {
+  assert.match(fmtPatM(22500), /^\$0[.,]02 M$/, "22.500 → 0,02 M (ya no queda un número crudo)");
+  assert.match(fmtPatM(438100000), /^\$438[.,]1 M$/);
+  assert.match(fmtPatM(43810000000), /^\$43[.,]810 M$/);
+  assert.match(fmtPatM(1.23e12, "USD"), /^U\$S 1[.,]230[.,]000 M$/);
+  assert.equal(fmtPatM(null), "—");
+  assert.equal(fmtPatM(0), "—");
 });
 
 test("diasDesdeFecha: cuenta días calendario y normaliza la hora", () => {
