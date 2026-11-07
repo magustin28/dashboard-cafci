@@ -126,9 +126,21 @@ export function contarFondos(rows) {
   return set.size;
 }
 
+// Puntaje para elegir la "mejor" clase de un fondo. La Var. Diaria 0 = "sin movimientos" (la
+// cuotaparte no operó o quedó planchada), así que NO debe ganarle a una clase que sí se movió a la
+// baja: entre 0 % y −0,05 % se muestra −0,05 %. Orden de peor a mejor:
+//   sin dato (null/NaN)  <  0 (sin movimientos)  <  negativos (el menos negativo es el mejor)  <  positivos
+// Devuelve [nivel, valor]: primero compara el nivel y, dentro del mismo, el valor.
+function puntajeMejorClase(v) {
+  const n = parseFloat(v);
+  if (isNaN(n)) return [-1, 0];
+  if (n === 0) return [0, 0];
+  return [1, n];
+}
+
 // Agrupa una lista de filas en "fondos": un grupo por nombre base + moneda. Cada grupo expone la
-// fila de la MEJOR clase (mayor variación diaria %; si no hay dato comparable, la primera) y la
-// lista completa de clases para el desplegable.
+// fila de la MEJOR clase (mayor variación diaria %; el 0 no gana sobre una clase negativa, ver
+// puntajeMejorClase) y la lista completa de clases para el desplegable.
 //   { key, nombre, moneda, clases: [row], mejor: row, n: clases.length }
 // Los grupos con una sola clase quedan con n === 1: la tabla los dibuja como una fila normal, sin
 // desplegable (no tiene sentido ofrecer "ver las demás" cuando no hay demás).
@@ -146,14 +158,13 @@ export function agruparFondos(rows) {
 
   for (const g of grupos.values()) {
     g.n = g.clases.length;
-    // "Mejor" = mayor Var. Diaria %. Los fondos sin dato (null/NaN) van al final para no ganar
-    // por descarte. Con empate se queda la primera, así el orden de la planilla manda.
+    // "Mejor" = mayor Var. Diaria %, con el 0 tratado como "sin movimientos" (ver puntajeMejorClase):
+    // no le gana a una clase que sí se movió a la baja. Con empate se queda la primera, así el orden
+    // de la planilla manda.
     g.mejor = g.clases.reduce((best, r) => {
-      const v = parseFloat(r && r.valorVarPct);
-      const b = parseFloat(best && best.valorVarPct);
-      if (isNaN(v)) return best;
-      if (isNaN(b)) return r;
-      return v > b ? r : best;
+      const v = puntajeMejorClase(r && r.valorVarPct);
+      const b = puntajeMejorClase(best && best.valorVarPct);
+      return v[0] > b[0] || (v[0] === b[0] && v[1] > b[1]) ? r : best;
     }, g.clases[0]);
   }
 

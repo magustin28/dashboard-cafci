@@ -358,6 +358,32 @@ test("agruparFondos: no mezcla ARS con USD aunque el nombre base sea el mismo", 
   assert.equal(agruparFondos(rows).length, 2, "monedas distintas son grupos distintos");
 });
 
+test("agruparFondos: el 0 (sin movimientos) no le gana a una clase negativa", () => {
+  const rows = [
+    { fondo: "Fondo Z - Clase A", moneda: "ARS", valorVarPct: "0" },
+    { fondo: "Fondo Z - Clase B", moneda: "ARS", valorVarPct: "-0.05" },
+    { fondo: "Fondo Z - Clase C", moneda: "ARS", valorVarPct: "-0.12" },
+  ];
+  const g = agruparFondos(rows)[0];
+  assert.equal(g.mejor.valorVarPct, "-0.05", "se muestra la menos negativa, no el 0");
+});
+
+test("agruparFondos: un positivo sí le gana al 0", () => {
+  const rows = [
+    { fondo: "Fondo W - Clase A", moneda: "ARS", valorVarPct: "0" },
+    { fondo: "Fondo W - Clase B", moneda: "ARS", valorVarPct: "0.02" },
+  ];
+  assert.equal(agruparFondos(rows)[0].mejor.valorVarPct, "0.02");
+});
+
+test("agruparFondos: si todas son 0 se queda la primera", () => {
+  const rows = [
+    { fondo: "Fondo V - Clase A", moneda: "ARS", valorVarPct: "0" },
+    { fondo: "Fondo V - Clase B", moneda: "ARS", valorVarPct: "0.0" },
+  ];
+  assert.equal(agruparFondos(rows)[0].mejor.valorVarPct, "0", "todas sin movimientos: la primera");
+});
+
 // ── Texto legal pegado a la clase (casos reales de la planilla de CAFCI) ──
 // Muchas clases traen el régimen legal detrás del nombre: "Clase B Art. 11 Decreto 99/2019 y mod",
 // "Clase B Ley N° 27.743". Antes el corte exigía que "Clase X" cerrara el nombre, así que esos
