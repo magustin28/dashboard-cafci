@@ -13,7 +13,7 @@ import {
   parseFechaAPI, fmtMoney, fmtPat, cnvLink, toast, formatPlazoLiq,
   diasDesdeFecha, estadoFrescura, diasHabilesDeAtraso,
   nombreBaseFondo, nombreClase, claveGrupoFondo, contarFondos, agruparFondos,
-  agruparPorGerente, treemapSquarified, colorVariacion,
+  agruparPorGerente, agruparFondosPorPatrimonio, treemapSquarified, colorVariacion,
 } from "./utils.js";
 
 // Fila como la arma useFondos: objeto con nombres estables (categoria + clasificacion)
@@ -457,6 +457,37 @@ test("agruparPorGerente: sin gerente cae en '—' y no suma patrimonio inválido
   assert.equal(g[0].gerente, "—");
   assert.equal(g[0].patrimonio, 50, "sólo suma patrimonio válido");
   assert.equal(g[0].varPct, 2, "la fila sin patrimonio no pondera");
+});
+
+test("agruparFondosPorPatrimonio: agrupa por fondo base y suma patrimonio con variación ponderada", () => {
+  const rows = [
+    { fondo: "Compass Renta Fija - Clase F", moneda: "ARS", patrimonio: "100", valorVarPct: "1" },
+    { fondo: "Compass Renta Fija - Clase E", moneda: "ARS", patrimonio: "300", valorVarPct: "-2" },
+    { fondo: "Compass Renta Fija - Clase D", moneda: "ARS", patrimonio: "100", valorVarPct: "0" },
+    { fondo: "Otro Fondo - Clase A", moneda: "ARS", patrimonio: "50", valorVarPct: "0.5" },
+  ];
+  const g = agruparFondosPorPatrimonio(rows);
+  assert.equal(g.length, 2, "dos fondos base distintos");
+  assert.equal(g[0].nombre, "Compass Renta Fija", "ordenado por patrimonio descendente");
+  assert.equal(g[0].n, 3, "las tres clases del mismo fondo se agrupan");
+  assert.equal(g[0].patrimonio, 500, "suma el patrimonio de las clases");
+  assert.equal(g[0].varPct, -1, "(1*100 + -2*300 + 0*100) / 500 = -1");
+  assert.equal(g[1].nombre, "Otro Fondo");
+  assert.equal(g[1].n, 1);
+  assert.equal(g[1].patrimonio, 50);
+});
+
+test("agruparFondosPorPatrimonio: lista vacía o nula devuelve []", () => {
+  assert.deepEqual(agruparFondosPorPatrimonio(null), []);
+  assert.deepEqual(agruparFondosPorPatrimonio([]), []);
+});
+
+test("agruparFondosPorPatrimonio: sin patrimonio válido deja varPct null", () => {
+  const g = agruparFondosPorPatrimonio([
+    { fondo: "Solo - Clase A", moneda: "ARS", patrimonio: "", valorVarPct: "1" },
+  ]);
+  assert.equal(g[0].patrimonio, 0);
+  assert.equal(g[0].varPct, null);
 });
 
 test("treemapSquarified: reparte toda el área y no se sale del contenedor", () => {

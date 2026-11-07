@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { agruparPorGerente, treemapSquarified, colorVariacion, fmtPat } from '../lib/utils';
+import { agruparPorGerente, agruparFondosPorPatrimonio, nombreClase, treemapSquarified, colorVariacion, fmtPat } from '../lib/utils';
 import { IconBuilding2, IconX } from './Icons';
 import { useModalClose } from '../hooks/useModalClose';
 
@@ -164,17 +164,11 @@ function GerenteModal({ g, moneda, onClose }) {
   const [n, setN] = useState(() => (g.fondos || []).length || 1);
 
   // Fondos ordenados por patrimonio (mayor primero).
-  const fondos = useMemo(
-    () =>
-      [...(g.fondos || [])].sort(
-        (a, b) => (parseFloat(b.patrimonio) || 0) - (parseFloat(a.patrimonio) || 0)
-      ),
-    [g]
-  );
+  const fondos = useMemo(() => agruparFondosPorPatrimonio(g.fondos || []), [g]);
 
   // Máximo |variación| de los fondos para colorear la variación de cada fila.
   const maxAbs = useMemo(
-    () => fondos.reduce((m, f) => Math.max(m, Math.abs(parseFloat(f.valorVarPct) || 0)), 0),
+    () => fondos.reduce((m, f) => Math.max(m, Math.abs(f.varPct || 0)), 0),
     [fondos]
   );
 
@@ -221,15 +215,33 @@ function GerenteModal({ g, moneda, onClose }) {
           <span>Var. diaria</span>
         </div>
         <div className="gm-list" ref={listRef}>
-          {visibles.map((f, i) => (
-            <div className="gm-row" key={i}>
-              <span className="gm-row-name" title={f.fondo}>{f.fondo}</span>
-              <span className="gm-row-pat">{fmtPat(f.patrimonio, moneda)}</span>
-              <span className="gm-row-var" style={{ color: colorVariacion(f.valorVarPct, maxAbs) }}>
-                {formatearPct(f.valorVarPct)}
-              </span>
-            </div>
-          ))}
+          {visibles.map((f) => {
+            // Nombre a mostrar: si el fondo agrupa varias clases, el nombre base + badge; si tiene
+            // una sola clase, el nombre completo de esa clase (así no se pierde la letra).
+            const nombre = f.n > 1 ? f.nombre : (f.clases[0] && f.clases[0].fondo) || f.nombre;
+            // Detalle por clase en el tooltip (title): cada clase con su patrimonio y variación.
+            const detalle =
+              f.n > 1
+                ? f.clases
+                    .map(
+                      (c) =>
+                        `${nombreClase(c.fondo) || c.fondo} · ${fmtPat(c.patrimonio, moneda)} · ${formatearPct(c.valorVarPct)}`
+                    )
+                    .join('\n')
+                : nombre;
+            return (
+              <div className="gm-row" key={f.key}>
+                <span className="gm-row-name" title={detalle}>
+                  <span className="gm-row-fund">{nombre}</span>
+                  {f.n > 1 && <span className="gm-row-badge">{f.n} clases</span>}
+                </span>
+                <span className="gm-row-pat">{fmtPat(f.patrimonio, moneda)}</span>
+                <span className="gm-row-var" style={{ color: colorVariacion(f.varPct, maxAbs) }}>
+                  {formatearPct(f.varPct)}
+                </span>
+              </div>
+            );
+          })}
         </div>
         <div className="gm-note">
           {ocultos > 0

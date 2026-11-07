@@ -203,6 +203,45 @@ export function agruparPorGerente(rows) {
   return out.sort((a, b) => b.patrimonio - a.patrimonio);
 }
 
+// ── Agrupación por FONDO BASE (modal de "Sociedades Gerentes") ─────────────────────────────────
+// Igual que agruparPorGerente, pero agrupa por nombre base del fondo (no por gerente): junta las
+// clases de un mismo fondo ("Compass Renta Fija - Clase F/E/D" → "Compass Renta Fija") porque
+// comparten objetivo y activos. SUMA el patrimonio de las clases y pondera la variación por
+// patrimonio. Es lo que usa el listado del modal: una fila por fondo, no por clase.
+//   { key, nombre, moneda, n, patrimonio, varPct, clases: [row] }
+export function agruparFondosPorPatrimonio(rows) {
+  const grupos = new Map();
+  for (const r of rows || []) {
+    const key = claveGrupoFondo(r);
+    let g = grupos.get(key);
+    if (!g) {
+      g = {
+        key,
+        nombre: nombreBaseFondo(r && r.fondo),
+        moneda: (r && r.moneda) || "",
+        clases: [],
+        patrimonio: 0,
+        pesoVar: 0,
+      };
+      grupos.set(key, g);
+    }
+    g.clases.push(r);
+    const pat = parseFloat(r && r.patrimonio);
+    const v = parseFloat(r && r.valorVarPct);
+    if (!isNaN(pat) && pat > 0) {
+      g.patrimonio += pat;
+      if (!isNaN(v)) g.pesoVar += v * pat;
+    }
+  }
+  const out = [...grupos.values()];
+  for (const g of out) {
+    g.n = g.clases.length;
+    g.varPct = g.patrimonio > 0 ? g.pesoVar / g.patrimonio : null;
+    delete g.pesoVar;
+  }
+  return out.sort((a, b) => b.patrimonio - a.patrimonio);
+}
+
 // ── Treemap "squarified" ─────────────────────────────────────────────────────────────────────────
 // Reparte un rectángulo entre ítems de tamaño proporcional a `value`, con el algoritmo de Bruls,
 // Huizing y van Wijk (2000): arma filas que ocupan el lado corto y minimiza la relación de aspecto
