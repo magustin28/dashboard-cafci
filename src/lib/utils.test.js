@@ -13,6 +13,7 @@ import {
   parseFechaAPI, fmtMoney, fmtPat, cnvLink, toast, formatPlazoLiq,
   diasDesdeFecha, estadoFrescura, diasHabilesDeAtraso,
   nombreBaseFondo, nombreClase, claveGrupoFondo, contarFondos, agruparFondos,
+  agruparPorGerente, treemapSquarified, colorVariacion,
 } from "./utils.js";
 
 // Fila como la arma useFondos: objeto con nombres estables (categoria + clasificacion)
@@ -127,6 +128,14 @@ test("fmtPat: patrimonios inválidos → guion; abrevia B/MM/M", () => {
   assert.equal(fmtPat(2.5e6), "$2.50M");
   assert.match(fmtPat(5000), /^\$5[.,]000$/);
   assert.equal(fmtPat("790407962"), "$790.41M"); // string, como llega del jsonb
+});
+
+test("fmtPat: usa el símbolo de la moneda (U$S para USD)", () => {
+  assert.equal(fmtPat(3.2e9, "USD"), "U$S 3.20MM");
+  assert.equal(fmtPat(2.5e6, "USD"), "U$S 2.50M");
+  assert.match(fmtPat(5000, "USD"), /^U\$S 5[.,]000$/);
+  // Sin moneda sigue siendo ARS (comportamiento previo de las tablas).
+  assert.equal(fmtPat(3.2e9), "$3.20MM");
 });
 
 test("diasDesdeFecha: cuenta días calendario y normaliza la hora", () => {
@@ -421,6 +430,59 @@ test("nombreClase: incluye el régimen legal pegado (dos clases D quedan disting
   );
   assert.equal(nombreClase("1822 Raices Dólares Plus - Clase B Art. 11 Decreto 99/2019 y mod"), "Clase B Art. 11 Decreto 99/2019 y mod");
   assert.equal(nombreClase("SBS Acciones Brasil - Clase Ley N° 27.743"), "Clase Ley N° 27.743");
+});
+
+test("agruparPorGerente: suma patrimonio y promedia la variación ponderada por patrimonio", () => {
+  const rows = [
+    { socGerente: "GALILEO", patrimonio: "100", valorVarPct: "1" },
+    { socGerente: "GALILEO", patrimonio: "300", valorVarPct: "3" },
+    { socGerente: "BALANZ", patrimonio: "200", valorVarPct: "-2" },
+  ];
+  const g = agruparPorGerente(rows);
+  assert.equal(g.length, 2, "dos gerentes distintos");
+  assert.equal(g[0].gerente, "GALILEO", "ordenado por patrimonio descendente");
+  assert.equal(g[0].patrimonio, 400);
+  assert.equal(g[0].n, 2);
+  assert.equal(g[0].varPct, 2.5, "(1*100 + 3*300) / 400 = 2.5");
+  assert.equal(g[1].gerente, "BALANZ");
+  assert.equal(g[1].varPct, -2);
+});
+
+test("agruparPorGerente: sin gerente cae en '—' y no suma patrimonio inválido", () => {
+  const g = agruparPorGerente([
+    { socGerente: "", patrimonio: "50", valorVarPct: "2" },
+    { patrimonio: null, valorVarPct: "5" },
+  ]);
+  assert.equal(g.length, 1, "las dos filas sin gerente forman un solo grupo");
+  assert.equal(g[0].gerente, "—");
+  assert.equal(g[0].patrimonio, 50, "sólo suma patrimonio válido");
+  assert.equal(g[0].varPct, 2, "la fila sin patrimonio no pondera");
+});
+
+test("treemapSquarified: reparte toda el área y no se sale del contenedor", () => {
+  const rects = treemapSquarified([{ value: 60 }, { value: 25 }, { value: 10 }, { value: 5 }], 100, 60);
+  assert.equal(rects.length, 4);
+  let area = 0;
+  for (const r of rects) {
+    assert.ok(r.x >= -0.001 && r.y >= -0.001, "x/y no negativos");
+    assert.ok(r.x + r.w <= 100.001, "no se pasa del ancho");
+    assert.ok(r.y + r.h <= 60.001, "no se pasa del alto");
+    assert.ok(r.w >= -0.001 && r.h >= -0.001, "dimensiones no negativas");
+    area += r.w * r.h;
+  }
+  assert.ok(Math.abs(area - 6000) < 1, `área total ≈ 6000 (fue ${area})`);
+});
+
+test("treemapSquarified: descarta ítems sin valor", () => {
+  const rects = treemapSquarified([{ value: 0 }, { value: -3 }, { value: 10 }], 100, 100);
+  assert.equal(rects.length, 1);
+  assert.equal(rects[0].value, 10);
+});
+
+test("colorVariacion: verde si sube, rojo si baja y gris sin dato", () => {
+  assert.ok(colorVariacion(2, 4).startsWith("rgba(5,150,105"), "positivo → verde");
+  assert.ok(colorVariacion(-2, 4).startsWith("rgba(220,38,38"), "negativo → rojo");
+  assert.ok(colorVariacion(null, 4).startsWith("rgba(115,115,115"), "sin dato → gris");
 });
 
 

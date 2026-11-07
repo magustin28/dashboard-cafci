@@ -171,6 +171,130 @@ export function agruparFondos(rows) {
   return [...grupos.values()];
 }
 
+// ── Agrupación por sociedad gerente (pestaña "Sociedades Gerentes") ─────────────────────────────
+// Agrupa las filas por sociedad gerente y SUMA su patrimonio. La variación del grupo es el promedio
+// PONDERADO por patrimonio (una clase con más plata pesa más), no el promedio simple.
+//   { gerente, patrimonio, n (filas), varPct, fondos: [row] }
+// Las filas sin gerente caen en "—". Quien llama filtra antes por MONEDA: sumar ARS y USD en el
+// mismo total no tiene sentido (son productos distintos).
+export function agruparPorGerente(rows) {
+  const map = new Map();
+  for (const r of rows || []) {
+    const gerente = (r && r.socGerente) || "—";
+    let e = map.get(gerente);
+    if (!e) {
+      e = { gerente, patrimonio: 0, pesoVar: 0, n: 0, fondos: [] };
+      map.set(gerente, e);
+    }
+    const pat = parseFloat(r && r.patrimonio);
+    const v = parseFloat(r && r.valorVarPct);
+    e.n++;
+    e.fondos.push(r);
+    if (!isNaN(pat) && pat > 0) {
+      e.patrimonio += pat;
+      if (!isNaN(v)) e.pesoVar += v * pat;
+    }
+  }
+  const out = [...map.values()];
+  for (const e of out) {
+    e.varPct = e.patrimonio > 0 ? e.pesoVar / e.patrimonio : null;
+    delete e.pesoVar;
+  }
+  return out.sort((a, b) => b.patrimonio - a.patrimonio);
+}
+
+// ── Treemap "squarified" ─────────────────────────────────────────────────────────────────────────
+// Reparte un rectángulo entre ítems de tamaño proporcional a `value`, con el algoritmo de Bruls,
+// Huizing y van Wijk (2000): arma filas que ocupan el lado corto y minimiza la relación de aspecto
+// (rectángulos lo más cuadrados posible). Es el mismo layout del treemap de d3 con ratio = 1.
+// Devuelve una copia de cada ítem con { x, y, w, h } en las MISMAS unidades que width/height.
+// Descarta los ítems con value <= 0. La suma de las áreas w*h es igual a width*height.
+export function treemapSquarified(items, width = 100, height = 100, ratio = 1) {
+  const nodes = (items || [])
+    .filter((d) => d && isFinite(d.value) && d.value > 0)
+    .map((d) => ({ ...d }))
+    .sort((a, b) => b.value - a.value);
+  const total = nodes.reduce((s, d) => s + d.value, 0);
+  if (!nodes.length || total <= 0) return [];
+
+  const out = [];
+  let x0 = 0, y0 = 0, x1 = width, y1 = height;
+  let value = total;
+  let i0 = 0;
+  const n = nodes.length;
+
+  while (i0 < n) {
+    const dx = x1 - x0;
+    const dy = y1 - y0;
+    if (dx <= 0 || dy <= 0) break;
+
+    // Fila inicial con el ítem más grande que queda.
+    let i1 = i0 + 1;
+    let sumValue = nodes[i0].value;
+    let minValue = sumValue;
+    let maxValue = sumValue;
+    const alpha = Math.max(dy / dx, dx / dy) / (value * ratio);
+    let beta = sumValue * sumValue * alpha;
+    let minRatio = Math.max(maxValue / beta, beta / minValue);
+
+    // Agregar ítems mientras la relación de aspecto mejore.
+    while (i1 < n) {
+      const nodeValue = nodes[i1].value;
+      const nextSum = sumValue + nodeValue;
+      const nMin = Math.min(minValue, nodeValue);
+      const nMax = Math.max(maxValue, nodeValue);
+      const nBeta = nextSum * nextSum * alpha;
+      const newRatio = Math.max(nMax / nBeta, nBeta / nMin);
+      if (newRatio > minRatio) break;
+      sumValue = nextSum;
+      minValue = nMin;
+      maxValue = nMax;
+      minRatio = newRatio;
+      i1++;
+    }
+
+    const fila = nodes.slice(i0, i1);
+    if (dx < dy) {
+      // Fila horizontal: ocupa todo el ancho; el alto se reparte entre los ítems.
+      const k = sumValue ? dx / sumValue : 0;
+      const rowH = value ? (dy * sumValue) / value : dy;
+      let cx = x0;
+      for (const nd of fila) {
+        const w = nd.value * k;
+        out.push({ ...nd, x: cx, y: y0, w, h: rowH });
+        cx += w;
+      }
+      y0 += rowH;
+    } else {
+      // Fila vertical: ocupa todo el alto; el ancho se reparte entre los ítems.
+      const k = sumValue ? dy / sumValue : 0;
+      const rowW = value ? (dx * sumValue) / value : dx;
+      let cy = y0;
+      for (const nd of fila) {
+        const h = nd.value * k;
+        out.push({ ...nd, x: x0, y: cy, w: rowW, h });
+        cy += h;
+      }
+      x0 += rowW;
+    }
+    value -= sumValue;
+    i0 = i1;
+  }
+
+  return out;
+}
+
+// Color de fondo de un bloque del treemap según la variación: verde si sube, rojo si baja. La
+// intensidad crece con |variación| relativa al máximo del conjunto (maxAbs), para que un día
+// tranquilo no quede todo pálido. Devuelve un color rgba listo para style.background.
+export function colorVariacion(v, maxAbs = 1) {
+  const num = parseFloat(v);
+  if (isNaN(num)) return "rgba(115,115,115,0.55)"; // sin dato → gris
+  const t = Math.min(Math.abs(num) / (Math.abs(maxAbs) || 1), 1);
+  const alpha = (0.50 + t * 0.45).toFixed(2); // 0.50..0.95
+  return num >= 0 ? `rgba(5,150,105,${alpha})` : `rgba(220,38,38,${alpha})`;
+}
+
 export function parseFechaAPI(str) {
   if (!str) return null;
   const iso = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
@@ -192,14 +316,18 @@ export function fmtMoney(v, mon) {
   return pfx + v.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-export function fmtPat(v) {
+// Patrimonio abreviado (B / MM / M) con el símbolo de la moneda: "$" para ARS y "U$S " para USD
+// (el mismo criterio que fmtMoney y format.simboloMoneda). El parámetro `mon` es opcional y vale
+// "ARS" por defecto, así las tablas que ya lo llaman sin moneda no cambian.
+export function fmtPat(v, mon = "ARS") {
   if (v === null || v === undefined) return "—";
   const n = parseFloat(v);
   if (isNaN(n) || n <= 0) return "—";
-  if (n >= 1e12) return "$" + (n / 1e12).toFixed(2) + "B";
-  if (n >= 1e9) return "$" + (n / 1e9).toFixed(2) + "MM";
-  if (n >= 1e6) return "$" + (n / 1e6).toFixed(2) + "M";
-  return "$" + n.toLocaleString("es-AR");
+  const pfx = mon === "ARS" ? "$" : "U$S ";
+  if (n >= 1e12) return pfx + (n / 1e12).toFixed(2) + "B";
+  if (n >= 1e9) return pfx + (n / 1e9).toFixed(2) + "MM";
+  if (n >= 1e6) return pfx + (n / 1e6).toFixed(2) + "M";
+  return pfx + n.toLocaleString("es-AR");
 }
 
 // Días calendario transcurridos desde la fecha de la planilla hasta hoy (0 = hoy).

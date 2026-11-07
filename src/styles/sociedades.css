@@ -1,0 +1,277 @@
+/* ── Treemap de sociedades gerentes (pestaña "Sociedades Gerentes") ──────────────────────────────
+   Cada bloque representa una sociedad gerente: su ÁREA es proporcional al patrimonio sumado de sus
+   fondos y su COLOR va de verde (variación positiva) a rojo (negativa). Es el mismo estilo del
+   treemap de referencia: bloques que llenan un panel, con nombre, patrimonio y variación adentro. */
+
+.tm-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px 8px;
+  border-bottom: 1px solid var(--border);
+}
+.tm-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.tm-total {
+  font-size: 12px;
+  color: var(--text2);
+  margin-left: auto;
+}
+.tm-total strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+/* Panel donde se dibuja el treemap. Alto fijo: el componente mide este contenedor con ResizeObserver
+   y reparte el rectángulo con ese tamaño real, así los bloques quedan bien en cualquier pantalla. */
+.tm-canvas {
+  position: relative;
+  width: 100%;
+  height: 380px;
+  background: var(--bg2);
+  overflow: hidden;
+}
+@media (max-width: 640px) {
+  .tm-canvas {
+    height: 340px;
+  }
+}
+
+/* Cada bloque se posiciona en píxeles (left/top/width/height) que calcula treemapSquarified. */
+.tm-block {
+  position: absolute;
+  overflow: hidden;
+  padding: 5px 7px;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  line-height: 1.12;
+  transition: filter 0.15s;
+  /* Es un <button> (abre el modal de la gerente): se resetean los estilos nativos y el cursor
+     pasa a pointer para indicar que se puede clickear. */
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+}
+.tm-block:hover {
+  filter: brightness(1.08);
+  outline: 2px solid rgba(37, 99, 235, 0.7);
+  outline-offset: -2px;
+  z-index: 2;
+}
+.tm-name {
+  font-size: 11px;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.tm-val {
+  font-size: 11px;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+.tm-pct {
+  font-size: 10px;
+  font-weight: 600;
+  opacity: 0.92;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+/* Bloques chicos: sólo el nombre, en una sola línea y más chico. */
+.tm-small {
+  padding: 2px 4px;
+}
+.tm-small .tm-name {
+  font-size: 9px;
+  -webkit-line-clamp: 1;
+}
+.tm-empty {
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--text2);
+  font-size: 13px;
+}
+
+/* ── Tooltip flotante del treemap ──────────────────────────────────────────────────────────────
+   position:fixed lo saca del recorte del canvas (overflow:hidden) y lo dibuja junto al cursor.
+   pointer-events:none para que no se interponga con el clic del bloque. */
+.tm-tip {
+  position: fixed;
+  z-index: 700;
+  pointer-events: none;
+  background: rgba(15, 15, 15, 0.95);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  padding: 9px 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  min-width: 190px;
+  max-width: 260px;
+  font-size: 12px;
+  line-height: 1.3;
+}
+.tm-tip-name {
+  font-weight: 700;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+.tm-tip-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 2px 0;
+  color: rgba(255, 255, 255, 0.72);
+}
+.tm-tip-row strong {
+  color: #fff;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.tm-tip-hint {
+  margin-top: 7px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  font-size: 10px;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* ── Modal de detalle de la sociedad gerente ───────────────────────────────────────────────────
+   Ocupa el alto de la ventana (menos 120px de margen) y la lista muestra sólo los fondos que
+   entran, sin scroll. El alto de la lista se mide con ResizeObserver en el componente. */
+.modal-gerente {
+  width: 95vw;
+  max-width: 760px;
+  display: flex;
+  flex-direction: column;
+  padding: 0 !important;
+  overflow: hidden;
+  max-height: calc(100vh - 120px);
+  max-height: calc(100dvh - 120px);
+}
+.modal-gerente .modal-head {
+  flex: 0 0 auto;
+  padding: 22px 26px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.modal-gerente .modal-title {
+  font-size: 18px;
+  padding-right: 28px; /* deja libre el botón de cierre */
+}
+.modal-gerente .modal-subtitle {
+  margin-bottom: 0;
+}
+/* Los dos KPI (patrimonio y variación ponderada) en una caja dividida. */
+.modal-kpis {
+  display: flex;
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 14px 26px;
+  flex: 0 0 auto;
+}
+.modal-kpi {
+  flex: 1;
+  background: var(--bg2);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.modal-kpi-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text2);
+}
+.modal-kpi-val {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+/* Encabezado de columnas de la lista. */
+.gm-list-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 30px;
+  padding: 0 26px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text2);
+  border-bottom: 1px solid var(--border);
+  flex: 0 0 auto;
+}
+.gm-list-head span:first-child {
+  flex: 1;
+}
+.gm-list-head span:nth-child(2) {
+  width: 110px;
+  text-align: right;
+}
+.gm-list-head span:nth-child(3) {
+  width: 80px;
+  text-align: right;
+}
+/* Listado: flex:1 y overflow:hidden para que no scrollee; se renderiza sólo lo que entra. */
+.gm-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0 26px;
+}
+.gm-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 40px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+.gm-row:last-child {
+  border-bottom: none;
+}
+.gm-row-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+}
+.gm-row-pat {
+  width: 110px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--text2);
+}
+.gm-row-var {
+  width: 80px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.gm-note {
+  flex: 0 0 auto;
+  padding: 10px 26px 14px;
+  font-size: 11px;
+  font-style: italic;
+  color: var(--text2);
+}

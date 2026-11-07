@@ -14,6 +14,7 @@ import './styles/table.css'       // table, badges, fav, cnv, empty
 import './styles/pagination.css'  // paginación
 import './styles/utils.css'       // animaciones, date picker, skeleton, error
 import './styles/informe.css'     // informe modal / PDF
+import './styles/sociedades.css'  // treemap de sociedades gerentes
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

@@ -17,6 +17,7 @@ import HistorialModal from './components/HistorialModal';
 import FondoPanel    from './components/FondoPanel';
 import TopTab        from './components/TopTab';
 import { LoaderOverlay, ErrorState, DataOverlay } from './components/EstadoPantalla';
+import SociedadesTab from './components/SociedadesTab';
 import { IconStar } from './components/Icons';
 
 // ── Gesto Atrás en el celular ──────────────────────────────────────────────────────────────────
@@ -119,6 +120,7 @@ export default function App() {
   const isPortfolio = tabActual === 'Mi Portfolio';
   const isFavoritos = tabActual === 'Favoritos';
   const isTop       = tabActual === 'Top 10';
+  const isSociedades = tabActual === 'Sociedades';
   const hasFilters  = q || moneda || region || horizonte;
 
   const clearFilters = () => { setQ(''); setMoneda(''); setRegion(''); setHorizonte(''); };
@@ -229,14 +231,14 @@ export default function App() {
           las tabs quedan afuera justamente para poder seguir usando "Histórico: … ✕" y cambiar de
           pestaña durante la consulta. */}
       <div className="data-region">
-        {!isPortfolio && !isTop && (
+        {!isPortfolio && !isTop && !isSociedades && (
           <KPIs filtered={isFavoritos ? favFiltered : filtered} />
         )}
 
         {/* La barra vive en components/FilterBar.jsx: en el celular se pliega detrás del botón
             "Filtros" (una fila de 44px en lugar de las cuatro que ocupaba) y en escritorio se ve
             igual que antes. */}
-        {!isPortfolio && !isTop && (
+        {!isPortfolio && !isTop && !isSociedades && (
           <FilterBar
             q={q} setQ={setQ}
             moneda={moneda} setMoneda={setMoneda}
@@ -261,6 +263,8 @@ export default function App() {
             onOpenSuscripcion={(fondo, mon) => setSuscModal({ fondo, moneda: mon })}
             onFondoClick={(row) => setFondoPanel(row)}
           />
+        ) : isSociedades ? (
+          <SociedadesTab raw={raw} />
         ) : isPortfolio ? (
           <>
             <PortfolioTab

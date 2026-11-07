@@ -1,6 +1,6 @@
 import { useAuth } from "../context/useAuth";
 import { TAB_GROUPS, getTabGroup, contarFondos } from "../lib/utils";
-import { IconChartColumn, IconChevronDown, IconStar, IconTrophy } from "./Icons";
+import { IconChartColumn, IconChevronDown, IconStar, IconTrophy, IconBuilding2 } from "./Icons";
 
 // esFechaHistorica llega por prop y ya no se lee de window.location.search: la fecha pasó a ser
 // estado de App, así que el parámetro puede cambiar sin recargar y este componente tiene que
@@ -18,6 +18,7 @@ export default function Tabs({ raw, activeTab, onSwitch, esFechaHistorica = fals
     ...(user && !esFechaHistorica ? [{ id: "Mi Portfolio", label: "Mi Portfolio", n: nPort }] : []),
     { id: "Favoritos", label: "Favoritos", n: favs.length },
     { id: "Top 10", label: "Top 10", n: null },
+    { id: "Sociedades", label: "Sociedades Gerentes", n: null },
     ...TAB_GROUPS.map((g) => ({
       id: g.id,
       label: g.label,
@@ -57,6 +58,9 @@ export default function Tabs({ raw, activeTab, onSwitch, esFechaHistorica = fals
       </button>
       <button className={`tab tab-top${activeTab === "Top 10" ? " active" : ""}`} onClick={() => onSwitch("Top 10")}>
         <IconTrophy size={13} /> Top 10
+      </button>
+      <button className={`tab tab-soc${activeTab === "Sociedades" ? " active" : ""}`} onClick={() => onSwitch("Sociedades")}>
+        <IconBuilding2 size={13} /> Sociedades
       </button>
       {TAB_GROUPS.map((g) => {
         // Mismo criterio que el selector del celular: contar FONDOS (grupos), no clases.
