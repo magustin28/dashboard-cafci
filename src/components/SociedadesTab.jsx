@@ -159,6 +159,8 @@ const ROW_H = 40;
 function GerenteModal({ g, moneda, onClose }) {
   const { closing, requestClose } = useModalClose(onClose);
   const listRef = useRef(null);
+  // Tooltip de fila: { x, y, f } con el fondo bajo el cursor (se posiciona junto al puntero).
+  const [hover, setHover] = useState(null);
   // Arranca con todos los fondos para que la lista llene el alto y la medición pueda recortar;
   // después el ResizeObserver ajusta el número exacto que entra en la ventana.
   const [n, setN] = useState(() => (g.fondos || []).length || 1);
@@ -183,6 +185,18 @@ function GerenteModal({ g, moneda, onClose }) {
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
+
+  // Posiciona el tooltip de la fila junto al cursor (mismo criterio que el tooltip del treemap),
+  // corriéndolo si chocaría con el borde de la ventana. Sólo se muestra cuando el fondo agrupa 2+
+  // clases: en un fondo de una sola clase la fila ya muestra todo y el popup sería redundante.
+  const moverHover = (e, f) => {
+    if (!f || f.n <= 1) return;
+    const W = 340;
+    const H = Math.min(22 * (f.clases.length + 2) + 28, window.innerHeight - 24);
+    const x = Math.max(8, Math.min(e.clientX + 14, window.innerWidth - W - 12));
+    const y = Math.max(8, Math.min(e.clientY + 14, window.innerHeight - H - 12));
+    setHover({ x, y, f });
+  };
 
   const visibles = fondos.slice(0, n);
   const ocultos = Math.max(0, fondos.length - n);
@@ -230,8 +244,15 @@ function GerenteModal({ g, moneda, onClose }) {
                     .join('\n')
                 : nombre;
             return (
-              <div className="gm-row" key={f.key}>
-                <span className="gm-row-name" title={detalle}>
+              <div
+                className="gm-row"
+                key={f.key}
+                aria-label={detalle}
+                onMouseEnter={(e) => moverHover(e, f)}
+                onMouseMove={(e) => moverHover(e, f)}
+                onMouseLeave={() => setHover(null)}
+              >
+                <span className="gm-row-name">
                   <span className="gm-row-fund">{nombre}</span>
                   {f.n > 1 && <span className="gm-row-badge">{f.n} clases</span>}
                 </span>
@@ -249,6 +270,54 @@ function GerenteModal({ g, moneda, onClose }) {
             : `${fondos.length} fondos.`}
         </div>
       </div>
+
+      {/* Tooltip de la fila: mismo estilo que el tooltip flotante del treemap (.tm-tip). Lista las
+          clases del fondo como tabla (fondo · patrimonio · variación), ordenadas por patrimonio y
+          con el top 3 numerado. Va como hijo del overlay (hermano de .modal-gerente) para que el
+          overflow:hidden del modal no lo recorte. */}
+      {hover && (
+        <div className="tm-tip gm-tip" style={{ left: hover.x, top: hover.y }}>
+          <div className="tm-tip-name">
+            {hover.f.n > 1
+              ? `${hover.f.nombre} · ${hover.f.n} clases`
+              : (hover.f.clases[0] && hover.f.clases[0].fondo) || hover.f.nombre}
+          </div>
+          {hover.f.n > 1 && (
+            <table className="gm-tip-table">
+              <thead>
+                <tr>
+                  <th>Fondo</th>
+                  <th>Patrimonio</th>
+                  <th>Var.</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...hover.f.clases]
+                  .sort((a, b) => (parseFloat(b.patrimonio) || 0) - (parseFloat(a.patrimonio) || 0))
+                  .map((c, i) => (
+                    <tr key={i}>
+                      <td className="gm-tip-fondo">
+                        <span className="gm-tip-rank">{i < 3 ? `${i + 1}.` : ''}</span>
+                        <span className="gm-tip-fondo-txt">{nombreClase(c.fondo) || c.fondo}</span>
+                      </td>
+                      <td className="gm-tip-pat">{fmtPat(c.patrimonio, moneda)}</td>
+                      <td className="gm-tip-var" style={{ color: colorVariacion(c.valorVarPct, maxAbs) }}>
+                        {formatearPct(c.valorVarPct)}
+                      </td>
+                    </tr>
+                  ))}
+                <tr className="gm-tip-total">
+                  <td>Total</td>
+                  <td className="gm-tip-pat">{fmtPat(hover.f.patrimonio, moneda)}</td>
+                  <td className="gm-tip-var" style={{ color: colorVariacion(hover.f.varPct, maxAbs) }}>
+                    {formatearPct(hover.f.varPct)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
     </div>
   );
 }

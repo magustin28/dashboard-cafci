@@ -147,6 +147,73 @@
   color: rgba(255, 255, 255, 0.55);
 }
 
+/* ── Tooltip de cada fila del modal (mismo look que .tm-tip) ───────────────────────────────────
+   Al pasar el mouse por un fondo agrupado lista sus clases como tabla: fondo · patrimonio ·
+   variación, ordenadas por patrimonio y con el top 3 numerado. Hereda el fondo/borde/sombra de
+   .tm-tip; acá sólo se ajusta el ancho y se agrega la tabla. */
+.gm-tip {
+  min-width: 340px;
+  max-width: 460px;
+}
+.gm-tip-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.gm-tip-table th {
+  font-weight: 600;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-align: left;
+  color: rgba(255, 255, 255, 0.55);
+  padding: 0 0 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+.gm-tip-table th:not(:first-child) {
+  text-align: right;
+}
+.gm-tip-table td {
+  padding: 2px 0;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.82);
+  vertical-align: baseline;
+}
+.gm-tip-table td.gm-tip-fondo {
+  white-space: nowrap;
+}
+.gm-tip-fondo-txt {
+  display: inline-block;
+  max-width: 210px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: bottom;
+}
+.gm-tip-rank {
+  display: inline-block;
+  min-width: 15px;
+  margin-right: 4px;
+  color: rgba(255, 255, 255, 0.5);
+  font-variant-numeric: tabular-nums;
+}
+.gm-tip-table td.gm-tip-pat {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+  white-space: nowrap;
+}
+.gm-tip-table td.gm-tip-var {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.gm-tip-table tr.gm-tip-total td {
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  padding-top: 5px;
+  font-weight: 700;
+  color: #fff;
+}
+
 /* ── Modal de detalle de la sociedad gerente ───────────────────────────────────────────────────
    Ocupa el alto de la ventana (menos 120px de margen) y la lista muestra sólo los fondos que
    entran, sin scroll. El alto de la lista se mide con ResizeObserver en el componente. */
