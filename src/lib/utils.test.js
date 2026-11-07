@@ -12,7 +12,7 @@ import {
   getTabGroup, CLASIF_MAP, filterRows, cacheVencida, CACHE_TTL_MS,
   parseFechaAPI, fmtMoney, fmtPat, cnvLink, toast, formatPlazoLiq,
   diasDesdeFecha, estadoFrescura, diasHabilesDeAtraso,
-  nombreBaseFondo, claseFondo, claveGrupoFondo, contarFondos, agruparFondos,
+  nombreBaseFondo, nombreClase, claveGrupoFondo, contarFondos, agruparFondos,
 } from "./utils.js";
 
 // Fila como la arma useFondos: objeto con nombres estables (categoria + clasificacion)
@@ -293,12 +293,11 @@ test("nombreBaseFondo: saca el sufijo de clase con guion, en guion largo y sin g
   assert.equal(nombreBaseFondo(null), "");
 });
 
-test("claseFondo: extrae la letra de la clase (o cadena vacía si no tiene)", () => {
-  assert.equal(claseFondo("BAVSA Renta Balanceado IX - Clase A"), "A");
-  assert.equal(claseFondo("BAVSA Renta Balanceado IX - Clase b"), "B", "se normaliza a mayúsculas");
-  assert.equal(claseFondo("Fondo Compass Clase D"), "D");
-  assert.equal(claseFondo("Premier Renta Fija"), "");
-  assert.equal(claseFondo(null), "");
+test("nombreClase: devuelve la clase completa, con el régimen legal pegado incluido", () => {
+  assert.equal(nombreClase("BAVSA Renta Balanceado IX - Clase A"), "Clase A");
+  assert.equal(nombreClase("Fondo Compass Clase D"), "Clase D", "sin guion");
+  assert.equal(nombreClase("Premier Renta Fija"), "", "sin clase");
+  assert.equal(nombreClase(null), "");
 });
 
 test("claveGrupoFondo: mismo nombre base + misma moneda = mismo grupo; distinta moneda = otro grupo", () => {
@@ -383,14 +382,19 @@ test("claveGrupoFondo: dos clases del mismo fondo con distinto texto legal agrup
   assert.equal(claveGrupoFondo(a), claveGrupoFondo(b), "es el mismo fondo en la misma moneda");
 });
 
-test("claseFondo: no toma palabras legales como letra de clase", () => {
-  // Sin letra: sólo el régimen legal → "" (se muestra como "Clase —")
-  assert.equal(claseFondo("SBS Acciones Brasil - Clase Ley N° 27.743"), "");
-  assert.equal(claseFondo("MAF Mix I - Clase  Art. 11 Decreto 99/2019 y mod"), "");
-  assert.equal(claseFondo("Toronto Trust Renta Fija Plus - Clase N° 27.743"), "", "la N es de N° (número)");
-  // Con letra (aunque traiga texto legal detrás) → la letra
-  assert.equal(claseFondo("1822 Raices Dólares Plus - Clase B Ley N° 27.743"), "B");
-  assert.equal(claseFondo("MAF Acciones Argentinas - Clase RAP Ley N° 27.743"), "RAP", "clases multi-letra");
+test("nombreClase: incluye el régimen legal pegado (dos clases D quedan distinguibles)", () => {
+  assert.equal(nombreClase("Abierto Momentum Pymes - Clase D"), "Clase D");
+  assert.equal(
+    nombreClase("Abierto Momentum Pymes - Clase D Ley N° 27.743"),
+    "Clase D Ley N° 27.743",
+    "la extensión legal forma parte del nombre de la clase"
+  );
+  assert.notEqual(
+    nombreClase("Abierto Momentum Pymes - Clase D"),
+    nombreClase("Abierto Momentum Pymes - Clase D Ley N° 27.743")
+  );
+  assert.equal(nombreClase("1822 Raices Dólares Plus - Clase B Art. 11 Decreto 99/2019 y mod"), "Clase B Art. 11 Decreto 99/2019 y mod");
+  assert.equal(nombreClase("SBS Acciones Brasil - Clase Ley N° 27.743"), "Clase Ley N° 27.743");
 });
 
 

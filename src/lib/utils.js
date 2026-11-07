@@ -102,22 +102,15 @@ export function nombreBaseFondo(fondo) {
   return String(fondo).replace(RE_CLASE, "").replace(RE_CLASE_SIN_GUION, "").trim();
 }
 
-// "BAVSA Renta Balanceado IX - Clase A" → "A". Sin clase → "".
-//
-// La clase no siempre cierra el nombre: puede traer el régimen legal detrás ("Clase B Ley N°
-// 27.743", "Clase RAP Ley N° 27.743"). Y algunas filas no tienen letra, sólo la ley ("Clase Ley N°
-// 27.743", "Clase N° 27.743", "Clase Art. 11 Decreto 99/2019"): ahí el primer "token" es una
-// palabra legal, no una clase, así que se devuelve "" (la fila se muestra como "Clase —").
-const PALABRAS_LEGALES = new Set(["LEY", "ART", "ARTICULO", "DECRETO"]);
-export function claseFondo(fondo) {
+// Nombre COMPLETO de la clase: desde "Clase" hasta el final, con el régimen legal pegado incluido.
+//   "BAVSA Renta Balanceado IX - Clase A"            → "Clase A"
+//   "Abierto Momentum Pymes - Clase D Ley N° 27.743" → "Clase D Ley N° 27.743"
+// Antes se extraía sólo la letra ("D") y dos clases del mismo fondo —una con la Ley 27.743 y otra
+// sin— quedaban las dos como "Clase D", indistinguibles en el desplegable.
+export function nombreClase(fondo) {
   if (!fondo) return "";
-  const s = String(fondo);
-  const m = s.match(/\bClase\s+([A-Za-z0-9]+)/i);
-  if (!m) return "";
-  // "Clase N° 27.743": el token es la N de "N°" (número), no una clase.
-  if (/^\s*[°º]/.test(s.slice(m.index + m[0].length))) return "";
-  const token = m[1].toUpperCase();
-  return PALABRAS_LEGALES.has(token) ? "" : token;
+  const m = String(fondo).match(/\bClase\b.*$/i);
+  return m ? m[0].trim() : "";
 }
 
 // Clave de grupo: nombre base + moneda. Es la que usan la tabla y los contadores.

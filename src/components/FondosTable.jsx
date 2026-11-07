@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useState } from "react";
 import { useAuth } from "../context/useAuth";
-import { REG_MAP, HOR_MAP, cnvLink, parseFechaAPI, agruparFondos, claseFondo } from "../lib/utils";
+import { REG_MAP, HOR_MAP, cnvLink, parseFechaAPI, agruparFondos, nombreClase } from "../lib/utils";
 import { capaSuperior } from "../lib/historial";
 import { PctCell, PatCell, MonBadge } from "./TableCells";
 import { IconStar, IconInfo, IconPlus, IconChevronDown, IconChevronUp } from "./Icons";
@@ -44,17 +44,27 @@ export default function FondosTable({ filtered, refs, activeTab, onOpenSuscripci
 
   const toggleAbierto = (key) => setAbierto((prev) => (prev === key ? null : key));
 
-  // ESC cierra el acordeón abierto. Se ignora si hay un modal arriba (capaSuperior() no es null):
-  // en ese caso la tecla es para el modal, no para la tabla.
+  // Mientras hay un acordeón abierto: ESC lo cierra y un clic FUERA de sus filas también. Los dos
+  // se ignoran si hay un modal arriba (capaSuperior() no es null): ahí la interacción es del modal.
+  // Para el clic se mira el <tr> del target (closest) y no un ref, porque el grupo son VARIAS filas
+  // (el resumen y las clases desplegadas) y no comparten un contenedor.
   useEffect(() => {
     if (!abierto) return;
     const onKey = (e) => {
-      if (e.key !== "Escape") return;
+      if (e.key === "Escape" && !capaSuperior()) setAbierto(null);
+    };
+    const onDocClick = (e) => {
       if (capaSuperior()) return;
+      const tr = e.target.closest?.("tr");
+      if (tr && (tr.classList.contains("tr-grupo") || tr.classList.contains("tr-clase"))) return;
       setAbierto(null);
     };
     document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
+    document.addEventListener("click", onDocClick);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("click", onDocClick);
+    };
   }, [abierto]);
 
   // Un grupo por nombre base + moneda. Cada grupo trae su "mejor" clase (mayor var. diaria) y la
@@ -167,7 +177,7 @@ export default function FondosTable({ filtered, refs, activeTab, onOpenSuscripci
                 if (g.n === 1) return <FilaClase key={g.key} r={g.mejor} {...filaProps} />;
 
                 const estaAbierto = abierto === g.key;
-                const etiqueta = claseFondo(g.mejor.fondo);
+                const clase = nombreClase(g.mejor.fondo);
                 return (
                   <Fragment key={g.key}>
                     {/* Resumen del fondo: nombre base, la clase que se muestra y el botón de
@@ -191,8 +201,8 @@ export default function FondosTable({ filtered, refs, activeTab, onOpenSuscripci
                       </td>
                       <td className="td-fondo">
                         <span className="grupo-nombre">{g.nombre || "—"}</span>
-                        <span className="badge badge-clase" title={`Se muestra la mejor clase por Var. Diaria: Clase ${etiqueta}`}>
-                          Clase {etiqueta || "—"} · {g.n}
+                        <span className="badge badge-clase" title={`Se muestra la mejor clase por Var. Diaria: ${clase}`}>
+                          {clase || "Clase —"} · {g.n}
                         </span>
                       </td>
                       <td><MonBadge m={g.mejor.moneda} /></td>
@@ -208,9 +218,10 @@ export default function FondosTable({ filtered, refs, activeTab, onOpenSuscripci
                       <td><PctCell v={g.mejor.varAnual} decimals={3} /></td>
                       <td><PatCell v={g.mejor.patrimonio} /></td>
                       <td className="td-gerente">{g.mejor.socGerente || "—"}</td>
-                      <td>
-                        <a className="btn-cnv" href={cnvLink(g.mejor.cafci || "", g.mejor.cnv || "")} onClick={(e) => e.stopPropagation()} target="_blank" rel="noopener" title="Ver en CAFCI">↗</a>
-                      </td>
+                      {/* Sin botón de CAFCI en la fila de resumen: la fila representa varias
+                          clases y el botón llevaría a una sola (la "mejor"), lo que confunde.
+                          Cada clase tiene el suyo en las filas de detalle. */}
+                      <td />
                     </tr>
                     {/* Clases restantes: cada una es un fondo con su código CNV propio y sus
                         botones de acción. Sólo se dibujan con el grupo abierto. */}
@@ -301,7 +312,7 @@ function VarAnioCell({ r, refs }) {
 //                         grupo y se muestra sólo la clase (el nombre base ya está arriba).
 function FilaClase({ r, refs, favs, user, toggleFav, onOpenSuscripcion, onFondoClick, conAcciones = true, indentada = false }) {
   const isFaved = favs.includes(r.fondo);
-  const clase = claseFondo(r.fondo);
+  const clase = nombreClase(r.fondo);
   return (
     <tr className={indentada ? "tr-clase" : undefined}>
       <td style={{ verticalAlign: "middle" }}>
@@ -331,7 +342,7 @@ function FilaClase({ r, refs, favs, user, toggleFav, onOpenSuscripcion, onFondoC
       </td>
       <td className={indentada ? "td-fondo td-fondo-clase" : "td-fondo"} title={indentada ? r.fondo : undefined}>
         {indentada ? (
-          <span className="clase-etiqueta">Clase {clase || "—"}</span>
+          <span className="clase-etiqueta">{clase || "Clase —"}</span>
         ) : (
           r.fondo || "—"
         )}

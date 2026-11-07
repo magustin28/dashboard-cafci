@@ -251,32 +251,37 @@ tbody td:nth-child(2) {
   border-color: var(--accent);
 }
 
-/* Fila de resumen: tinte apenas visible para separarla de las filas normales sin recargar. Es
-   clickeable (toda ella abre/cierra el acordeón), de ahí el cursor de mano. */
+/* Fila de resumen (un fondo CON varias clases): fondo celeste marcado para que se distinga de las
+   filas normales (blancas) y se lea de un vistazo como "acá hay un fondo agrupado". Es clickeable
+   (toda ella abre/cierra el acordeón), de ahí el cursor de mano. */
 tr.tr-grupo {
-  background: rgba(37, 99, 235, 0.025);
+  background: rgba(37, 99, 235, 0.08);
   cursor: pointer;
 }
 tr.tr-grupo:hover {
-  background: rgba(37, 99, 235, 0.06);
+  background: rgba(37, 99, 235, 0.13);
 }
 tr.tr-grupo.abierto {
-  background: rgba(37, 99, 235, 0.09);
+  background: rgba(37, 99, 235, 0.16);
 }
 /* .td-fondo de table.css es font-weight 500 y text-align left: acá se sube el peso para que el
    nombre del grupo se distinga de las clases del detalle. */
 tr.tr-grupo .td-fondo {
   font-weight: 600;
 }
-/* El nombre del grupo se muestra en negrita y el badge de clase va al lado; con el nombre largo,
-   el badge baja de renglón en vez de empujar el ancho de la columna. */
+/* El nombre del grupo va en su renglón y el badge de clase SIEMPRE abajo: con .grupo-nombre en
+   display:block, un nombre corto ya no deja el badge en la misma línea que el nombre (así todas
+   las filas de resumen tienen el mismo alto y el mismo estilo). */
 .grupo-nombre {
-  display: inline;
+  display: block;
 }
 
-/* Badge "Clase A · 3": hereda .badge de table.css y sólo cambia colores. */
+/* Badge "Clase A · 3": hereda .badge y sólo cambia colores. Va en su propio renglón (ver
+   .grupo-nombre) y puede partirse si el nombre de la clase trae el régimen legal
+   ("Clase D Ley N° 27.743"). */
 .badge-clase {
-  margin-left: 8px;
+  margin-top: 3px;
+  white-space: normal;
   background: rgba(37, 99, 235, 0.08);
   color: #1d4ed8;
   border: 1px solid rgba(37, 99, 235, 0.2);
