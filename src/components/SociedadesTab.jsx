@@ -214,10 +214,10 @@ function GerenteModal({ g, moneda, onClose }) {
         <div className="modal-kpis">
           <div className="modal-kpi">
             <span className="modal-kpi-label">Patrimonio administrado</span>
-            <span className="modal-kpi-val">{fmtPat(g.patrimonio, moneda)}</span>
+            <span className="modal-kpi-val">{fmtPatM(g.patrimonio, moneda)}</span>
           </div>
           <div className="modal-kpi">
-            <span className="modal-kpi-label">Var. ponderada</span>
+            <span className="modal-kpi-label">Var. Diaria ponderada</span>
             <span className="modal-kpi-val" style={{ color: colorVariacion(g.varPct, maxAbs) }}>
               {formatearPct(g.varPct)}
             </span>
@@ -239,7 +239,7 @@ function GerenteModal({ g, moneda, onClose }) {
                 ? f.clases
                     .map(
                       (c) =>
-                        `${nombreClase(c.fondo) || c.fondo} · ${fmtPat(c.patrimonio, moneda)} · ${formatearPct(c.valorVarPct)}`
+                        `${nombreClase(c.fondo) || c.fondo} · ${fmtPatM(c.patrimonio, moneda)} · ${formatearPct(c.valorVarPct)}`
                     )
                     .join('\n')
                 : nombre;
@@ -256,7 +256,7 @@ function GerenteModal({ g, moneda, onClose }) {
                   <span className="gm-row-fund">{nombre}</span>
                   {f.n > 1 && <span className="gm-row-badge">{f.n} clases</span>}
                 </span>
-                <span className="gm-row-pat">{fmtPat(f.patrimonio, moneda)}</span>
+                <span className="gm-row-pat">{fmtPatM(f.patrimonio, moneda)}</span>
                 <span className="gm-row-var" style={{ color: colorVariacion(f.varPct, maxAbs) }}>
                   {formatearPct(f.varPct)}
                 </span>

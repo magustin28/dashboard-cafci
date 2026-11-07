@@ -143,6 +143,7 @@ test("fmtPatM: expresa el patrimonio siempre en millones (M)", () => {
   assert.match(fmtPatM(438100000), /^\$438[.,]1 M$/);
   assert.match(fmtPatM(43810000000), /^\$43[.,]810 M$/);
   assert.match(fmtPatM(1.23e12, "USD"), /^U\$S 1[.,]230[.,]000 M$/);
+  assert.match(fmtPatM(5000), /^\$>0\.01 M$/, "5.000 → >0.01 M (no llega al mínimo de 0.01 M)");
   assert.equal(fmtPatM(null), "—");
   assert.equal(fmtPatM(0), "—");
 });

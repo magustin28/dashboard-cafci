@@ -378,7 +378,13 @@ export function fmtPatM(v, mon = "ARS") {
   const n = parseFloat(v);
   if (isNaN(n) || n <= 0) return "—";
   const pfx = mon === "ARS" ? "$" : "U$S ";
-  const s = (n / 1e6).toLocaleString("es-AR", { maximumFractionDigits: 2 });
+  const mm = n / 1e6;
+  // El tooltip de Sociedades Gerentes compara importes en una misma unidad: millones ("M", igual
+  // que fmtPat, donde M = 1e6). Si el valor en millones no llega a 0.01 (mostraría un "0" que
+  // parece patrimonio nulo), se muestra ">0.01 M" como marca de que el importe es chico pero
+  // distinto de cero.
+  if (mm < 0.01) return pfx + ">0.01 M";
+  const s = mm.toLocaleString("es-AR", { maximumFractionDigits: 2 });
   return pfx + s + " M";
 }
 

@@ -171,8 +171,15 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
   text-align: center;
-  color: var(--muted);
-  padding: 0 0 6px;
+  vertical-align: middle;
+  /* Título más oscuro que --muted para que resalte sin necesidad de fondo. */
+  color: var(--text2);
+  /* Se quita el fondo que se filtraba de "thead th" (table.css) y el cursor de mano (el header
+     del tooltip no es ordenable). */
+  background: transparent;
+  cursor: default;
+  /* Padding simétrico: con "0 0 6px" el texto quedaba pegado arriba y se veía descentrado. */
+  padding: 6px 0;
   border-bottom: 1px solid var(--border);
 }
 .gm-tip-table td {
@@ -180,7 +187,30 @@
   font-size: 12px;
   text-align: center;
   color: var(--text2);
-  vertical-align: baseline;
+  vertical-align: middle;
+}
+/* Las columnas numéricas ("Patrimonio", "Var.") se ajustan a su contenido y el "Fondo" ocupa el
+   resto, para que no se estiren al ancho del tooltip. */
+.gm-tip-table th:nth-child(2),
+.gm-tip-table td:nth-child(2),
+.gm-tip-table th:nth-child(3),
+.gm-tip-table td:nth-child(3) {
+  width: 1%;
+  white-space: nowrap;
+  /* Aire a los costados de las columnas numéricas: sin esto "Patrimonio" y "Var." quedan pegadas
+     (el ancho se ajusta al contenido y no quedaba separación). */
+  padding-left: 12px;
+  padding-right: 12px;
+}
+/* table.css aplica a TODAS las tablas reglas genéricas que alinean a la izquierda el 1º y 2º th
+   (thead th:first-child / :nth-child(2)) y el 2º td (tbody td:nth-child(2)). Como esas tienen más
+   especificidad que ".gm-tip-table th/td", le ganaban al centrado y "Patrimonio" quedaba a la
+   izquierda. Anteponiendo ".gm-tip" se sube la especificidad y el tooltip queda con TODOS los
+   títulos y datos centrados (horizontal y vertical). */
+.gm-tip .gm-tip-table th,
+.gm-tip .gm-tip-table td {
+  text-align: center;
+  vertical-align: middle;
 }
 .gm-tip-table td.gm-tip-fondo {
   white-space: nowrap;
