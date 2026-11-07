@@ -46,8 +46,17 @@ export default function FondosTable({ filtered, refs, activeTab, onOpenSuscripci
 
   // Mientras hay un acordeón abierto: ESC lo cierra y un clic FUERA de sus filas también. Los dos
   // se ignoran si hay un modal arriba (capaSuperior() no es null): ahí la interacción es del modal.
+  // Así el cierre va POR FASES, igual que con ESC: primero se cierra el modal y recién el segundo
+  // gesto cierra el acordeón. Es la práctica recomendada en UI por capas (cada gesto descarta sólo
+  // la capa de arriba); cerrar todo de una vez deja al usuario sin el contexto que estaba mirando.
   // Para el clic se mira el <tr> del target (closest) y no un ref, porque el grupo son VARIAS filas
   // (el resumen y las clases desplegadas) y no comparten un contenedor.
+  //
+  // El listener va en FASE DE CAPTURA (tercer argumento = true) y no en bubbling: en bubbling corre
+  // DESPUÉS del onClick sintético de React del overlay del modal, y para entonces el modal ya sacó
+  // su capa con sacarCapa() (useModalClose la saca al instante y recién desmonta a los 240 ms). Por
+  // eso capaSuperior() ya daba null y el clic fuera del modal cerraba TAMBIÉN el acordeón. En
+  // captura corre ANTES de React y la capa del modal todavía está en la pila: se detecta y se ignora.
   useEffect(() => {
     if (!abierto) return;
     const onKey = (e) => {
@@ -60,10 +69,10 @@ export default function FondosTable({ filtered, refs, activeTab, onOpenSuscripci
       setAbierto(null);
     };
     document.addEventListener("keydown", onKey);
-    document.addEventListener("click", onDocClick);
+    document.addEventListener("click", onDocClick, true);
     return () => {
       document.removeEventListener("keydown", onKey);
-      document.removeEventListener("click", onDocClick);
+      document.removeEventListener("click", onDocClick, true);
     };
   }, [abierto]);
 
