@@ -31,7 +31,6 @@ export default function AuthModal({ onClose }) {
   return (
     <div
       className={`modal-overlay${closing ? " closing" : ""}`}
-      style={{ display: "flex" }}
       onClick={(e) => {
         if (e.target === e.currentTarget) requestClose();
       }}

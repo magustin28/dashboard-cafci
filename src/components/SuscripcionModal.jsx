@@ -41,7 +41,6 @@ export default function SuscripcionModal({ fondoInicial, monedaInicial, raw, onC
   return (
     <div
       className={`modal-overlay modal-overlay-top${closing ? " closing" : ""}`}
-      style={{ display: "flex" }}
       onClick={(e) => {
         if (e.target === e.currentTarget) requestClose();
       }}

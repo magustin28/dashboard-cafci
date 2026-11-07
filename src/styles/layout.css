@@ -559,3 +559,11 @@ select option {
   color: var(--text2);
 }
 
+/* Envoltorio de una pestaña con secciones apiladas (TopTab, SociedadesTab): antes era un style
+   inline `display:flex; flex-direction:column; gap:28`. */
+.tab-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+

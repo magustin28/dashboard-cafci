@@ -220,7 +220,7 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
 
   if (!data && loading) {
     return (
-      <div className={`modal-overlay${closing ? ' closing' : ''}`} style={{ display: 'flex' }} onClick={e => { if (e.target === e.currentTarget) requestClose(); }}>
+      <div className={`modal-overlay${closing ? ' closing' : ''}`} onClick={e => { if (e.target === e.currentTarget) requestClose(); }}>
         <div className="modal modal-wide">
           <button className="modal-close" onClick={requestClose} aria-label="Cerrar"><IconX size={16} /></button>
           <div style={{ textAlign: 'center', padding: 24, color: 'var(--text2)' }}>Cargando...</div>

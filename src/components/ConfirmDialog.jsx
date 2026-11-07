@@ -30,24 +30,21 @@ export default function ConfirmDialog({
   return (
     <div
       className={`modal-overlay${closing ? " closing" : ""}`}
-      style={{ display: "flex", zIndex }}
+      style={{ zIndex }}
       onClick={(e) => { if (e.target === e.currentTarget) requestClose(); }}
     >
-      <div className="modal" style={{ maxWidth: 420, textAlign: "center" }}>
-        <div style={{ marginBottom: 12, color: "var(--yellow)" }}>
+      <div className="modal modal-confirm">
+        <div className="confirm-icon">
           <IconAlertTriangle size={32} strokeWidth={1.75} />
         </div>
-        <p style={{ fontSize: 14, color: "var(--text)", marginBottom: 24, lineHeight: 1.6 }}>{mensaje}</p>
-        <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
-          <button
-            onClick={requestClose}
-            style={{ padding: "8px 20px", borderRadius: 6, border: "1px solid var(--border2)", background: "none", color: "var(--text2)", cursor: "pointer", fontSize: 13 }}
-          >
+        <p className="confirm-msg">{mensaje}</p>
+        <div className="confirm-actions">
+          <button className="confirm-btn" onClick={requestClose}>
             Cancelar
           </button>
           <button
+            className="confirm-btn confirm-btn-danger"
             onClick={async () => { await onConfirm?.(); requestClose(); }}
-            style={{ padding: "8px 20px", borderRadius: 6, border: "none", background: "#dc2626", color: "#fff", cursor: "pointer", fontSize: 13, fontWeight: 600 }}
           >
             {textoBoton}
           </button>

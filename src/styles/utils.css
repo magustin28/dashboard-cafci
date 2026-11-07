@@ -91,7 +91,9 @@
 }
 
 #loader-overlay {
-  display: none;
+  /* Sólo lo renderiza React (EstadoPantalla.LoaderOverlay) con return temprano en App.jsx, así que
+     está visible siempre que existe: no hace falta ocultarlo y mostrarlo con un style inline. */
+  display: flex;
   position: fixed;
   inset: 0;
   background: rgba(240, 240, 238, 0.92);

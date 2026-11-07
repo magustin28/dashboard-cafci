@@ -118,6 +118,14 @@ tbody td:nth-child(2) {
   font-size: 12px;
   font-variant-numeric: tabular-nums;
 }
+/* Utilidades sueltas que antes iban como style inline en TableCells.jsx. */
+.nowrap {
+  white-space: nowrap;
+}
+.fw-600 {
+  font-weight: 600;
+}
+
 .pos {
   color: var(--accent2);
 }

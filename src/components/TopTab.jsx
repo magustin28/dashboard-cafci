@@ -128,7 +128,7 @@ export default function TopTab({ raw, refs, onOpenSuscripcion, onFondoClick }) {
     .slice(0, 10);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+    <div className="tab-stack">
 
       {/* ARS */}
       <div className="table-wrap">

@@ -331,7 +331,7 @@ export default function SociedadesTab({ raw }) {
     [raw]
   );
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+    <div className="tab-stack">
       <TreemapGerentes rows={ars} titulo="Sociedades Gerentes — Pesos" moneda="ARS" />
       <TreemapGerentes rows={usd} titulo="Sociedades Gerentes — Dólares" moneda="USD" />
     </div>

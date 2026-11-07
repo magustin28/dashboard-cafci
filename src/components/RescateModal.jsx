@@ -66,7 +66,6 @@ export default function RescateModal({ fondoInicial, monedaInicial, onClose }) {
   return (
     <div
       className={`modal-overlay modal-overlay-top${closing ? " closing" : ""}`}
-      style={{ display: "flex" }}
       onClick={(e) => {
         if (e.target === e.currentTarget) requestClose();
       }}

@@ -9,7 +9,7 @@ export function LoaderOverlay({
   sub = "Esto puede tardar hasta 30 segundos si el servidor está iniciando.",
 }) {
   return (
-    <div id="loader-overlay" style={{ display: "flex" }}>
+    <div id="loader-overlay">
       <div className="spinner"></div>
       <span id="loader-msg">{mensaje}</span>
       {sub && <span id="loader-sub">{sub}</span>}

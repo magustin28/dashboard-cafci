@@ -70,6 +70,41 @@
   position: relative;
   animation: fadeUp 0.2s ease;
 }
+/* ── Diálogo de confirmación (ConfirmDialog.jsx) ── */
+.modal-confirm {
+  text-align: center;
+}
+.confirm-icon {
+  margin-bottom: 12px;
+  color: var(--yellow);
+}
+.confirm-msg {
+  font-size: 14px;
+  color: var(--text);
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+.confirm-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+.confirm-btn {
+  padding: 8px 20px;
+  border-radius: 6px;
+  border: 1px solid var(--border2);
+  background: none;
+  color: var(--text2);
+  font-size: 13px;
+  cursor: pointer;
+}
+.confirm-btn-danger {
+  border: none;
+  background: #dc2626;
+  color: #fff;
+  font-weight: 600;
+}
+
 /* Salida del modal: la clase .closing la agrega useModalClose (hooks/useModalClose.js) cuando se
    pide cerrar, y el componente se desmonta recién al terminar esta animación (240 ms, igual que
    MODAL_CLOSE_MS). Antes el modal abría con fadeUp pero desaparecía de golpe: entrada y salida

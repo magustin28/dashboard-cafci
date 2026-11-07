@@ -41,7 +41,7 @@ export function MoneyCell({ v, mon, colored }) {
   const signo = colored && n !== 0 ? (n > 0 ? "+" : "-") : "";
   const valor = Math.abs(n).toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   return (
-    <span className={`td-mono ${cls}`} style={{ whiteSpace: "nowrap" }}>
+    <span className={`td-mono ${cls} nowrap`}>
       {signo}
       {simboloMoneda(mon)}
       {valor}
@@ -57,7 +57,7 @@ export function VActualCell({ v, costo, mon }) {
   }
   const cls = n > costo ? "pos" : n < costo ? "neg" : "zero";
   return (
-    <span className={`td-mono ${cls}`} style={{ whiteSpace: "nowrap", fontWeight: 600 }}>
+    <span className={`td-mono ${cls} nowrap fw-600`}>
       {simboloMoneda(mon)}
       {n.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
     </span>
