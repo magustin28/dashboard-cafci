@@ -7,7 +7,10 @@ import { IconLock, IconX } from "./Icons";
 export default function RescateModal({ fondoInicial, monedaInicial, onClose }) {
   const { portfolio, addRescate } = useAuth();
   const [fondo, setFondo] = useState(fondoInicial || "");
-  const [moneda, setMoneda] = useState(monedaInicial || "ARS");
+  // La moneda también queda fija: la determina el fondo de la posición que se está mirando. No se
+  // elige con una lista porque un rescate en pesos no debe poder registrarse como si fuera de un
+  // fondo en dólares. Se guarda en una constante: nunca cambia dentro del modal.
+  const moneda = monedaInicial || "ARS";
   const [fecha, setFecha] = useState(new Date().toISOString().slice(0, 10));
   const [cantidad, setCantidad] = useState("");
   const [precio, setPrecio] = useState("");
@@ -100,12 +103,11 @@ export default function RescateModal({ fondoInicial, monedaInicial, onClose }) {
 
         <div className="modal-row">
           <div className="modal-field">
-            <label>Moneda {bloqueado && <IconLock size={11} />}</label>
-            <select value={moneda} onChange={(e) => setMoneda(e.target.value)} disabled={bloqueado}>
-              <option value="ARS">ARS — Pesos</option>
-              <option value="USD">USD — Dólar</option>
-              <option value="USB">USB — Dólar Billete</option>
-            </select>
+            {/* La moneda viene fija por el fondo, así que no hay lista de opciones: era un select
+                con las 3 monedas que sólo se podía mirar y se prestaba a confundir pesos con fondos
+                en dólares. Queda como campo fijo, con el mismo estilo que el Fondo bloqueado. */}
+            <label>Moneda <IconLock size={11} /></label>
+            <input type="text" value={moneda} readOnly />
           </div>
           <div className="modal-field">
             <label>Fecha de rescate</label>
