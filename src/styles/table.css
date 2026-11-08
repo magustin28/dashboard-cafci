@@ -139,6 +139,46 @@ tbody td:nth-child(2) {
   color: var(--text2);
 }
 
+/* ── Anchos de columna (Lote 3) ───────────────────────────────────────────────────────────────
+   Antes iban como style inline en los <th>. Estas .col-* van DESPUÉS de las reglas "thead th" para
+   ganar los empates de especificidad (thead th:first-child/:nth-child(2) alinean a la izquierda).
+   Lo que difiere por tabla se scopea con la clase del <table> (.tbl-fondos/.tbl-portfolio/.tbl-top). */
+.col-acciones { width: 64px; }
+thead th.col-acciones { text-align: center; }
+.col-fondo { min-width: 240px; }
+thead th.col-fondo { text-align: left; }
+.col-gerente { min-width: 180px; }
+.col-rank { width: 36px; }
+thead th.col-rank { text-align: center; }
+
+/* PortfolioTab: columnas propias / anchos distintos */
+.tbl-portfolio .col-fondo { min-width: 180px; max-width: 240px; }
+.tbl-portfolio .col-moneda { width: 70px; }
+.tbl-portfolio .col-cuotapartes { width: 100px; }
+.tbl-portfolio .col-pond { width: 110px; }
+.tbl-portfolio .col-importe { width: 110px; }
+.tbl-portfolio .col-vactual { width: 110px; }
+.tbl-portfolio .col-rend { width: 80px; }
+.tbl-portfolio .col-rendimp { width: 110px; }
+.tbl-portfolio .col-vardia { width: 80px; }
+.tbl-portfolio .col-tna,
+.tbl-portfolio .col-tem,
+.tbl-portfolio .col-tea { width: 72px; }
+.tbl-portfolio .col-cafci { width: 44px; }
+
+/* TopTab: "Sociedad Gerente" es más angosta que en FondosTable */
+.tbl-top .col-gerente { min-width: 160px; }
+
+/* Celda numérica repetida (HistorialModal): antes era style inline en ~10 <td>. */
+.td-num {
+  text-align: right;
+  padding: 6px 8px;
+}
+.td-num-c {
+  text-align: center;
+  padding: 6px 8px;
+}
+
 /* ── Badges ── */
 .badge {
   display: inline-flex;

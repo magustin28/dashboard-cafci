@@ -17,12 +17,12 @@ function TopTable({ rows, refs, onOpenSuscripcion, onFondoClick, moneda }) {
 
   return (
     <div className="tbl-scroll">
-      <table id="main-table">
+      <table id="main-table" className="tbl-top">
         <thead>
           <tr>
-            <th style={{ width: 36, textAlign: 'center' }}>#</th>
-            <th style={{ width: 64, textAlign: 'center' }}>Acciones</th>
-            <th style={{ minWidth: 240, textAlign: 'left' }}>Fondo</th>
+            <th className="col-rank">#</th>
+            <th className="col-acciones">Acciones</th>
+            <th className="col-fondo">Fondo</th>
             <th>
               <div className="th-var-inner">
                 <div className="th-var-left">
@@ -49,7 +49,7 @@ function TopTable({ rows, refs, onOpenSuscripcion, onFondoClick, moneda }) {
               </div>
             </th>
             <th>Patrimonio</th>
-            <th style={{ minWidth: 160 }}>Sociedad Gerente</th>
+            <th className="col-gerente">Sociedad Gerente</th>
             <th>CAFCI</th>
           </tr>
         </thead>

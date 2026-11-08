@@ -424,15 +424,15 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
                                     <tr key={di} style={{ background: 'rgba(255,255,255,0.02)', fontSize: 11 }}>
                                       <td></td>
                                       <td style={{ paddingLeft: 28, color: 'var(--text2)' }}>↳ FIFO</td>
-                                      <td style={{ textAlign: 'right', padding: '6px 8px' }}>{fmtCp(d.cuotapartes_consumidas)}</td>
-                                      <td style={{ textAlign: 'right', padding: '6px 8px' }}>{fmtPrecio(d.precio_compra)}</td>
-                                      <td style={{ textAlign: 'right', padding: '6px 8px' }}>{fmtPrecio(d.precio_rescate)}</td>
-                                      <td style={{ textAlign: 'right', padding: '6px 8px' }}>{fmt(d.venta)}</td>
-                                      <td style={{ textAlign: 'right', padding: '6px 8px' }}>{fmt(d.costo)}</td>
-                                      <td className={parseFloat(d.rendimiento) >= 0 ? 'pos' : 'neg'} style={{ textAlign: 'right', padding: '6px 8px' }}>{parseFloat(d.rendimiento) >= 0 ? '+' : ''}{fmt(d.rendimiento)}</td>
-                                      <td style={{ textAlign: 'right', padding: '6px 8px' }}>{pctSpan(dRendPct)}</td>
-                                      <td style={{ textAlign: 'center', padding: '6px 8px' }}>{d.dias}</td>
-                                      <td style={{ textAlign: 'center', padding: '6px 8px' }}>{pctSpan(dTna)}</td>
+                                      <td className="td-num">{fmtCp(d.cuotapartes_consumidas)}</td>
+                                      <td className="td-num">{fmtPrecio(d.precio_compra)}</td>
+                                      <td className="td-num">{fmtPrecio(d.precio_rescate)}</td>
+                                      <td className="td-num">{fmt(d.venta)}</td>
+                                      <td className="td-num">{fmt(d.costo)}</td>
+                                      <td className={`${parseFloat(d.rendimiento) >= 0 ? 'pos' : 'neg'} td-num`}>{parseFloat(d.rendimiento) >= 0 ? '+' : ''}{fmt(d.rendimiento)}</td>
+                                      <td className="td-num">{pctSpan(dRendPct)}</td>
+                                      <td className="td-num-c">{d.dias}</td>
+                                      <td className="td-num-c">{pctSpan(dTna)}</td>
                                       <td></td>
                                     </tr>
                                   );

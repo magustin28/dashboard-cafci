@@ -116,11 +116,11 @@ export default function FondosTable({ filtered, refs, activeTab, onOpenSuscripci
   return (
     <div className="table-wrap">
       <div className="tbl-scroll">
-        <table id="main-table">
+        <table id="main-table" className="tbl-fondos">
           <thead>
             <tr>
-              <th style={{ width: 64, textAlign: "center" }}>Acciones</th>
-              <th style={{ minWidth: 240 }} onClick={() => handleSort("fondo")} id="th-fondo">
+              <th className="col-acciones">Acciones</th>
+              <th className="col-fondo" onClick={() => handleSort("fondo")} id="th-fondo">
                 Fondo <span className="sort-arrow">{arrow("fondo")}</span>
               </th>
               <th>Moneda</th>
@@ -165,7 +165,7 @@ export default function FondosTable({ filtered, refs, activeTab, onOpenSuscripci
               <th onClick={() => handleSort("pat")} id="th-pat">
                 Patrimonio <span className="sort-arrow">{arrow("pat")}</span>
               </th>
-              <th style={{ minWidth: 180 }}>Sociedad Gerente</th>
+              <th className="col-gerente">Sociedad Gerente</th>
               <th>
                 Consultar
                 <br />

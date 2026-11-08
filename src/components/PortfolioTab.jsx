@@ -142,28 +142,28 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
       {/* Table */}
       <div className="table-wrap">
         <div className="tbl-scroll">
-          <table id="main-table">
+          <table id="main-table" className="tbl-portfolio">
             <thead>
               <tr>
-                <th style={{ width: 64 }}>Acciones</th>
-                <th style={{ minWidth: 180, maxWidth: 240 }}>Fondo</th>
-                <th style={{ width: 70 }}>Moneda</th>
-                <th style={{ width: 100 }}>
+                <th className="col-acciones">Acciones</th>
+                <th className="col-fondo">Fondo</th>
+                <th className="col-moneda">Moneda</th>
+                <th className="col-cuotapartes">
                   Cuota-
                   <br />
                   partes
                 </th>
-                <th style={{ width: 110 }}>
+                <th className="col-pond">
                   P. Suscrip.
                   <br />
                   Pond.
                 </th>
-                <th style={{ width: 110 }}>
+                <th className="col-importe">
                   Importe
                   <br />
                   Suscrip.
                 </th>
-                <th style={{ width: 110 }}>
+                <th className="col-vactual">
                   Valor Actual
                   {apiFecha && (
                     <div style={{ fontSize: 9, fontWeight: 400, color: "var(--muted2)", marginTop: 2, fontFamily: "'JetBrains Mono', monospace" }}>
@@ -171,16 +171,16 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
                     </div>
                   )}
                 </th>
-                <th style={{ width: 80 }}>
+                <th className="col-rend">
                   Rend.
                   <br />%
                 </th>
-                <th style={{ width: 110 }}>
+                <th className="col-rendimp">
                   Rendimiento
                   <br />
                   Importe
                 </th>
-                <th style={{ width: 80 }}>
+                <th className="col-vardia">
                   Var. Diaria %
                   {refs?.fechaAnterior && (
                     <div style={{ fontSize: 9, fontWeight: 400, color: "var(--muted2)", marginTop: 2, fontFamily: "'JetBrains Mono', monospace" }}>
@@ -188,10 +188,10 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
                     </div>
                   )}
                 </th>
-                <th style={{ width: 72 }}>TNA</th>
-                <th style={{ width: 72 }}>TEM</th>
-                <th style={{ width: 72 }}>TEA</th>
-                <th style={{ width: 44 }}>CAFCI</th>
+                <th className="col-tna">TNA</th>
+                <th className="col-tem">TEM</th>
+                <th className="col-tea">TEA</th>
+                <th className="col-cafci">CAFCI</th>
               </tr>
             </thead>
             <tbody className="fade-up">
