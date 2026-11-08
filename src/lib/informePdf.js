@@ -8,11 +8,11 @@
 const ESTILOS_PDF = `
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #111827; background: white; padding: 24px 32px; font-size: 12px; }
-    .inf-header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 16px; border-bottom: 3px solid #16a34a; margin-bottom: 24px; }
+    .inf-header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 16px; border-bottom: 3px solid #059669; margin-bottom: 24px; }
     .inf-title { font-size: 20px; font-weight: 700; }
     .inf-subtitle { font-size: 11px; color: #6b7280; margin-top: 3px; }
     .inf-logo { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
-    .inf-section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #16a34a; border-bottom: 2px solid #dcfce7; padding-bottom: 4px; margin: 22px 0 12px; page-break-after: avoid; }
+    .inf-section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #059669; border-bottom: 2px solid #dcfce7; padding-bottom: 4px; margin: 22px 0 12px; page-break-after: avoid; }
     .inf-kpis-grid { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
     .inf-kpis-row { display: flex; gap: 10px; }
     .inf-kpi { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 8px 14px; min-width: 150px; }
@@ -24,13 +24,18 @@ const ESTILOS_PDF = `
     .inf-table tbody tr { border-bottom: 1px solid #f3f4f6; }
     .inf-table tbody tr:last-child { border-bottom: 2px solid #e5e7eb; }
     .inf-table td { padding: 5px 7px; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; color: #374151; }
+    /* La ventana de impresión clona el HTML (con class="pos"/"neg"), pero no carga table.css: hay
+       que repetir acá el verde/rojo/gris para que el PDF salga coloreado. */
+    .inf-kpi-val.pos, .inf-table td.pos { color: #059669; }
+    .inf-kpi-val.neg, .inf-table td.neg { color: #dc2626; }
+    .inf-kpi-val.zero, .inf-table td.zero { color: #6b7280; }
     .inf-table td:first-child { text-align: left; }
     .inf-table-susc { width: auto !important; display: inline-block; }
     .inf-table-susc thead th { padding: 5px 16px 5px 10px; }
     .inf-table-susc td { padding: 5px 16px 5px 10px; }
     .inf-fondo-block { margin-bottom: 14px; page-break-inside: avoid; border: 1px solid #e5e7eb; border-radius: 6px; padding: 10px 12px; }
     .inf-fondo-name { font-size: 12px; font-weight: 600; margin-bottom: 5px; display: flex; align-items: center; gap: 7px; }
-    .inf-mon-badge { font-size: 9px; font-weight: 700; background: #dcfce7; color: #16a34a; border-radius: 3px; padding: 1px 5px; }
+    .inf-mon-badge { font-size: 9px; font-weight: 700; background: #dcfce7; color: #059669; border-radius: 3px; padding: 1px 5px; }
     .inf-sub-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; margin: 7px 0 4px; }
     .inf-empty { font-size: 11px; color: #9ca3af; padding: 6px 0; font-style: italic; }
     .inf-footer { margin-top: 32px; padding-top: 12px; border-top: 1px solid #e5e7eb; font-size: 9px; color: #9ca3af; text-align: center; }

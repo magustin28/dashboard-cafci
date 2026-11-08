@@ -2,7 +2,7 @@
 #
 # Por qué existe: iOS no acepta SVG como icono y Chrome/Android piden 192 y 512 en PNG. En vez de
 # guardar binarios que nadie sabe de dónde salieron, se dibujan acá (System.Drawing, sin
-# dependencias) siguiendo el mismo diseño del favicon: fondo verde #16a34a + 3 velas japonesas.
+# dependencias) siguiendo el mismo diseño del favicon: fondo verde #059669 + 3 velas japonesas.
 #
 # Uso:  powershell -NoProfile -File scripts/generar-iconos.ps1
 # Salida: public/icons/icon-192.png, icon-512.png, icon-maskable-512.png, apple-touch-icon.png
@@ -13,7 +13,7 @@
 Add-Type -AssemblyName System.Drawing
 $ErrorActionPreference = 'Stop'
 
-$verde    = [System.Drawing.Color]::FromArgb(22, 163, 74)      # #16a34a, el del favicon
+$verde    = [System.Drawing.Color]::FromArgb(5, 150, 105)      # #059669, el del favicon
 $blanco   = [System.Drawing.Color]::White
 $blanco60 = [System.Drawing.Color]::FromArgb(153, 255, 255, 255)  # velas bajistas, 60%
 

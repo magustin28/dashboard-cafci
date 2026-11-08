@@ -55,7 +55,7 @@ export default function InformeModal({ enriched, apiFecha, onClose }) {
 
   const Logo = () => (
     <svg width="26" height="26" viewBox="0 0 32 32" style={{ verticalAlign: "middle", marginRight: 6 }}>
-      <rect width="32" height="32" rx="6" fill="#16a34a" />
+      <rect width="32" height="32" rx="6" fill="#059669" />
       <line x1="8" y1="7" x2="8" y2="10" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
       <rect x="5.5" y="10" width="5" height="7" rx="1" fill="white" opacity="0.6" />
       <line x1="8" y1="17" x2="8" y2="21" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
@@ -110,13 +110,13 @@ export default function InformeModal({ enriched, apiFecha, onClose }) {
               </div>
               <div className="inf-kpi">
                 <div className="inf-kpi-label">Valor Actual ARS</div>
-                <div className="inf-kpi-val" style={{ color: vARS >= totalARS ? "#16a34a" : "#dc2626" }}>
+                <div className={`inf-kpi-val ${vARS >= totalARS ? "pos" : "neg"}`}>
                   {fmtMon(vARS, "ARS")}
                 </div>
               </div>
               <div className="inf-kpi">
                 <div className="inf-kpi-label">Rendimiento ARS</div>
-                <div className="inf-kpi-val" style={{ color: rendARS >= 0 ? "#16a34a" : "#dc2626" }}>
+                <div className={`inf-kpi-val ${rendARS >= 0 ? "pos" : "neg"}`}>
                   {fmtMonSigned(rendARS, "ARS")} ({fmtPct(totalARS > 0 ? (rendARS / totalARS) * 100 : null)})
                 </div>
               </div>
@@ -131,13 +131,13 @@ export default function InformeModal({ enriched, apiFecha, onClose }) {
               </div>
               <div className="inf-kpi">
                 <div className="inf-kpi-label">Valor Actual USD</div>
-                <div className="inf-kpi-val" style={{ color: vUSD >= totalUSD ? "#16a34a" : "#dc2626" }}>
+                <div className={`inf-kpi-val ${vUSD >= totalUSD ? "pos" : "neg"}`}>
                   {fmtMon(vUSD, "USD")}
                 </div>
               </div>
               <div className="inf-kpi">
                 <div className="inf-kpi-label">Rendimiento USD</div>
-                <div className="inf-kpi-val" style={{ color: rendUSD >= 0 ? "#16a34a" : "#dc2626" }}>
+                <div className={`inf-kpi-val ${rendUSD >= 0 ? "pos" : "neg"}`}>
                   {fmtMonSigned(rendUSD, "USD")} ({fmtPct(totalUSD > 0 ? (rendUSD / totalUSD) * 100 : null)})
                 </div>
               </div>
@@ -169,12 +169,12 @@ export default function InformeModal({ enriched, apiFecha, onClose }) {
                 <td>{fmtCp(item.cuotapartes_disponibles)}</td>
                 <td>{fmtPrecio(item.precio_compra)}</td>
                 <td>{item.costoTotal != null ? fmtMon(item.costoTotal, item.moneda) : "—"}</td>
-                <td style={{ color: item.vActual >= item.costoTotal ? "#16a34a" : "#dc2626", fontWeight: 600 }}>
+                <td className={`${item.vActual >= item.costoTotal ? "pos" : "neg"} fw-600`}>
                   {item.vActual != null ? fmtMon(item.vActual, item.moneda) : "—"}
                 </td>
-                <td style={{ color: item.rendPct >= 0 ? "#16a34a" : "#dc2626" }}>{fmtPct(item.rendPct)}</td>
-                <td style={{ color: item.tna >= 0 ? "#16a34a" : "#dc2626" }}>{fmtPct(item.tna)}</td>
-                <td style={{ color: item.tea >= 0 ? "#16a34a" : "#dc2626" }}>{fmtPct(item.tea)}</td>
+                <td className={item.rendPct >= 0 ? "pos" : "neg"}>{fmtPct(item.rendPct)}</td>
+                <td className={item.tna >= 0 ? "pos" : "neg"}>{fmtPct(item.tna)}</td>
+                <td className={item.tea >= 0 ? "pos" : "neg"}>{fmtPct(item.tea)}</td>
               </tr>
             ))}
           </tbody>
@@ -215,7 +215,7 @@ export default function InformeModal({ enriched, apiFecha, onClose }) {
                         <td>{fmtCp(s.cantidad)}</td>
                         <td>{fmtPrecio(s.precio_compra)}</td>
                         <td>{fmtMon(parseFloat(s.cantidad) * parseFloat(s.precio_compra), item.moneda)}</td>
-                        <td style={{ color: parseFloat(s.cuotapartes_disponibles) > 0 ? "#16a34a" : "#6b7280" }}>
+                        <td className={parseFloat(s.cuotapartes_disponibles) > 0 ? "pos" : "zero"}>
                           {fmtCp(s.cuotapartes_disponibles)}
                         </td>
                       </tr>
@@ -265,13 +265,13 @@ export default function InformeModal({ enriched, apiFecha, onClose }) {
                             <td>{fmtPrecio(r.precio_rescate)}</td>
                             <td>{fmtMon(r.importe_venta, item.moneda)}</td>
                             <td>{fmtMon(r.costo_total, item.moneda)}</td>
-                            <td style={{ color: rendPos ? "#16a34a" : "#dc2626" }}>
+                            <td className={rendPos ? "pos" : "neg"}>
                               {rendPos ? "+" : ""}
                               {fmtMon(r.rendimiento, item.moneda)}
                             </td>
-                            <td style={{ color: rendPos ? "#16a34a" : "#dc2626" }}>{fmtPct(rendPct)}</td>
+                            <td className={rendPos ? "pos" : "neg"}>{fmtPct(rendPct)}</td>
                             <td style={{ textAlign: "center" }}>{dias ?? "—"}</td>
-                            <td style={{ color: tna >= 0 ? "#16a34a" : "#dc2626" }}>{fmtPct(tna)}</td>
+                            <td className={tna >= 0 ? "pos" : "neg"}>{fmtPct(tna)}</td>
                           </tr>
                         );
                       })}

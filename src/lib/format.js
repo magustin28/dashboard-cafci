@@ -3,7 +3,7 @@
 // FondoPanel, PortfolioTab, FondosTable y TopTab. Centralizarlas evita que el mismo dato se vea
 // distinto según la pantalla.
 
-export const VERDE = "#16a34a";
+export const VERDE = "#059669"; // verde único de la app (el --accent2 del tema)
 export const ROJO = "#dc2626";
 
 /** Símbolo de la moneda con espacio final: las tablas muestran "$ 1.234,56" / "U$S 1.234,56". */

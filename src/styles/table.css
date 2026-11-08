@@ -135,6 +135,9 @@ tbody td:nth-child(2) {
 .zero {
   color: var(--muted2);
 }
+.text2 {
+  color: var(--text2);
+}
 
 /* ── Badges ── */
 .badge {

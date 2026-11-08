@@ -8,6 +8,7 @@ import {
   precioCuotaparte as fmtPrecio,
   // Alias: el componente recibe un prop `moneda` (la del fondo), que taparía este import.
   moneda as fmtMoneda,
+  claseSigno,
 } from '../lib/format';
 import { useModalClose } from '../hooks/useModalClose';
 import SuscripcionModal from './SuscripcionModal';
@@ -25,8 +26,8 @@ import {
 const pctSpan = (v) => {
   if (v === null || v === undefined) return <span style={{ color: 'var(--text2)' }}>—</span>;
   const n = parseFloat(v);
-  const col = n > 0 ? 'var(--pos)' : n < 0 ? 'var(--neg)' : 'var(--text2)';
-  return <span style={{ color: col }}>{n > 0 ? '+' : ''}{n.toFixed(2)}%</span>;
+  // Clase .pos/.neg (verde/rojo del tema) en vez de var(--pos)/var(--neg), que no existían.
+  return <span className={claseSigno(n)}>{n > 0 ? '+' : ''}{n.toFixed(2)}%</span>;
 };
 
 // Encabezado de columna numérica (derecha por defecto, center=true lo centra).
@@ -268,12 +269,12 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
             <div className="hist-kpi"><div className="hist-kpi-label">Rescatado (venta)</div><div className="hist-kpi-val">{fmt(totalRescatadoV)}</div></div>
             <div className="hist-kpi">
               <div className="hist-kpi-label">Gan./Pérd. realizada</div>
-              <div className="hist-kpi-val" style={{ color: ganRealizada >= 0 ? 'var(--pos)' : 'var(--neg)' }}>
+              <div className={`hist-kpi-val ${ganRealizada >= 0 ? 'pos' : 'neg'}`}>
                 {ganRealizada >= 0 ? '+' : ''}{fmt(ganRealizada)}
               </div>
             </div>
             {tnaPromedio !== null && (
-              <div className="hist-kpi"><div className="hist-kpi-label">TNA promedio</div><div className="hist-kpi-val" style={{ color: 'var(--pos)' }}>{tnaPromedio.toFixed(2)}%</div></div>
+              <div className="hist-kpi"><div className="hist-kpi-label">TNA promedio</div><div className="hist-kpi-val pos">{tnaPromedio.toFixed(2)}%</div></div>
             )}
             <div className="hist-kpi"><div className="hist-kpi-label">CP disponibles</div><div className="hist-kpi-val">{fmtCp(cpDisp)}</div></div>
           </div>
@@ -317,7 +318,7 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
                             {td(fmtCp(s.cantidad))}
                             {td(fmtPrecio(s.precio_compra))}
                             {td(fmt(parseFloat(s.cantidad) * parseFloat(s.precio_compra)))}
-                            {td(<span style={{ color: disp > 0 ? 'var(--pos)' : 'var(--text2)' }}>{fmtCp(disp)}</span>)}
+                            {td(<span className={disp > 0 ? 'pos' : 'text2'}>{fmtCp(disp)}</span>)}
                           </>
                         )}
                       </tr>
@@ -390,7 +391,7 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
                             {td(fmtPrecio(r.precio_rescate))}
                             {td(fmt(r.importe_venta))}
                             {td(fmt(r.costo_total))}
-                            {td(<span style={{ color: rendPos ? 'var(--pos)' : 'var(--neg)' }}>{rendPos ? '+' : ''}{fmt(r.rendimiento)}</span>)}
+                            {td(<span className={rendPos ? 'pos' : 'neg'}>{rendPos ? '+' : ''}{fmt(r.rendimiento)}</span>)}
                             {td(pctSpan(rendPct))}
                             {td(diasStr, true)}
                             {td(tnaNode, true)}
@@ -428,7 +429,7 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
                                       <td style={{ textAlign: 'right', padding: '6px 8px' }}>{fmtPrecio(d.precio_rescate)}</td>
                                       <td style={{ textAlign: 'right', padding: '6px 8px' }}>{fmt(d.venta)}</td>
                                       <td style={{ textAlign: 'right', padding: '6px 8px' }}>{fmt(d.costo)}</td>
-                                      <td style={{ textAlign: 'right', padding: '6px 8px', color: parseFloat(d.rendimiento) >= 0 ? 'var(--pos)' : 'var(--neg)' }}>{parseFloat(d.rendimiento) >= 0 ? '+' : ''}{fmt(d.rendimiento)}</td>
+                                      <td className={parseFloat(d.rendimiento) >= 0 ? 'pos' : 'neg'} style={{ textAlign: 'right', padding: '6px 8px' }}>{parseFloat(d.rendimiento) >= 0 ? '+' : ''}{fmt(d.rendimiento)}</td>
                                       <td style={{ textAlign: 'right', padding: '6px 8px' }}>{pctSpan(dRendPct)}</td>
                                       <td style={{ textAlign: 'center', padding: '6px 8px' }}>{d.dias}</td>
                                       <td style={{ textAlign: 'center', padding: '6px 8px' }}>{pctSpan(dTna)}</td>

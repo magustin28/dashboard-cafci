@@ -136,7 +136,7 @@ export default function FondoPanel({ fondo, refs, apiFecha, onClose }) {
 function Section({ title, children }) {
   return (
     <div>
-      <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#16a34a', borderBottom: '1px solid var(--border)', paddingBottom: 5, marginBottom: 8 }}>
+      <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--accent2)', borderBottom: '1px solid var(--border)', paddingBottom: 5, marginBottom: 8 }}>
         {title}
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>

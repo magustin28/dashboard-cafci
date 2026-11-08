@@ -27,7 +27,7 @@
   z-index: 10;
 }
 .btn-informe-print {
-  background: #16a34a;
+  background: var(--accent2);
   color: white;
   border: none;
   border-radius: 8px;
@@ -63,7 +63,7 @@
   justify-content: space-between;
   gap: 16px;
   padding-bottom: 20px;
-  border-bottom: 3px solid #16a34a;
+  border-bottom: 3px solid var(--accent2);
   margin-bottom: 28px;
 }
 .inf-logo {
@@ -95,7 +95,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.07em;
-  color: #16a34a;
+  color: var(--accent2);
   border-bottom: 2px solid #dcfce7;
   padding-bottom: 5px;
   margin: 28px 0 14px;
@@ -174,6 +174,21 @@
 .inf-table td:first-child {
   text-align: left;
 }
+/* table.css define .pos/.neg/.zero, pero acá `.inf-kpi-val` (color #111827) y `.inf-table td`
+   (color #374151) fijan su propio color y los pisarían. Estas reglas, más específicas, recuperan el
+   verde/rojo/gris del informe. */
+.inf-kpi-val.pos,
+.inf-table td.pos {
+  color: var(--accent2);
+}
+.inf-kpi-val.neg,
+.inf-table td.neg {
+  color: var(--red);
+}
+.inf-kpi-val.zero,
+.inf-table td.zero {
+  color: var(--muted);
+}
 
 /* Fondo block */
 .inf-fondo-block {
@@ -213,7 +228,7 @@
   font-size: 10px;
   font-weight: 700;
   background: #dcfce7;
-  color: #16a34a;
+  color: var(--accent2);
   border-radius: 4px;
   padding: 1px 6px;
 }
