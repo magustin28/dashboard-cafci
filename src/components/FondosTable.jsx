@@ -198,7 +198,7 @@ export default function FondosTable({ filtered, refs, activeTab, onOpenSuscripci
                       className={`tr-grupo${estaAbierto ? " abierto" : ""}`}
                       onClick={() => toggleAbierto(g.key)}
                     >
-                      <td style={{ textAlign: "center", verticalAlign: "middle" }}>
+                      <td className="td-center td-mid">
                         <button
                           className={`btn-expand${estaAbierto ? " on" : ""}`}
                           onClick={(e) => { e.stopPropagation(); toggleAbierto(g.key); }}
@@ -217,13 +217,13 @@ export default function FondosTable({ filtered, refs, activeTab, onOpenSuscripci
                       <td><MonBadge m={g.mejor.moneda} /></td>
                       <td><span className="badge badge-reg">{REG_MAP[g.mejor.region] || g.mejor.region || "—"}</span></td>
                       <td><span className="badge badge-hor">{HOR_MAP[g.mejor.horizonte] || g.mejor.horizonte || "—"}</span></td>
-                      <td style={{ textAlign: "center" }}>
+                      <td className="td-center">
                         <PctCell v={g.mejor.valorVarPct} decimals={3} />
                         {g.mejor.valorVarPct != null && (
-                          <div style={{ fontSize: 9, color: "var(--text2)", marginTop: 1 }}>~ {(parseFloat(g.mejor.valorVarPct) * 360).toFixed(2)}% TNA ~</div>
+                          <div className="tna-note">~ {(parseFloat(g.mejor.valorVarPct) * 360).toFixed(2)}% TNA ~</div>
                         )}
                       </td>
-                      <td style={{ textAlign: "center" }}><VarAnioCell r={g.mejor} refs={refs} /></td>
+                      <td className="td-center"><VarAnioCell r={g.mejor} refs={refs} /></td>
                       <td><PctCell v={g.mejor.varAnual} decimals={3} /></td>
                       <td><PatCell v={g.mejor.patrimonio} /></td>
                       <td className="td-gerente">{g.mejor.socGerente || "—"}</td>
@@ -324,9 +324,9 @@ function FilaClase({ r, refs, favs, user, toggleFav, onOpenSuscripcion, onFondoC
   const clase = nombreClase(r.fondo);
   return (
     <tr className={indentada ? "tr-clase" : undefined}>
-      <td style={{ verticalAlign: "middle" }}>
+      <td className="td-mid">
         {conAcciones && (
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 3, width: 52, margin: "0 auto" }}>
+          <div className="action-grid">
             <button
               className={`btn-fav${isFaved ? " active" : ""}`}
               onClick={() => toggleFav(r.fondo)}
@@ -340,10 +340,9 @@ function FilaClase({ r, refs, favs, user, toggleFav, onOpenSuscripcion, onFondoC
             ><IconInfo size={13} /></button>
             {user ? (
               <button
-                className="btn-port-action btn-susc"
+                className="btn-port-action btn-susc col-span-2"
                 onClick={() => onOpenSuscripcion(r.fondo, r.moneda)}
                 title="Agregar a mi portfolio"
-                style={{ gridColumn: "span 2" }}
               ><IconPlus size={13} /></button>
             ) : <span />}
           </div>
@@ -365,13 +364,13 @@ function FilaClase({ r, refs, favs, user, toggleFav, onOpenSuscripcion, onFondoC
       <td>
         <span className="badge badge-hor">{HOR_MAP[r.horizonte] || r.horizonte || "—"}</span>
       </td>
-      <td style={{ textAlign: "center" }}>
+      <td className="td-center">
         <PctCell v={r.valorVarPct} decimals={3} />
         {r.valorVarPct != null && (
-          <div style={{ fontSize: 9, color: "var(--text2)", marginTop: 1 }}>~ {(parseFloat(r.valorVarPct) * 360).toFixed(2)}% TNA ~</div>
+          <div className="tna-note">~ {(parseFloat(r.valorVarPct) * 360).toFixed(2)}% TNA ~</div>
         )}
       </td>
-      <td style={{ textAlign: "center" }}>
+      <td className="td-center">
         <VarAnioCell r={r} refs={refs} />
       </td>
       <td>

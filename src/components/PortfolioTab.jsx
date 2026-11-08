@@ -67,7 +67,7 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
           <div className="kpi">
             <div className="kpi-bar c"></div>
             <div className="kpi-label">Invertido ARS</div>
-            <div className="kpi-val c" style={{ fontSize: 18 }}>
+            <div className="kpi-val c kpi-val-lg">
               {fmtMoney(totalARS, "ARS")}
             </div>
             <div className="kpi-sub">costo de compra</div>
@@ -77,7 +77,7 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
           <div className="kpi">
             <div className={`kpi-bar ${clsARS}`}></div>
             <div className="kpi-label">Rendimiento ARS</div>
-            <div className={`kpi-val ${clsARS}`} style={{ fontSize: 18 }}>
+            <div className={`kpi-val ${clsARS} kpi-val-lg`}>
               {rendARS > 0 ? "+" : ""}
               {fmtMoney(rendARS, "ARS")}
             </div>
@@ -88,7 +88,7 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
           <div className="kpi">
             <div className="kpi-bar c"></div>
             <div className="kpi-label">Invertido USD</div>
-            <div className="kpi-val c" style={{ fontSize: 18 }}>
+            <div className="kpi-val c kpi-val-lg">
               {fmtMoney(totalUSD, "USD")}
             </div>
             <div className="kpi-sub">costo de compra</div>
@@ -98,7 +98,7 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
           <div className="kpi">
             <div className={`kpi-bar ${clsUSD}`}></div>
             <div className="kpi-label">Rendimiento USD</div>
-            <div className={`kpi-val ${clsUSD}`} style={{ fontSize: 18 }}>
+            <div className={`kpi-val ${clsUSD} kpi-val-lg`}>
               {rendUSD > 0 ? "+" : ""}
               {fmtMoney(rendUSD, "USD")}
             </div>
@@ -134,7 +134,7 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
         <button className="btn-clear" disabled={!hasFilters} onClick={clearFilters}>
           <IconX size={12} /> Limpiar filtros
         </button>
-        <button className="btn-informe-print" style={{ marginLeft: "auto" }} onClick={() => setShowInforme(true)} disabled={subTab === "historico"}>
+        <button className="btn-informe-print ml-auto" onClick={() => setShowInforme(true)} disabled={subTab === "historico"}>
           <IconFileText size={13} /> Exportar PDF
         </button>
       </div>
@@ -166,7 +166,7 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
                 <th className="col-vactual">
                   Valor Actual
                   {apiFecha && (
-                    <div style={{ fontSize: 9, fontWeight: 400, color: "var(--muted2)", marginTop: 2, fontFamily: "'JetBrains Mono', monospace" }}>
+                    <div className="th-date">
                       {fechaCorta(apiFecha)}
                     </div>
                   )}
@@ -183,7 +183,7 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
                 <th className="col-vardia">
                   Var. Diaria %
                   {refs?.fechaAnterior && (
-                    <div style={{ fontSize: 9, fontWeight: 400, color: "var(--muted2)", marginTop: 2, fontFamily: "'JetBrains Mono', monospace" }}>
+                    <div className="th-date">
                       {refs.fechaAnterior}
                     </div>
                   )}
@@ -205,7 +205,7 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
                           <p>
                             No tenés suscripciones activas.
                             <br />
-                            <button className="btn-retry" style={{ marginTop: 14 }} onClick={() => onOpenSuscripcion()}>
+                            <button className="btn-retry mt-14" onClick={() => onOpenSuscripcion()}>
                               + Agregar suscripción
                             </button>
                           </p>
@@ -227,8 +227,8 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
                   const precFmt = parseFloat(item.precio_suscripcion ?? item.precio_compra).toLocaleString("es-AR", { minimumFractionDigits: 4, maximumFractionDigits: 6 });
                   return (
                     <tr key={`${item.fondo_nombre}__${item.moneda}`}>
-                      <td style={{ verticalAlign: "middle" }}>
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 3, width: 52 }}>
+                      <td className="td-mid">
+                        <div className="action-grid flush">
                           {/* Fila 1: info + historial */}
                           <button
                             className="btn-port-action btn-info"
@@ -270,13 +270,10 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
                           )}
                         </div>
                       </td>
-                      <td
-                        className="td-fondo"
-                        style={{ minWidth: 160, maxWidth: 220, whiteSpace: "normal", wordBreak: "break-word", lineHeight: 1.3 }}
-                      >
+                      <td className="td-fondo td-fondo-narrow">
                         {item.fondo_nombre}
                         {!r && (
-                          <span style={{ color: "var(--yellow)" }} title="Sin match">
+                          <span className="c-warn" title="Sin match">
                             {" "}
                             <IconAlertTriangle size={11} />
                           </span>
@@ -286,12 +283,12 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
                         <MonBadge m={item.moneda} />
                       </td>
                       <td>
-                        <span className="td-mono" style={{ fontSize: 11 }}>
+                        <span className="td-mono td-mono-sm">
                           {cantFmt}
                         </span>
                       </td>
                       <td>
-                        <span className="td-mono" style={{ fontSize: 11 }}>
+                        <span className="td-mono td-mono-sm">
                           {precFmt}
                         </span>
                       </td>

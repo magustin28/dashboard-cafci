@@ -109,7 +109,7 @@ export default function SuscripcionModal({ fondoInicial, monedaInicial, raw, onC
         <div className="modal-calc">
           {total !== null ? (
             <>
-              Inversión total: <strong style={{ color: "var(--text)", fontSize: 13 }}>{fmtMoneda(total, moneda)}</strong>
+              Inversión total: <strong className="susc-total">{fmtMoneda(total, moneda)}</strong>
             </>
           ) : (
             "Completá cantidad y precio para ver el total."

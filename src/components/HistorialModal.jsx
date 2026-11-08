@@ -24,7 +24,7 @@ import {
 // estado, así que viven a nivel de módulo.
 
 const pctSpan = (v) => {
-  if (v === null || v === undefined) return <span style={{ color: 'var(--text2)' }}>—</span>;
+  if (v === null || v === undefined) return <span className="text2">—</span>;
   const n = parseFloat(v);
   // Clase .pos/.neg (verde/rojo del tema) en vez de var(--pos)/var(--neg), que no existían.
   return <span className={claseSigno(n)}>{n > 0 ? '+' : ''}{n.toFixed(2)}%</span>;
@@ -32,43 +32,34 @@ const pctSpan = (v) => {
 
 // Encabezado de columna numérica (derecha por defecto, center=true lo centra).
 const th = (label, center = false) => (
-  <th style={{ textAlign: center ? 'center' : 'right', whiteSpace: 'nowrap' }}>{label}</th>
+  <th className={center ? 'th-num center' : 'th-num'}>{label}</th>
 );
 // Celda numérica alineada a la derecha (o centrada con center=true).
 const td = (content, center = false) => (
-  <td style={{ textAlign: center ? 'center' : 'right' }}>{content}</td>
+  <td className={center ? 'td-center' : 'td-num-r'}>{content}</td>
 );
 
 // Botones de acción de una fila (editar / eliminar).
 const ActionBtns = ({ onEdit, onDelete }) => (
-  <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
-    <button onClick={onEdit} title="Editar"
-      style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, opacity: 0.5, padding: '2px 4px', transition: 'opacity 0.15s' }}
-      onMouseOver={e => e.currentTarget.style.opacity = 1}
-      onMouseOut={e => e.currentTarget.style.opacity = 0.5}><IconPencil size={13} /></button>
+  <td className="td-actions">
+    <button className="hist-icon-btn" onClick={onEdit} title="Editar"><IconPencil size={13} /></button>
     {/* El trash va en rojo para que se lea de inmediato como acción destructiva. */}
-    <button onClick={onDelete} title="Eliminar"
-      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--red)', fontSize: 13, opacity: 0.5, padding: '2px 4px', transition: 'opacity 0.15s' }}
-      onMouseOver={e => e.currentTarget.style.opacity = 1}
-      onMouseOut={e => e.currentTarget.style.opacity = 0.5}><IconTrash2 size={13} /></button>
+    <button className="hist-icon-btn danger" onClick={onDelete} title="Eliminar"><IconTrash2 size={13} /></button>
   </td>
 );
 
 // Input inline compacto de la edición en la fila.
 const InlineInput = ({ type = 'text', value, onChange, style = {} }) => (
-  <input type={type} value={value} onChange={e => onChange(e.target.value)}
-    style={{ width: '100%', fontSize: 11, padding: '2px 4px', border: '1px solid var(--accent)', borderRadius: 4, background: 'var(--bg)', color: 'var(--text1)', ...style }} />
+  <input className="hist-input" type={type} value={value} onChange={e => onChange(e.target.value)} style={style} />
 );
 
 // Guardar/Cancelar de una fila en edición: las dos tablas repetían el mismo par con estilos inline.
 const BotonesEdicion = ({ onSave, onCancel, saving }) => (
   <>
-    <button onClick={onSave} disabled={saving}
-      style={{ marginRight: 6, padding: '3px 10px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 11 }}>
+    <button className="btn-sm primary" onClick={onSave} disabled={saving}>
       {saving ? '…' : '✓ Guardar'}
     </button>
-    <button onClick={onCancel}
-      style={{ padding: '3px 10px', background: 'none', border: '1px solid var(--border2)', borderRadius: 4, cursor: 'pointer', fontSize: 11 }}>
+    <button className="btn-sm" onClick={onCancel}>
       Cancelar
     </button>
   </>
@@ -224,7 +215,7 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
       <div className={`modal-overlay${closing ? ' closing' : ''}`} onClick={e => { if (e.target === e.currentTarget) requestClose(); }}>
         <div className="modal modal-wide">
           <button className="modal-close" onClick={requestClose} aria-label="Cerrar"><IconX size={16} /></button>
-          <div style={{ textAlign: 'center', padding: 24, color: 'var(--text2)' }}>Cargando...</div>
+          <div className="hist-loading">Cargando...</div>
         </div>
       </div>
     );
@@ -246,17 +237,17 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
   const tnaPromedio = tnasValidas.length ? tnasValidas.reduce((a, b) => a + b, 0) / tnasValidas.length : null;
 
   return (
-    <div className={`modal-overlay${closing ? ' closing' : ''}`} style={{ display: 'flex' }} onClick={e => { if (e.target === e.currentTarget) requestClose(); }}>
-      <div className="modal modal-wide" style={{ maxWidth: 1150, width: '95vw' }}>
+    <div className={`modal-overlay${closing ? ' closing' : ''}`} onClick={e => { if (e.target === e.currentTarget) requestClose(); }}>
+      <div className="modal modal-wide">
         <button className="modal-close" onClick={requestClose} aria-label="Cerrar"><IconX size={16} /></button>
-        <div className="hist-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+        <div className="hist-head">
           <div>
-            <h2 className="modal-title" style={{ marginBottom: 4 }}>{fondoNombre}</h2>
+            <h2 className="modal-title">{fondoNombre}</h2>
             <p className="modal-subtitle">Historial de movimientos</p>
           </div>
-          <div style={{ display: 'flex', gap: 8, flexShrink: 0, marginTop: 4, marginRight: 32 }}>
-            <button className="btn-port-action btn-susc" onClick={() => setShowSusc(true)} title="Nueva suscripción" style={{ fontSize: 12, padding: '4px 10px' }}>+ Suscripción</button>
-            <button className="btn-port-action btn-resc" onClick={() => setShowResc(true)} title="Nuevo rescate" style={{ fontSize: 12, padding: '4px 10px' }}>− Rescate</button>
+          <div className="hist-head-acts">
+            <button className="btn-port-action btn-susc hist-hbtn" onClick={() => setShowSusc(true)} title="Nueva suscripción">+ Suscripción</button>
+            <button className="btn-port-action btn-resc hist-hbtn" onClick={() => setShowResc(true)} title="Nuevo rescate">− Rescate</button>
           </div>
         </div>
 
@@ -281,11 +272,11 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
 
           {/* ── Suscripciones ── */}
           <div className="hist-section-title"><IconDownload size={13} /> Suscripciones <span className="hist-count">{suscs.length}</span></div>
-          <div style={{ display: 'inline-block', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>
-            <table className="hist-table hist-table-susc" style={{ width: 'auto', minWidth: 0 }}>
+          <div className="hist-tbl-box">
+            <table className="hist-table hist-table-susc">
               <thead><tr>
-                <th style={{ textAlign: 'center', width: 60 }}>Acciones</th>
-                <th style={{ textAlign: 'left' }}>Fecha</th>
+                <th className="th-actions">Acciones</th>
+                <th className="th-left">Fecha</th>
                 {th('Cuotapartes')}
                 {th('P. Suscrip.')}
                 {th('Importe Suscrip.')}
@@ -293,12 +284,12 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
               </tr></thead>
               <tbody>
                 {suscs.length === 0
-                  ? <tr><td colSpan={6} style={{ textAlign: 'center', color: 'var(--text2)', padding: 16 }}>Sin suscripciones</td></tr>
+                  ? <tr><td colSpan={6} className="td-empty">Sin suscripciones</td></tr>
                   : suscs.map(s => {
                     const disp    = parseFloat(s.cuotapartes_disponibles);
                     const isEditing = editSusc?.id === s.id;
                     return (
-                      <tr key={s.id} style={{ background: isEditing ? 'rgba(22,163,74,0.05)' : undefined }}>
+                      <tr key={s.id} className={isEditing ? 'tr-editing' : undefined}>
                         <ActionBtns
                           onEdit={() => setEditSusc(isEditing ? null : { id: s.id, fecha_compra: s.fecha_compra, cantidad: s.cantidad, precio_compra: s.precio_compra })}
                           onDelete={() => deleteSusc(s.id)}
@@ -308,13 +299,13 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
                             <td><InlineInput type="date" value={editSusc.fecha_compra} onChange={v => setEditSusc(p => ({ ...p, fecha_compra: v }))} /></td>
                             <td><InlineInput type="number" value={editSusc.cantidad} onChange={v => setEditSusc(p => ({ ...p, cantidad: v }))} /></td>
                             <td><InlineInput type="number" value={editSusc.precio_compra} onChange={v => setEditSusc(p => ({ ...p, precio_compra: v }))} /></td>
-                            <td colSpan={2} style={{ textAlign: 'center' }}>
+                            <td colSpan={2} className="td-center">
                               <BotonesEdicion onSave={saveSusc} onCancel={() => setEditSusc(null)} saving={saving} />
                             </td>
                           </>
                         ) : (
                           <>
-                            <td style={{ textAlign: 'left', color: 'var(--text2)' }}>{fmtDate(s.fecha_compra)}</td>
+                            <td className="td-left-muted">{fmtDate(s.fecha_compra)}</td>
                             {td(fmtCp(s.cantidad))}
                             {td(fmtPrecio(s.precio_compra))}
                             {td(fmt(parseFloat(s.cantidad) * parseFloat(s.precio_compra)))}
@@ -330,12 +321,12 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
           </div>
 
           {/* ── Rescates ── */}
-          <div className="hist-section-title" style={{ marginTop: 16 }}><IconUpload size={13} /> Rescates <span className="hist-count">{rescates.length}</span></div>
+          <div className="hist-section-title lg"><IconUpload size={13} /> Rescates <span className="hist-count">{rescates.length}</span></div>
           <div className="hist-tbl-wrap">
             <table className="hist-table">
               <thead><tr>
-                <th style={{ textAlign: 'center', width: 60 }}>Acciones</th>
-                <th style={{ textAlign: 'left' }}>Fecha</th>
+                <th className="th-actions">Acciones</th>
+                <th className="th-left">Fecha</th>
                 {th('CP Rescatadas')}
                 {th('P. Suscrip. Pond.')}
                 {th('P. Rescate')}
@@ -349,7 +340,7 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
               </tr></thead>
               <tbody>
                 {rescates.length === 0
-                  ? <tr><td colSpan={12} style={{ textAlign: 'center', color: 'var(--text2)', padding: 16 }}>Sin rescates registrados</td></tr>
+                  ? <tr><td colSpan={12} className="td-empty">Sin rescates registrados</td></tr>
                   : rescates.flatMap(r => {
                     const detalles    = r.rescate_detalles || [];
                     const esCompuesto = detalles.length > 1;
@@ -359,7 +350,7 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
                     const precPond    = totalCp > 0 ? detalles.reduce((s, d) => s + parseFloat(d.cuotapartes_consumidas) * parseFloat(d.precio_compra), 0) / totalCp : 0;
                     const isEditing   = editResc?.id === r.id;
 
-                    let diasStr = '—', tnaNode = <span style={{ color: 'var(--text2)' }}>—</span>;
+                    let diasStr = '—', tnaNode = <span className="text2">—</span>;
                     if (!esCompuesto && detalles[0]?.dias > 0) {
                       diasStr = detalles[0].dias;
                       const tna = (parseFloat(r.rendimiento) / parseFloat(r.costo_total)) / detalles[0].dias * 360 * 100;
@@ -368,7 +359,7 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
 
                     const isExp = expanded[r.id];
                     const rows = [
-                      <tr key={r.id} style={{ background: isEditing ? 'rgba(22,163,74,0.05)' : undefined }}>
+                      <tr key={r.id} className={isEditing ? 'tr-editing' : undefined}>
                         <ActionBtns
                           onEdit={() => setEditResc(isEditing ? null : { id: r.id, fecha_rescate: r.fecha_rescate, precio_rescate: r.precio_rescate })}
                           onDelete={() => deleteResc(r.id)}
@@ -379,13 +370,13 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
                             {td(fmtCp(r.cuotapartes_rescatadas))}
                             {td(fmtPrecio(precPond))}
                             <td><InlineInput type="number" value={editResc.precio_rescate} onChange={v => setEditResc(p => ({ ...p, precio_rescate: v }))} /></td>
-                            <td colSpan={7} style={{ textAlign: 'left', paddingLeft: 8 }}>
+                            <td colSpan={7} className="td-left-p8">
                               <BotonesEdicion onSave={saveResc} onCancel={() => setEditResc(null)} saving={saving} />
                             </td>
                           </>
                         ) : (
                           <>
-                            <td style={{ textAlign: 'left', color: 'var(--text2)' }}>{fmtDate(r.fecha_rescate)}</td>
+                            <td className="td-left-muted">{fmtDate(r.fecha_rescate)}</td>
                             {td(fmtCp(r.cuotapartes_rescatadas))}
                             {td(fmtPrecio(precPond))}
                             {td(fmtPrecio(r.precio_rescate))}
@@ -395,7 +386,7 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
                             {td(pctSpan(rendPct))}
                             {td(diasStr, true)}
                             {td(tnaNode, true)}
-                            <td style={{ textAlign: 'center' }}>{esCompuesto && (
+                            <td className="td-center">{esCompuesto && (
                               <button className="btn-hist-expand"
                                 onClick={() => setExpanded(prev => ({ ...prev, [r.id]: !prev[r.id] }))}>
                                 {detalles.length} mov {isExp ? <IconChevronUp size={11} /> : <IconChevronDown size={11} />}
@@ -409,11 +400,11 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
                     if (esCompuesto && isExp) {
                       rows.push(
                         <tr key={`${r.id}-det`}>
-                          <td colSpan={12} style={{ padding: 0 }}>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
-                              <thead><tr style={{ background: 'rgba(255,255,255,0.04)' }}>
+                          <td colSpan={12} className="p-0">
+                            <table className="fifo-table">
+                              <thead><tr className="fifo-head">
                                 {['','Tramo','CP','P. Suscrip.','P. Rescate','Importe Rescate','Importe Suscrip.','Gan./Pérd.','Rend%','Días','TNA',''].map((h, i) => (
-                                  <th key={i} style={{ textAlign: i <= 1 ? 'left' : i >= 9 ? 'center' : 'right', padding: '6px 8px', color: 'var(--text2)', fontSize: 10, paddingLeft: i === 1 ? 28 : 8 }}>{h}</th>
+                                  <th key={i} className="fifo-th" style={{ textAlign: i <= 1 ? 'left' : i >= 9 ? 'center' : 'right', paddingLeft: i === 1 ? 28 : 8 }}>{h}</th>
                                 ))}
                               </tr></thead>
                               <tbody>
@@ -421,9 +412,9 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
                                   const dRendPct = parseFloat(d.costo) > 0 ? parseFloat(d.rendimiento) / parseFloat(d.costo) * 100 : null;
                                   const dTna     = d.dias > 0 ? (parseFloat(d.rendimiento) / parseFloat(d.costo)) / d.dias * 360 * 100 : null;
                                   return (
-                                    <tr key={di} style={{ background: 'rgba(255,255,255,0.02)', fontSize: 11 }}>
+                                    <tr key={di} className="fifo-row">
                                       <td></td>
-                                      <td style={{ paddingLeft: 28, color: 'var(--text2)' }}>↳ FIFO</td>
+                                      <td className="td-indent">↳ FIFO</td>
                                       <td className="td-num">{fmtCp(d.cuotapartes_consumidas)}</td>
                                       <td className="td-num">{fmtPrecio(d.precio_compra)}</td>
                                       <td className="td-num">{fmtPrecio(d.precio_rescate)}</td>
@@ -450,7 +441,7 @@ export default function HistorialModal({ fondoNombre, moneda, raw, onClose }) {
             </table>
           </div>
           <div className="hist-footer-note">Los rescates se procesaron con método FIFO.</div>
-          <div className="hist-footer-note" style={{ marginTop: 4, color: 'var(--text2)' }}>Para modificar la cantidad de un rescate, eliminá el rescate y cargalo nuevamente.</div>
+          <div className="hist-footer-note tight">Para modificar la cantidad de un rescate, eliminá el rescate y cargalo nuevamente.</div>
         </div>
       </div>
 

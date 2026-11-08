@@ -136,7 +136,7 @@ export default function RescateModal({ fondoInicial, monedaInicial, onClose }) {
               <span>Costo (FIFO)</span>
               <span>{fmt(preview.costoTotal)}</span>
             </div>
-            <div className="resc-preview-row" style={{ fontWeight: 600, borderTop: "1px solid var(--border2)", paddingTop: 6, marginTop: 2 }}>
+            <div className="resc-preview-row total">
               <span>Rendimiento</span>
               <span className={preview.rendimiento >= 0 ? "pos" : "neg"}>
                 {preview.rendimiento >= 0 ? "+" : "-"}

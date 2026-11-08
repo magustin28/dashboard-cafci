@@ -179,6 +179,56 @@ thead th.col-rank { text-align: center; }
   padding: 6px 8px;
 }
 
+/* ── Utilidades de celda/bloque compartidas (Lote 4) ── */
+.td-center { text-align: center; }
+.td-mid { vertical-align: middle; }
+.td-rank {
+  text-align: center;
+  font-weight: 700;
+  font-size: 13px;
+}
+.ml-4 { margin-left: 4px; }
+.action-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  width: 52px;
+  margin: 0 auto;
+}
+.col-span-2 { grid-column: span 2; }
+.action-grid.flush { margin: 0; }
+.tna-note {
+  font-size: 9px;
+  color: var(--text2);
+  margin-top: 1px;
+}
+/* Utilidades varias (Lote 4) */
+.ml-auto { margin-left: auto; }
+.mt-14 { margin-top: 14px; }
+.kpi-val-lg { font-size: 18px; }
+.td-mono-sm { font-size: 11px; }
+.c-warn { color: var(--yellow); }
+.empty-favs.tight { padding: 32px 0; }
+.td-fondo-narrow { min-width: 160px; max-width: 220px; white-space: normal; word-break: break-word; line-height: 1.3; }
+/* Encabezado de bloque (TopTab, etc.): barra con título + subtítulo y borde inferior. */
+.block-head {
+  padding: 10px 16px 8px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.block-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+.block-sub {
+  font-size: 11px;
+  color: var(--text2);
+  margin-left: auto;
+}
+
 /* ── Badges ── */
 .badge {
   display: inline-flex;

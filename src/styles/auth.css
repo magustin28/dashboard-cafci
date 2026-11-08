@@ -144,3 +144,10 @@ img.auth-avatar {
   text-decoration: underline;
 }
 
+/* Badge CAFCI dentro del modal de login (AuthModal): el badge del header (a.logo-badge) tiene su
+   propio tamaño; acá el <span> del modal va más chico. */
+.modal-logo .logo-badge {
+  font-size: 12px;
+  padding: 5px 12px;
+}
+

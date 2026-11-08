@@ -55,14 +55,14 @@ export default function FondoPanel({ fondo, refs, apiFecha, onClose }) {
       }}>
 
         {/* Header */}
-        <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid var(--border)', position: 'sticky', top: 0, background: 'var(--card)', zIndex: 1 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, lineHeight: 1.3, color: 'var(--text1)' }}>{fondo.fondo}</div>
-            <button onClick={requestClose} aria-label="Cerrar" style={{ background: 'none', border: 'none', color: 'var(--text2)', cursor: 'pointer', fontSize: 18, padding: 4, flexShrink: 0 }}><IconX size={16} /></button>
+        <div className="fp-head">
+          <div className="fp-head-row">
+            <div className="fp-title">{fondo.fondo}</div>
+            <button onClick={requestClose} aria-label="Cerrar" className="fp-close"><IconX size={16} /></button>
           </div>
         </div>
 
-        <div style={{ padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+        <div className="fp-body">
 
           {/* 1. Datos Generales — primero */}
           <Section title="Datos Generales">
@@ -80,17 +80,17 @@ export default function FondoPanel({ fondo, refs, apiFecha, onClose }) {
 
           {/* 2. Valor cuotaparte */}
           <Section title="Valor Cuotaparte">
-            <Row label={`Valor al ${fechaActual}`} value={<span style={{ fontWeight: 700 }}>{fmtMon4(fondo.valor, monSym)}</span>} />
-            <Row label="Variación diaria" value={<span style={{ color: clrPct(varD), fontWeight: 600 }}>{fmtPct(varD)}</span>} />
+            <Row label={`Valor al ${fechaActual}`} value={<span className="fw-700">{fmtMon4(fondo.valor, monSym)}</span>} />
+            <Row label="Variación diaria" value={<span className="fw-600" style={{ color: clrPct(varD) }}>{fmtPct(varD)}</span>} />
             {fondo.valorAnt != null && <Row label={`Valor al ${fechaAnterior || 'anterior'}`} value={fmtMon4(fondo.valorAnt, monSym)} />}
             {fondo.valorReexp != null && mon !== 'ARS' && <Row label="Valor reexp. ARS" value={fmtMon4(fondo.valorReexp, '$')} />}
           </Section>
 
           {/* 3. Variaciones históricas */}
           <Section title="Variaciones Históricas">
-            {refs?.fecha1 && <Row label={`Del mes (${fecha1})`}  value={<span style={{ color: clrPct(var1), fontWeight: 600 }}>{fmtPct(var1)}</span>} />}
-            {refs?.fecha2 && <Row label={`Del año (${fecha2})`}  value={<span style={{ color: clrPct(var2), fontWeight: 600 }}>{fmtPct(var2)}</span>} />}
-            {refs?.fecha3 && <Row label={`Anual (${fecha3})`}    value={<span style={{ color: clrPct(var3), fontWeight: 600 }}>{fmtPct(var3)}</span>} />}
+            {refs?.fecha1 && <Row label={`Del mes (${fecha1})`}  value={<span className="fw-600" style={{ color: clrPct(var1) }}>{fmtPct(var1)}</span>} />}
+            {refs?.fecha2 && <Row label={`Del año (${fecha2})`}  value={<span className="fw-600" style={{ color: clrPct(var2) }}>{fmtPct(var2)}</span>} />}
+            {refs?.fecha3 && <Row label={`Anual (${fecha3})`}    value={<span className="fw-600" style={{ color: clrPct(var3) }}>{fmtPct(var3)}</span>} />}
           </Section>
 
           {/* 4. Patrimonio */}
@@ -136,10 +136,10 @@ export default function FondoPanel({ fondo, refs, apiFecha, onClose }) {
 function Section({ title, children }) {
   return (
     <div>
-      <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--accent2)', borderBottom: '1px solid var(--border)', paddingBottom: 5, marginBottom: 8 }}>
+      <div className="fp-section-title">
         {title}
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div className="fp-section-body">
         {children}
       </div>
     </div>
@@ -148,9 +148,9 @@ function Section({ title, children }) {
 
 function Row({ label, value, nowrap }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: nowrap ? 'center' : 'flex-start', gap: 12 }}>
-      <span style={{ fontSize: 12, color: 'var(--text2)', flexShrink: 0 }}>{label}</span>
-      <span style={{ fontSize: 12, color: 'var(--text1)', fontVariantNumeric: 'tabular-nums', textAlign: 'right', whiteSpace: nowrap ? 'nowrap' : 'normal' }}>{value}</span>
+    <div className="fp-row" style={{ alignItems: nowrap ? 'center' : 'flex-start' }}>
+      <span className="fp-row-label">{label}</span>
+      <span className="fp-row-value" style={{ whiteSpace: nowrap ? 'nowrap' : 'normal' }}>{value}</span>
     </div>
   );
 }

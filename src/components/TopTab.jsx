@@ -8,7 +8,7 @@ function TopTable({ rows, refs, onOpenSuscripcion, onFondoClick, moneda }) {
 
   if (rows.length === 0) {
     return (
-      <div className="empty-favs" style={{ padding: '32px 0' }}>
+      <div className="empty-favs tight">
         <div className="empty-icon"><IconChartColumn size={32} strokeWidth={1.5} /></div>
         <p>No hay datos disponibles para {moneda}.</p>
       </div>
@@ -60,11 +60,11 @@ function TopTable({ rows, refs, onOpenSuscripcion, onFondoClick, moneda }) {
             const tna = !isNaN(varD) ? varD * 360 : null;
             return (
               <tr key={i}>
-                <td style={{ textAlign: 'center', fontWeight: 700, color: i === 0 ? '#f59e0b' : i === 1 ? '#9ca3af' : i === 2 ? '#b45309' : 'var(--text2)', fontSize: 13 }}>
+                <td className="td-rank" style={{ color: i === 0 ? '#f59e0b' : i === 1 ? '#9ca3af' : i === 2 ? '#b45309' : 'var(--text2)' }}>
                   {i + 1}
                 </td>
-                <td style={{ verticalAlign: 'middle' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 3, width: 52, margin: '0 auto' }}>
+                <td className="td-mid">
+                  <div className="action-grid">
                     <button
                       className={`btn-fav${isFaved ? ' active' : ''}`}
                       onClick={() => toggleFav(r.fondo)}
@@ -76,18 +76,17 @@ function TopTable({ rows, refs, onOpenSuscripcion, onFondoClick, moneda }) {
                       title="Ver detalle del fondo"><IconInfo size={13} /></button>
                     {user ? (
                       <button
-                        className="btn-port-action btn-susc"
+                        className="btn-port-action btn-susc col-span-2"
                         onClick={() => onOpenSuscripcion(r.fondo, r.moneda)}
-                        title="Agregar a mi portfolio"
-                        style={{ gridColumn: 'span 2' }}><IconPlus size={13} /></button>
+                        title="Agregar a mi portfolio"><IconPlus size={13} /></button>
                     ) : <span />}
                   </div>
                 </td>
                 <td className="td-fondo">{r.fondo || '—'}</td>
-                <td style={{ textAlign: 'center' }}>
+                <td className="td-center">
                   <PctCell v={r.valorVarPct} decimals={3} />
                 </td>
-                <td style={{ textAlign: 'center' }}>
+                <td className="td-center">
                   {tna !== null
                     ? <span className={`td-mono ${tna > 0 ? 'pos' : tna < 0 ? 'neg' : 'zero'}`}>
                         {tna > 0 ? '+' : ''}{tna.toFixed(2)}%
@@ -95,8 +94,8 @@ function TopTable({ rows, refs, onOpenSuscripcion, onFondoClick, moneda }) {
                     : <span className="td-mono zero">—</span>
                   }
                 </td>
-                <td style={{ textAlign: 'center' }}><PctCell v={r.varAnio} decimals={2} /></td>
-                <td style={{ textAlign: 'center' }}><PctCell v={r.varAnual} decimals={2} /></td>
+                <td className="td-center"><PctCell v={r.varAnio} decimals={2} /></td>
+                <td className="td-center"><PctCell v={r.varAnual} decimals={2} /></td>
                 <td><PatCell v={r.patrimonio} /></td>
                 <td className="td-gerente">{r.socGerente || '—'}</td>
                 <td>
@@ -132,10 +131,10 @@ export default function TopTab({ raw, refs, onOpenSuscripcion, onFondoClick }) {
 
       {/* ARS */}
       <div className="table-wrap">
-        <div style={{ padding: '10px 16px 8px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}><IconTrophy size={13} /> Top 10 — Pesos</span>
+        <div className="block-head">
+          <span className="block-title"><IconTrophy size={13} /> Top 10 — Pesos</span>
           <span className="badge badge-ars">ARS</span>
-          <span style={{ fontSize: 11, color: 'var(--text2)', marginLeft: 'auto' }}>Ordenado por variación diaria</span>
+          <span className="block-sub">Ordenado por variación diaria</span>
         </div>
         <TopTable
           rows={top10ARS}
@@ -148,11 +147,11 @@ export default function TopTab({ raw, refs, onOpenSuscripcion, onFondoClick }) {
 
       {/* USD */}
       <div className="table-wrap">
-        <div style={{ padding: '10px 16px 8px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}><IconTrophy size={13} /> Top 10 — Dólares</span>
+        <div className="block-head">
+          <span className="block-title"><IconTrophy size={13} /> Top 10 — Dólares</span>
           <span className="badge badge-usd">USD</span>
-          <span className="badge badge-usb" style={{ marginLeft: 4 }}>USB</span>
-          <span style={{ fontSize: 11, color: 'var(--text2)', marginLeft: 'auto' }}>Ordenado por variación diaria</span>
+          <span className="badge badge-usb ml-4">USB</span>
+          <span className="block-sub">Ordenado por variación diaria</span>
         </div>
         <TopTable
           rows={top10USD}

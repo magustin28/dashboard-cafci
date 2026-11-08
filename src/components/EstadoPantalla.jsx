@@ -22,8 +22,8 @@ export function ErrorState({ error, onRetry }) {
   return (
     <div className="wrap">
       <div className="table-wrap">
-        <div style={{ textAlign: "center", padding: 40 }}>
-          <div style={{ marginBottom: 12, color: "var(--red)" }}>
+        <div className="err-box">
+          <div className="err-icon">
             <IconAlertTriangle size={32} strokeWidth={1.75} />
           </div>
           <p>No se pudieron cargar los datos.<br /><small>{error}</small></p>

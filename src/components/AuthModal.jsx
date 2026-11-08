@@ -40,7 +40,7 @@ export default function AuthModal({ onClose }) {
           <IconX size={16} />
         </button>
         <div className="modal-logo">
-          <span className="logo-badge" style={{ fontSize: 12, padding: "5px 12px" }}>
+          <span className="logo-badge">
             CAFCI
           </span>
         </div>
@@ -48,7 +48,7 @@ export default function AuthModal({ onClose }) {
         <p className="modal-subtitle">Entrá con tu cuenta de Google para ver y guardar tu portafolio de FCI</p>
 
         {error && (
-          <p className="modal-error" style={{ color: "#ef4444" }}>
+          <p className="modal-error">
             {error}
           </p>
         )}

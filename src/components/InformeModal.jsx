@@ -54,7 +54,7 @@ export default function InformeModal({ enriched, apiFecha, onClose }) {
   const handleOpenPDF = () => abrirInformePDF("informe-content");
 
   const Logo = () => (
-    <svg width="26" height="26" viewBox="0 0 32 32" style={{ verticalAlign: "middle", marginRight: 6 }}>
+    <svg width="26" height="26" viewBox="0 0 32 32" className="inf-logo-svg">
       <rect width="32" height="32" rx="6" fill="#059669" />
       <line x1="8" y1="7" x2="8" y2="10" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
       <rect x="5.5" y="10" width="5" height="7" rx="1" fill="white" opacity="0.6" />
@@ -69,7 +69,7 @@ export default function InformeModal({ enriched, apiFecha, onClose }) {
   );
 
   const renderInforme = () => {
-    if (loading) return <div style={{ textAlign: "center", padding: 40 }}>Cargando datos…</div>;
+    if (loading) return <div className="inf-loading">Cargando datos…</div>;
     const { suscs, rescates } = data;
 
     // Solo fondos con tenencia actual
@@ -150,7 +150,7 @@ export default function InformeModal({ enriched, apiFecha, onClose }) {
         <table className="inf-table">
           <thead>
             <tr>
-              <th style={{ textAlign: "left" }}>Fondo</th>
+              <th className="th-left">Fondo</th>
               <th>Mon.</th>
               <th>CP Disponibles</th>
               <th>P. Suscrip.</th>
@@ -164,8 +164,8 @@ export default function InformeModal({ enriched, apiFecha, onClose }) {
           <tbody>
             {enrichedActivo.map((item) => (
               <tr key={item.id}>
-                <td style={{ textAlign: "left" }}>{item.fondo_nombre}</td>
-                <td style={{ textAlign: "center" }}>{item.moneda}</td>
+                <td className="td-left">{item.fondo_nombre}</td>
+                <td className="td-center">{item.moneda}</td>
                 <td>{fmtCp(item.cuotapartes_disponibles)}</td>
                 <td>{fmtPrecio(item.precio_compra)}</td>
                 <td>{item.costoTotal != null ? fmtMon(item.costoTotal, item.moneda) : "—"}</td>
@@ -201,7 +201,7 @@ export default function InformeModal({ enriched, apiFecha, onClose }) {
                 <table className="inf-table inf-table-susc">
                   <thead>
                     <tr>
-                      <th style={{ textAlign: "left" }}>Fecha</th>
+                      <th className="th-left">Fecha</th>
                       <th>Cuotapartes</th>
                       <th>P. Suscrip.</th>
                       <th>Importe</th>
@@ -211,7 +211,7 @@ export default function InformeModal({ enriched, apiFecha, onClose }) {
                   <tbody>
                     {fondoSuscs.map((s) => (
                       <tr key={s.id}>
-                        <td style={{ textAlign: "left" }}>{fmtDate(s.fecha_compra)}</td>
+                        <td className="td-left">{fmtDate(s.fecha_compra)}</td>
                         <td>{fmtCp(s.cantidad)}</td>
                         <td>{fmtPrecio(s.precio_compra)}</td>
                         <td>{fmtMon(parseFloat(s.cantidad) * parseFloat(s.precio_compra), item.moneda)}</td>
@@ -227,13 +227,13 @@ export default function InformeModal({ enriched, apiFecha, onClose }) {
               {/* Rescates — solo si hay */}
               {fondoRescates.length > 0 && (
                 <>
-                  <div className="inf-sub-title" style={{ marginTop: 10 }}>
+                  <div className="inf-sub-title lg">
                     Rescates
                   </div>
                   <table className="inf-table">
                     <thead>
                       <tr>
-                        <th style={{ textAlign: "left" }}>Fecha</th>
+                        <th className="th-left">Fecha</th>
                         <th>CP Rescatadas</th>
                         <th>P. Suscrip. Pond.</th>
                         <th>P. Rescate</th>
@@ -259,7 +259,7 @@ export default function InformeModal({ enriched, apiFecha, onClose }) {
                         const tna = dias > 0 ? (parseFloat(r.rendimiento) / parseFloat(r.costo_total) / dias) * 360 * 100 : null;
                         return (
                           <tr key={r.id}>
-                            <td style={{ textAlign: "left" }}>{fmtDate(r.fecha_rescate)}</td>
+                            <td className="td-left">{fmtDate(r.fecha_rescate)}</td>
                             <td>{fmtCp(r.cuotapartes_rescatadas)}</td>
                             <td>{fmtPrecio(precPond)}</td>
                             <td>{fmtPrecio(r.precio_rescate)}</td>
@@ -270,7 +270,7 @@ export default function InformeModal({ enriched, apiFecha, onClose }) {
                               {fmtMon(r.rendimiento, item.moneda)}
                             </td>
                             <td className={rendPos ? "pos" : "neg"}>{fmtPct(rendPct)}</td>
-                            <td style={{ textAlign: "center" }}>{dias ?? "—"}</td>
+                            <td className="td-center">{dias ?? "—"}</td>
                             <td className={tna >= 0 ? "pos" : "neg"}>{fmtPct(tna)}</td>
                           </tr>
                         );
@@ -294,22 +294,22 @@ export default function InformeModal({ enriched, apiFecha, onClose }) {
     <>
       <div
         className={`modal-overlay informe-overlay${closing ? " closing" : ""}`}
-        style={{ display: "flex", alignItems: "flex-start", overflowY: "auto", padding: "20px" }}
+       
         onClick={(e) => {
           if (e.target === e.currentTarget) requestClose();
         }}
       >
-        <div className="informe-modal" style={{ maxWidth: 1200 }}>
+        <div className="informe-modal wide">
           <div className="informe-actions no-print">
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 14, fontWeight: 600 }}>Previsualización del informe</span>
-              {loading && <span style={{ fontSize: 12, color: "var(--text2)" }}>Cargando datos…</span>}
+            <div className="inf-actions-left">
+              <span className="inf-actions-title">Previsualización del informe</span>
+              {loading && <span className="inf-actions-sub">Cargando datos…</span>}
             </div>
-            <div style={{ display: "flex", gap: 8 }}>
+            <div className="inf-actions-right">
               <button className="btn-informe-print" onClick={handleOpenPDF} disabled={loading}>
                 <IconFileText size={13} /> Ver / Guardar PDF
               </button>
-              <button className="modal-close" style={{ position: "static", fontSize: 16 }} onClick={requestClose} aria-label="Cerrar">
+              <button className="modal-close informe-close" onClick={requestClose} aria-label="Cerrar">
                 <IconX size={16} />
               </button>
             </div>
