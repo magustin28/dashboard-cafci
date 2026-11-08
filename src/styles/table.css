@@ -8,6 +8,12 @@
 }
 .tbl-scroll {
   overflow-x: auto;
+  /* El contenedor sólo necesita scroll horizontal (tablas anchas en pantallas chicas). OJO: al
+     declarar overflow-x: auto, el eje Y también pasa a ser scrollable por regla de CSS, y entonces
+     la animación de entrada de <tbody> (.fade-up, translateY(5px)) asomaba una barra de scroll
+     vertical en cada tabla durante los 0.2 s que dura. Con el eje Y en hidden no hay barra que
+     mostrar ni contenido vertical que scrollear: el alto de la tabla lo define su contenido. */
+  overflow-y: hidden;
 }
 table {
   width: 100%;

@@ -218,6 +218,15 @@
   appearance: none;
   -webkit-appearance: none;
 }
+/* Un input readOnly igual recibe foco al hacer clic, y el :focus le aplicaba el borde azul y el
+   halo de los campos editables: el Fondo fijado se veía "resaltado para editar", igual que la
+   Fecha que sí se edita. Se anula ese resaltado y el campo conserva sólo su borde punteado: el
+   candado del label y la leyenda "Fijado al fondo que estás viendo" ya avisan que no se edita. */
+.modal-field input[readonly]:focus,
+.modal-field select:disabled:focus {
+  border-color: var(--border2);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
 /* Leyenda del campo Fondo cuando está fijado (Suscripción y Rescate): va en el mismo renglón del
    título, en itálica y en caja baja —el label es uppercase, así que sin text-transform: none se
    leía todo en mayúsculas y pesaba demasiado—. Sólo la lleva el Fondo; Moneda muestra el candado.
