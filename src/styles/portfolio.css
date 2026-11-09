@@ -247,6 +247,66 @@
 .modal-field label .icon {
   margin-left: 4px;
 }
+/* Campo Fondo del modal en blanco con el botón para borrar lo elegido. El botón va AL LADO del
+   input y no encima: así el input conserva la flecha del datalist del navegador. Queda siempre
+   visible y deshabilitado mientras no hay nada que borrar, para que la fila no se mueva. */
+.modal-fondo-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.modal-fondo-wrap input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.modal-clear-btn {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--muted2);
+  cursor: pointer;
+  transition:
+    color 0.12s,
+    border-color 0.12s;
+}
+.modal-clear-btn:not(:disabled):hover {
+  border-color: var(--red);
+  color: var(--red);
+}
+.modal-clear-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+/* La fecha del modal sigue el mismo patrón que los desplegables (components/Select.jsx): se oculta
+   el icono nativo del calendario y la flecha de Lucide se dibuja en HTML, siempre visible. Antes
+   el navegador mostraba su calendario recién al pasar el mouse por encima, así que el campo
+   parecía vacío al abrir el modal. Sin pointer-events la flecha no se interpone al clic. */
+.modal-date-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.modal-date-wrap input {
+  padding-right: 34px;
+}
+.modal-date-wrap input::-webkit-calendar-picker-indicator {
+  opacity: 0;
+}
+.modal-date-chev {
+  position: absolute;
+  right: 9px;
+  display: flex;
+  align-items: center;
+  color: var(--text2);
+  pointer-events: none;
+}
 .modal-row {
   display: flex;
   gap: 12px;

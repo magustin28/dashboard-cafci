@@ -2,12 +2,11 @@ import { useState } from "react";
 import { useAuth } from "../context/useAuth";
 import { moneda as fmtMoneda, nombreMoneda } from "../lib/format";
 import { useModalClose } from "../hooks/useModalClose";
-import { IconLock, IconX } from "./Icons";
+import { IconChevronDown, IconLock, IconX } from "./Icons";
 
 export default function SuscripcionModal({ fondoInicial, monedaInicial, raw, onClose }) {
   const { addSuscripcion } = useAuth();
   const [fondo, setFondo] = useState(fondoInicial || "");
-  const [moneda, setMoneda] = useState(monedaInicial || "ARS");
   const [fecha, setFecha] = useState(new Date().toISOString().slice(0, 10));
   const [cantidad, setCantidad] = useState("");
   const [precio, setPrecio] = useState("");
@@ -18,27 +17,26 @@ export default function SuscripcionModal({ fondoInicial, monedaInicial, raw, onC
   // puede cargar la suscripción en otro fondo/otra moneda por error. Sólo son editables cuando se
   // abre "en blanco" (botón + de Agregar suscripción, que llega con fondo vacío).
   const bloqueado = Boolean(fondoInicial);
-  // En el modal en blanco la moneda tampoco se elige: se deriva del fondo que se elige (el raw trae
-  // el par fondo + moneda), así una compra en pesos no se puede cargar como si fuera de un fondo en
-  // dólares. Mientras no haya un fondo elegido no hay moneda que mostrar: el campo queda bloqueado.
-  // Si el nombre elegido existe con más de una moneda (o no está en la lista) se deja elegir.
+  // La moneda la fija el fondo: no se elige nunca. El raw trae el par fondo + moneda y en los datos
+  // cada nombre de fondo existe con UNA sola moneda (verificado contra la API: 4.293 fondos, 0 con
+  // más de una), así que el campo se completa solo al elegir el fondo y queda fijo.
   const monedasDelFondo = fondo
     ? [...new Set(raw.filter((r) => r.fondo === fondo).map((r) => r.moneda).filter(Boolean))]
     : [];
-  const monedaFija = bloqueado || monedasDelFondo.length === 1;
-  // Valor efectivo del campo: si el fondo fija una sola moneda se usa esa; si tiene varias se
-  // respeta la elegida siempre que siga existiendo, si no la primera. Con el modal bloqueado manda
-  // la moneda que vino por parámetro. Así el select nunca queda con un value fuera de su lista.
-  const monedaValor = bloqueado
-    ? moneda
-    : monedasDelFondo.length === 1
-      ? monedasDelFondo[0]
-      : monedasDelFondo.length > 1
-        ? (monedasDelFondo.includes(moneda) ? moneda : monedasDelFondo[0])
-        : moneda;
+  // Bloqueado manda la moneda que vino por parámetro; en blanco, la del fondo elegido. Sin fondo
+  // elegido no hay moneda que mostrar: el campo queda vacío y sin leyendas de ayuda.
+  const moneda = bloqueado ? (monedaInicial || "ARS") : (monedasDelFondo[0] || monedaInicial || "ARS");
+  const monedaVisible = bloqueado || monedasDelFondo.length > 0 ? nombreMoneda(moneda) : "";
   // Cierre animado (hooks/useModalClose.js). requestClose(true) al guardar: el hook reenvía el
   // argumento, así el padre sigue enterándose de que hay que refrescar el portfolio.
-  const { closing, requestClose } = useModalClose(onClose);
+  // ESC: en el modal en blanco, con un fondo ya elegido, el primer ESC lo borra en vez de cerrar:
+  // es la forma rápida de deshacer la selección sin perder cantidad, precio y fecha.
+  const { closing, requestClose } = useModalClose(onClose, {
+    alEscape: () => {
+      if (!bloqueado && fondo) { setFondo(""); return true; }
+      return false;
+    },
+  });
 
   const cant = parseFloat(cantidad);
   const prec = parseFloat(precio);
@@ -46,11 +44,14 @@ export default function SuscripcionModal({ fondoInicial, monedaInicial, raw, onC
 
   const submit = async () => {
     if (!fondo) return setError("Ingresá el nombre del fondo.");
+    // El fondo tiene que salir de la lista: la moneda se deriva de ahí. Si no, se guardaría con la
+    // moneda por defecto, que es justo lo que se quiere evitar.
+    if (raw.length && !monedasDelFondo.length) return setError("Elegí un fondo de la lista.");
     if (!fecha) return setError("Ingresá la fecha de compra.");
     if (isNaN(cant) || cant <= 0) return setError("Ingresá una cantidad válida.");
     if (isNaN(prec) || prec <= 0) return setError("Ingresá un precio válido.");
     setLoading(true);
-    const result = await addSuscripcion({ fondoNombre: fondo, moneda: monedaValor, fechaCompra: fecha, cantidad: cant, precioCompra: prec });
+    const result = await addSuscripcion({ fondoNombre: fondo, moneda, fechaCompra: fecha, cantidad: cant, precioCompra: prec });
     setLoading(false);
     if (result.ok) requestClose(true);
     else setError(result.msg);
@@ -81,14 +82,28 @@ export default function SuscripcionModal({ fondoInicial, monedaInicial, raw, onC
             <input type="text" value={fondo} readOnly />
           ) : (
             <>
-              <input
-                type="text"
-                value={fondo}
-                onChange={(e) => setFondo(e.target.value)}
-                placeholder="Nombre del fondo"
-                list="fondos-datalist"
-                autoComplete="off"
-              />
+              <div className="modal-fondo-wrap">
+                <input
+                  type="text"
+                  value={fondo}
+                  onChange={(e) => setFondo(e.target.value)}
+                  placeholder="Nombre del fondo"
+                  list="fondos-datalist"
+                  autoComplete="off"
+                />
+                {/* Borra el fondo elegido sin cerrar el modal: antes había que seleccionar todo el
+                    texto y borrarlo, porque ESC cierra. */}
+                <button
+                  type="button"
+                  className="modal-clear-btn"
+                  onClick={() => setFondo("")}
+                  disabled={!fondo}
+                  title="Borrar el fondo elegido"
+                  aria-label="Borrar el fondo elegido"
+                >
+                  <IconX size={13} />
+                </button>
+              </div>
               <datalist id="fondos-datalist">
                 {raw.map((r, i) => (
                   <option key={i} value={r.fondo} />
@@ -100,27 +115,19 @@ export default function SuscripcionModal({ fondoInicial, monedaInicial, raw, onC
 
         <div className="modal-row">
           <div className="modal-field">
-            {/* La moneda nunca se elige con una lista: la fija el fondo. Llega por parámetro cuando
-                el modal se abre desde una posición y se deriva del fondo en el modal en blanco. */}
-            <label>
-              Moneda {monedaFija && <IconLock size={11} />}
-              {!monedaFija && !fondo && <span className="modal-hint-inline">Se completa al elegir el fondo.</span>}
-            </label>
-            {monedaFija ? (
-              <input type="text" value={nombreMoneda(monedaValor)} readOnly />
-            ) : !fondo ? (
-              <input type="text" value="" placeholder="Se completa al elegir el fondo" readOnly />
-            ) : (
-              <select value={monedaValor} onChange={(e) => setMoneda(e.target.value)}>
-                {(monedasDelFondo.length > 1 ? monedasDelFondo : ["ARS", "USD", "USB"]).map((m) => (
-                  <option key={m} value={m}>{nombreMoneda(m)}</option>
-                ))}
-              </select>
-            )}
+            {/* La moneda nunca se elige: la fija el fondo. Sin fondo elegido el campo queda vacío y
+                se completa solo (sin leyendas: eran largas y no aportaban información). */}
+            <label>Moneda {monedaVisible && <IconLock size={11} />}</label>
+            <input type="text" value={monedaVisible} readOnly />
           </div>
           <div className="modal-field">
             <label>Fecha de suscripción</label>
-            <input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
+            {/* Mismo patrón que los desplegables (Select.jsx): el calendario nativo se oculta y la
+                flecha de Lucide queda siempre visible, así el campo no parece vacío al abrir. */}
+            <span className="modal-date-wrap">
+              <input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
+              <span className="modal-date-chev"><IconChevronDown size={12} /></span>
+            </span>
           </div>
         </div>
 
@@ -138,7 +145,7 @@ export default function SuscripcionModal({ fondoInicial, monedaInicial, raw, onC
         <div className="modal-calc">
           {total !== null ? (
             <>
-              Inversión total: <strong className="susc-total">{fmtMoneda(total, monedaValor)}</strong>
+              Inversión total: <strong className="susc-total">{fmtMoneda(total, moneda)}</strong>
             </>
           ) : (
             "Completá cantidad y precio para ver el total."
