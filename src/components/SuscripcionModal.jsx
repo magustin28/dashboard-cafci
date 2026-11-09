@@ -83,14 +83,22 @@ export default function SuscripcionModal({ fondoInicial, monedaInicial, raw, onC
           ) : (
             <>
               <div className="modal-fondo-wrap">
-                <input
-                  type="text"
-                  value={fondo}
-                  onChange={(e) => setFondo(e.target.value)}
-                  placeholder="Nombre del fondo"
-                  list="fondos-datalist"
-                  autoComplete="off"
-                />
+                <span className="modal-fondo-input">
+                  <input
+                    type="text"
+                    value={fondo}
+                    onChange={(e) => setFondo(e.target.value)}
+                    placeholder="Nombre del fondo"
+                    list="fondos-datalist"
+                    autoComplete="off"
+                  />
+                  {/* La flecha del datalist la dibuja el navegador recién al pasar el mouse (y cada
+                      navegador la hace distinto), así que el campo no parecía un desplegable: se
+                      oculta la nativa y se dibuja la de Lucide, siempre visible, igual que los
+                      selects (components/Select.jsx). La flecha es pointer-events: none, así el
+                      clic llega al input y sigue abriendo la lista. */}
+                  <span className="modal-fondo-chev"><IconChevronDown size={12} /></span>
+                </span>
                 {/* Borra el fondo elegido sin cerrar el modal: antes había que seleccionar todo el
                     texto y borrarlo, porque ESC cierra. */}
                 <button
@@ -118,16 +126,11 @@ export default function SuscripcionModal({ fondoInicial, monedaInicial, raw, onC
             {/* La moneda nunca se elige: la fija el fondo. Sin fondo elegido el campo queda vacío y
                 se completa solo (sin leyendas: eran largas y no aportaban información). */}
             <label>Moneda {monedaVisible && <IconLock size={11} />}</label>
-            <input type="text" value={monedaVisible} readOnly />
+            <input type="text" value={monedaVisible} readOnly placeholder="ej: ARS" />
           </div>
           <div className="modal-field">
             <label>Fecha de suscripción</label>
-            {/* Mismo patrón que los desplegables (Select.jsx): el calendario nativo se oculta y la
-                flecha de Lucide queda siempre visible, así el campo no parece vacío al abrir. */}
-            <span className="modal-date-wrap">
-              <input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
-              <span className="modal-date-chev"><IconChevronDown size={12} /></span>
-            </span>
+            <input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
           </div>
         </div>
 

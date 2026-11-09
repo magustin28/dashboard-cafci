@@ -247,18 +247,46 @@
 .modal-field label .icon {
   margin-left: 4px;
 }
-/* Campo Fondo del modal en blanco con el botón para borrar lo elegido. El botón va AL LADO del
-   input y no encima: así el input conserva la flecha del datalist del navegador. Queda siempre
-   visible y deshabilitado mientras no hay nada que borrar, para que la fila no se mueva. */
+/* Campo Fondo del modal en blanco: el input con la flecha que avisa que hay desplegable (datalist)
+   y, al lado, el botón para borrar lo elegido. El botón va AL LADO y no encima del input: así no
+   se pisa con la flecha. */
 .modal-fondo-wrap {
   display: flex;
   align-items: center;
   gap: 6px;
 }
-.modal-fondo-wrap input {
+.modal-fondo-input {
+  position: relative;
+  display: flex;
+  align-items: center;
   flex: 1 1 auto;
   min-width: 0;
 }
+.modal-fondo-input input {
+  width: 100%;
+  /* Lugar para la flecha: sin este padding un nombre de fondo largo le pasa por debajo. */
+  padding-right: 30px;
+}
+/* La flecha del datalist la dibuja el navegador recién al pasar el mouse (y cada navegador la hace
+   distinto), así que el campo no se leía como desplegable. Se oculta la nativa y se dibuja la de
+   Lucide, siempre visible, igual que los selects (components/Select.jsx). Es opacity y no display
+   para no perder el área de clic: la flecha de Lucide es pointer-events: none, así el clic llega al
+   input y la lista se abre igual. */
+.modal-fondo-input input::-webkit-calendar-picker-indicator {
+  opacity: 0;
+}
+.modal-fondo-chev {
+  position: absolute;
+  right: 9px;
+  display: flex;
+  align-items: center;
+  color: var(--text2);
+  pointer-events: none;
+}
+/* Botón para borrar el fondo elegido: queda siempre visible y deshabilitado mientras no hay nada
+   que borrar, así la fila no se mueve al elegir. En reposo es neutro: el rojo es SÓLO la señal del
+   hover con mouse. El @media es a propósito: en pantalla táctil el :hover se queda "pegado" después
+   del toque y el botón se veía rojo hasta tocar otra cosa. */
 .modal-clear-btn {
   flex: 0 0 auto;
   display: flex;
@@ -276,36 +304,15 @@
     color 0.12s,
     border-color 0.12s;
 }
-.modal-clear-btn:not(:disabled):hover {
-  border-color: var(--red);
-  color: var(--red);
-}
 .modal-clear-btn:disabled {
   opacity: 0.4;
   cursor: default;
 }
-/* La fecha del modal sigue el mismo patrón que los desplegables (components/Select.jsx): se oculta
-   el icono nativo del calendario y la flecha de Lucide se dibuja en HTML, siempre visible. Antes
-   el navegador mostraba su calendario recién al pasar el mouse por encima, así que el campo
-   parecía vacío al abrir el modal. Sin pointer-events la flecha no se interpone al clic. */
-.modal-date-wrap {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-.modal-date-wrap input {
-  padding-right: 34px;
-}
-.modal-date-wrap input::-webkit-calendar-picker-indicator {
-  opacity: 0;
-}
-.modal-date-chev {
-  position: absolute;
-  right: 9px;
-  display: flex;
-  align-items: center;
-  color: var(--text2);
-  pointer-events: none;
+@media (hover: hover) {
+  .modal-clear-btn:not(:disabled):hover {
+    border-color: var(--red);
+    color: var(--red);
+  }
 }
 .modal-row {
   display: flex;
