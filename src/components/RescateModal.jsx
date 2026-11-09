@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../context/useAuth";
-import { moneda as fmtMoneda, cuotapartes } from "../lib/format";
+import { moneda as fmtMoneda, cuotapartes, nombreMoneda } from "../lib/format";
 import { useModalClose } from "../hooks/useModalClose";
 import { IconLock, IconX } from "./Icons";
 
@@ -105,9 +105,10 @@ export default function RescateModal({ fondoInicial, monedaInicial, onClose }) {
           <div className="modal-field">
             {/* La moneda viene fija por el fondo, así que no hay lista de opciones: era un select
                 con las 3 monedas que sólo se podía mirar y se prestaba a confundir pesos con fondos
-                en dólares. Queda como campo fijo, con el mismo estilo que el Fondo bloqueado. */}
+                en dólares. Queda como campo fijo, con el mismo estilo que el Fondo bloqueado, y
+                muestra el nombre largo de la lista ("ARS — Pesos") en vez del código suelto. */}
             <label>Moneda <IconLock size={11} /></label>
-            <input type="text" value={moneda} readOnly />
+            <input type="text" value={nombreMoneda(moneda)} readOnly />
           </div>
           <div className="modal-field">
             <label>Fecha de rescate</label>

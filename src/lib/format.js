@@ -11,6 +11,16 @@ export function simboloMoneda(mon) {
   return mon === "ARS" ? "$ " : "U$S ";
 }
 
+/**
+ * Nombre largo de la moneda, el mismo que mostraba la lista de los modales: "ARS — Pesos".
+ * Los campos de Moneda quedaron fijos (la moneda la define el fondo), pero se sigue mostrando el
+ * nombre largo en vez del código suelto. El código ARS/USD/USB es el que va en los datos.
+ */
+export function nombreMoneda(mon) {
+  const nombres = { ARS: "ARS — Pesos", USD: "USD — Dólar", USB: "USB — Dólar Billete" };
+  return nombres[mon] || mon || "—";
+}
+
 /** Número con separador de miles es-AR. Sin valor o no numérico → "—". */
 export function numero(v, minDec = 2, maxDec = minDec) {
   if (v === null || v === undefined || v === "") return "—";

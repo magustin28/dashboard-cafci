@@ -3,7 +3,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  simboloMoneda, numero, cuotapartes, precioCuotaparte,
+  simboloMoneda, nombreMoneda, numero, cuotapartes, precioCuotaparte,
   moneda, porcentaje, claseSigno, colorVariacion,
   fechaCorta, fechaCompleta, hoyCompleta, VERDE, ROJO,
 } from "./format.js";
@@ -12,6 +12,15 @@ test("simboloMoneda: ARS y USD/USB con espacio final", () => {
   assert.equal(simboloMoneda("ARS"), "$ ");
   assert.equal(simboloMoneda("USD"), "U$S ");
   assert.equal(simboloMoneda("USB"), "U$S ");
+});
+
+test("nombreMoneda: nombre largo de la moneda para los campos fijos de los modales", () => {
+  assert.equal(nombreMoneda("ARS"), "ARS — Pesos");
+  assert.equal(nombreMoneda("USD"), "USD — Dólar");
+  assert.equal(nombreMoneda("USB"), "USB — Dólar Billete");
+  // Una moneda desconocida se muestra tal cual (no se le inventa nombre); sin valor va el guion.
+  assert.equal(nombreMoneda("XXX"), "XXX");
+  assert.equal(nombreMoneda(null), "—");
 });
 
 test("numero: separador es-AR y guion si no es numérico", () => {

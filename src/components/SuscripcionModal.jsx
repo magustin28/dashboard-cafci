@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../context/useAuth";
-import { moneda as fmtMoneda } from "../lib/format";
+import { moneda as fmtMoneda, nombreMoneda } from "../lib/format";
 import { useModalClose } from "../hooks/useModalClose";
 import { IconLock, IconX } from "./Icons";
 
@@ -18,6 +18,24 @@ export default function SuscripcionModal({ fondoInicial, monedaInicial, raw, onC
   // puede cargar la suscripción en otro fondo/otra moneda por error. Sólo son editables cuando se
   // abre "en blanco" (botón + de Agregar suscripción, que llega con fondo vacío).
   const bloqueado = Boolean(fondoInicial);
+  // En el modal en blanco la moneda tampoco se elige: se deriva del fondo que se elige (el raw trae
+  // el par fondo + moneda), así una compra en pesos no se puede cargar como si fuera de un fondo en
+  // dólares. Mientras no haya un fondo elegido no hay moneda que mostrar: el campo queda bloqueado.
+  // Si el nombre elegido existe con más de una moneda (o no está en la lista) se deja elegir.
+  const monedasDelFondo = fondo
+    ? [...new Set(raw.filter((r) => r.fondo === fondo).map((r) => r.moneda).filter(Boolean))]
+    : [];
+  const monedaFija = bloqueado || monedasDelFondo.length === 1;
+  // Valor efectivo del campo: si el fondo fija una sola moneda se usa esa; si tiene varias se
+  // respeta la elegida siempre que siga existiendo, si no la primera. Con el modal bloqueado manda
+  // la moneda que vino por parámetro. Así el select nunca queda con un value fuera de su lista.
+  const monedaValor = bloqueado
+    ? moneda
+    : monedasDelFondo.length === 1
+      ? monedasDelFondo[0]
+      : monedasDelFondo.length > 1
+        ? (monedasDelFondo.includes(moneda) ? moneda : monedasDelFondo[0])
+        : moneda;
   // Cierre animado (hooks/useModalClose.js). requestClose(true) al guardar: el hook reenvía el
   // argumento, así el padre sigue enterándose de que hay que refrescar el portfolio.
   const { closing, requestClose } = useModalClose(onClose);
@@ -32,7 +50,7 @@ export default function SuscripcionModal({ fondoInicial, monedaInicial, raw, onC
     if (isNaN(cant) || cant <= 0) return setError("Ingresá una cantidad válida.");
     if (isNaN(prec) || prec <= 0) return setError("Ingresá un precio válido.");
     setLoading(true);
-    const result = await addSuscripcion({ fondoNombre: fondo, moneda, fechaCompra: fecha, cantidad: cant, precioCompra: prec });
+    const result = await addSuscripcion({ fondoNombre: fondo, moneda: monedaValor, fechaCompra: fecha, cantidad: cant, precioCompra: prec });
     setLoading(false);
     if (result.ok) requestClose(true);
     else setError(result.msg);
@@ -82,12 +100,23 @@ export default function SuscripcionModal({ fondoInicial, monedaInicial, raw, onC
 
         <div className="modal-row">
           <div className="modal-field">
-            <label>Moneda {bloqueado && <IconLock size={11} />}</label>
-            <select value={moneda} onChange={(e) => setMoneda(e.target.value)} disabled={bloqueado}>
-              <option value="ARS">ARS — Pesos</option>
-              <option value="USD">USD — Dólar</option>
-              <option value="USB">USB — Dólar Billete</option>
-            </select>
+            {/* La moneda nunca se elige con una lista: la fija el fondo. Llega por parámetro cuando
+                el modal se abre desde una posición y se deriva del fondo en el modal en blanco. */}
+            <label>
+              Moneda {monedaFija && <IconLock size={11} />}
+              {!monedaFija && !fondo && <span className="modal-hint-inline">Se completa al elegir el fondo.</span>}
+            </label>
+            {monedaFija ? (
+              <input type="text" value={nombreMoneda(monedaValor)} readOnly />
+            ) : !fondo ? (
+              <input type="text" value="" placeholder="Se completa al elegir el fondo" readOnly />
+            ) : (
+              <select value={monedaValor} onChange={(e) => setMoneda(e.target.value)}>
+                {(monedasDelFondo.length > 1 ? monedasDelFondo : ["ARS", "USD", "USB"]).map((m) => (
+                  <option key={m} value={m}>{nombreMoneda(m)}</option>
+                ))}
+              </select>
+            )}
           </div>
           <div className="modal-field">
             <label>Fecha de suscripción</label>
@@ -109,7 +138,7 @@ export default function SuscripcionModal({ fondoInicial, monedaInicial, raw, onC
         <div className="modal-calc">
           {total !== null ? (
             <>
-              Inversión total: <strong className="susc-total">{fmtMoneda(total, moneda)}</strong>
+              Inversión total: <strong className="susc-total">{fmtMoneda(total, monedaValor)}</strong>
             </>
           ) : (
             "Completá cantidad y precio para ver el total."
