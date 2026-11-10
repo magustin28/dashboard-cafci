@@ -283,10 +283,11 @@
   color: var(--text2);
   pointer-events: none;
 }
-/* Botón para borrar el fondo elegido: queda siempre visible y deshabilitado mientras no hay nada
-   que borrar, así la fila no se mueve al elegir. En reposo es neutro: el rojo es SÓLO la señal del
-   hover con mouse. El @media es a propósito: en pantalla táctil el :hover se queda "pegado" después
-   del toque y el botón se veía rojo hasta tocar otra cosa. */
+/* Botón para borrar el fondo elegido. Copia los tres estados de "Limpiar filtros" (.btn-clear en
+   layout.css), que es el otro botón de borrado de la app: apagado (opacity .45 + cursor de "no
+   permitido") mientras no hay nada que borrar; ROJO cuando hay un fondo elegido, para que se note
+   que se puede usar; y rojo lleno con la ✕ en blanco al pasar el mouse. Queda siempre visible, así
+   la fila no se mueve al elegir. */
 .modal-clear-btn {
   flex: 0 0 auto;
   display: flex;
@@ -299,20 +300,21 @@
   border-radius: 6px;
   background: var(--card);
   color: var(--muted2);
+  cursor: not-allowed;
+  opacity: 0.45;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: all 0.15s;
+}
+.modal-clear-btn:not(:disabled) {
+  border-color: var(--red);
+  color: var(--red);
+  opacity: 1;
   cursor: pointer;
-  transition:
-    color 0.12s,
-    border-color 0.12s;
 }
-.modal-clear-btn:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-@media (hover: hover) {
-  .modal-clear-btn:not(:disabled):hover {
-    border-color: var(--red);
-    color: var(--red);
-  }
+.modal-clear-btn:not(:disabled):hover {
+  background: var(--red);
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.2);
 }
 .modal-row {
   display: flex;
