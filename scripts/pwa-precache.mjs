@@ -38,8 +38,20 @@ if (incluidos.length === 0) {
 }
 
 const sw = readFileSync(SW, "utf8");
-// El hash va sobre la lista: si cambia cualquier archivo del build, cambia el nombre del caché.
-const version = "cafci-" + createHash("sha1").update(incluidos.join("|")).digest("hex").slice(0, 8);
+// El hash va sobre la lista CON el contenido de cada archivo. Sólo con los nombres alcanzaba para los
+// assets del build (llevan hash en el nombre), pero no para los de nombre fijo: al regenerar los PNG
+// de public/icons/ el nombre del caché quedaba igual y las PWA ya instaladas seguían con los iconos
+// viejos (comprobado: dos builds con iconos distintos dieron el mismo "cafci-0e6259b2").
+const huella = incluidos
+  .map(
+    (rel) =>
+      `${rel}:${createHash("sha1")
+        .update(readFileSync(join(DIST, rel)))
+        .digest("hex")
+        .slice(0, 8)}`,
+  )
+  .join("|");
+const version = "cafci-" + createHash("sha1").update(huella).digest("hex").slice(0, 8);
 
 const lista = "[" + incluidos.map((rel) => `"./${rel}"`).join(", ") + "]";
 const conLista = sw.replace(/\/\* __PRECACHE__ \*\/ \[[^\]]*\]/, `/* __PRECACHE__ */ ${lista}`);
