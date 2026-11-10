@@ -1,0 +1,17 @@
+{
+  // Config del PROYECTO (workspace), no global: sólo aplica cuando se abre ESTA carpeta en VS Code.
+  // A diferencia del settings.json del usuario (%APPDATA%\Code\User\settings.json), que es global y
+  // afecta a todos los proyectos, este archivo viaja con el repo.
+  //
+  // Por qué existe: al guardar, Prettier (editor.defaultFormatter: esbenp.prettier-vscode, con
+  // prettier.printWidth: 150 en la config del usuario) reformateaba el archivo COMPLETO: comillas
+  // simples a dobles, líneas unidas hasta 150 columnas, comas finales y paréntesis de más sacados en
+  // los && de JSX. El 09/11 eso metió 93 líneas de ruido en SociedadesTab.jsx por un cambio real de 3
+  // (ver resumenProyecto.txt). El código del repo está formateado a mano, así que se apaga el
+  // formateo automático en este proyecto.
+  //
+  // Formatear un archivo puntual a mano: Shift+Alt+F (Format Document) o clic derecho → Formatear
+  // documento. Si algún día se adopta Prettier en el repo, lo correcto es agregar un .prettierrc con
+  // el estilo del proyecto y borrar este archivo.
+  "editor.formatOnSave": false
+}
