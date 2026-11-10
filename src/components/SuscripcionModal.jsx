@@ -21,11 +21,18 @@ export default function SuscripcionModal({ fondoInicial, monedaInicial, raw, onC
   // cada nombre de fondo existe con UNA sola moneda (verificado contra la API: 4.293 fondos, 0 con
   // más de una), así que el campo se completa solo al elegir el fondo y queda fijo.
   const monedasDelFondo = fondo
-    ? [...new Set(raw.filter((r) => r.fondo === fondo).map((r) => r.moneda).filter(Boolean))]
+    ? [
+        ...new Set(
+          raw
+            .filter((r) => r.fondo === fondo)
+            .map((r) => r.moneda)
+            .filter(Boolean),
+        ),
+      ]
     : [];
   // Bloqueado manda la moneda que vino por parámetro; en blanco, la del fondo elegido. Sin fondo
   // elegido no hay moneda que mostrar: el campo queda vacío y sin leyendas de ayuda.
-  const moneda = bloqueado ? (monedaInicial || "ARS") : (monedasDelFondo[0] || monedaInicial || "ARS");
+  const moneda = bloqueado ? monedaInicial || "ARS" : monedasDelFondo[0] || monedaInicial || "ARS";
   const monedaVisible = bloqueado || monedasDelFondo.length > 0 ? nombreMoneda(moneda) : "";
   // Cierre animado (hooks/useModalClose.js). requestClose(true) al guardar: el hook reenvía el
   // argumento, así el padre sigue enterándose de que hay que refrescar el portfolio.
@@ -33,7 +40,10 @@ export default function SuscripcionModal({ fondoInicial, monedaInicial, raw, onC
   // es la forma rápida de deshacer la selección sin perder cantidad, precio y fecha.
   const { closing, requestClose } = useModalClose(onClose, {
     alEscape: () => {
-      if (!bloqueado && fondo) { setFondo(""); return true; }
+      if (!bloqueado && fondo) {
+        setFondo("");
+        return true;
+      }
       return false;
     },
   });
@@ -97,7 +107,9 @@ export default function SuscripcionModal({ fondoInicial, monedaInicial, raw, onC
                       oculta la nativa y se dibuja la de Lucide, siempre visible, igual que los
                       selects (components/Select.jsx). La flecha es pointer-events: none, así el
                       clic llega al input y sigue abriendo la lista. */}
-                  <span className="modal-fondo-chev"><IconChevronDown size={12} /></span>
+                  <span className="modal-fondo-chev">
+                    <IconChevronDown size={12} />
+                  </span>
                 </span>
                 {/* Borra el fondo elegido sin cerrar el modal: antes había que seleccionar todo el
                     texto y borrarlo, porque ESC cierra. */}
@@ -126,7 +138,7 @@ export default function SuscripcionModal({ fondoInicial, monedaInicial, raw, onC
             {/* La moneda nunca se elige: la fija el fondo. Sin fondo elegido el campo queda vacío y
                 se completa solo (sin leyendas: eran largas y no aportaban información). */}
             <label>Moneda {monedaVisible && <IconLock size={11} />}</label>
-            <input type="text" value={monedaVisible} readOnly placeholder="ej: ARS" />
+            <input type="text" value={monedaVisible} readOnly placeholder="ej: ARS/USD/USB" />
           </div>
           <div className="modal-field">
             <label>Fecha de suscripción</label>
