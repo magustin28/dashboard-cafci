@@ -213,7 +213,7 @@ function GerenteModal({ g, moneda, onClose }) {
         </div>
         <div className="modal-kpis">
           <div className="modal-kpi">
-            <span className="modal-kpi-label">Patrimonio administrado</span>
+            <span className="modal-kpi-label">Patrimonio administrado (M)</span>
             <span className="modal-kpi-val">{fmtPatM(g.patrimonio, moneda)}</span>
           </div>
           <div className="modal-kpi">
@@ -225,7 +225,7 @@ function GerenteModal({ g, moneda, onClose }) {
         </div>
         <div className="gm-list-head">
           <span>Fondo</span>
-          <span>Patrimonio</span>
+          <span>Patrimonio (M)</span>
           <span>Var. diaria</span>
         </div>
         <div className="gm-list" ref={listRef}>
@@ -287,7 +287,7 @@ function GerenteModal({ g, moneda, onClose }) {
               <thead>
                 <tr>
                   <th>Fondo</th>
-                  <th>Patrimonio</th>
+                  <th>Patrimonio (M)</th>
                   <th>Var.</th>
                 </tr>
               </thead>
