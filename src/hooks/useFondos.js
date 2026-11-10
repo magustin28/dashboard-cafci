@@ -28,11 +28,11 @@ const EXCEL = {
 
 // Los que llevan la fecha de referencia dentro de la clave (sólo en el formato completo)
 const EXCEL_CON_FECHA = {
-  varMes:        (r) => `Variacion cuotaparte %_${r.variacion_fecha1}`,
-  varAnio:       (r) => `Variacion cuotaparte %_${r.variacion_fecha2}`,
-  varAnual:      (r) => `Variacion cuotaparte %_${r.variacion_fecha3}`,
+  varMes: (r) => `Variacion cuotaparte %_${r.variacion_fecha1}`,
+  varAnio: (r) => `Variacion cuotaparte %_${r.variacion_fecha2}`,
+  varAnual: (r) => `Variacion cuotaparte %_${r.variacion_fecha3}`,
   patrimonioAnt: (r) => `Patrimonio_${r.patrimonio_fecha_anterior}`,
-  valorAnt:      (r) => `Valor (mil cuotapartes)_${r.valor_fecha_anterior}`,
+  valorAnt: (r) => `Valor (mil cuotapartes)_${r.valor_fecha_anterior}`,
 };
 
 function saveCache(rows, fecha, refs) {
@@ -107,9 +107,7 @@ export function useFondos() {
       const MAX = 7;
       const id = ++pedidoId.current;
       // ?fields=slim → 22 campos con nombres estables (ver README de la API)
-      const url = fechaParam
-        ? `${API_BASE}/api/fondos/${fechaParam}?fields=slim`
-        : `${API_URL}?fields=slim`;
+      const url = fechaParam ? `${API_BASE}/api/fondos/${fechaParam}?fields=slim` : `${API_URL}?fields=slim`;
 
       // Use cache on reload (only for main page, not historical)
       const cache = !fechaParam ? loadCache() : null;
@@ -161,15 +159,17 @@ export function useFondos() {
           const leer = (f, nombre) => {
             if (pos) return f[pos[nombre]] ?? null;
             const clave = EXCEL[nombre] || (EXCEL_CON_FECHA[nombre] && EXCEL_CON_FECHA[nombre](r));
-            return clave ? f[clave] ?? null : null;
+            return clave ? (f[clave] ?? null) : null;
           };
 
           // Fecha anterior: en slim ya viene en `referencias`; en el formato completo se
           // deduce de la clave tipo "Patrimonio_DD/MM/YY"
-          const fechaAnterior = r.patrimonio_fecha_anterior
-            || (Object.keys(data.datos.listado_fondos?.[0]?.fondos?.[0] || {})
-                  .find((k) => k.startsWith("Patrimonio_") && k !== "Patrimonio_Actual") || "")
-                 .replace("Patrimonio_", "");
+          const fechaAnterior =
+            r.patrimonio_fecha_anterior ||
+            (
+              Object.keys(data.datos.listado_fondos?.[0]?.fondos?.[0] || {}).find((k) => k.startsWith("Patrimonio_") && k !== "Patrimonio_Actual") ||
+              ""
+            ).replace("Patrimonio_", "");
 
           // Calcular fecha inicio de año: 01/01/YY donde YY = año de variacion_fecha2 + 1
           const fechaInicioAnio = (() => {
@@ -199,29 +199,29 @@ export function useFondos() {
             const categoria = cat.categoria_fondo || "";
             (cat.fondos || []).forEach((f) => {
               rows.push({
-                cnv:             leer(f, "cnv") || "",
-                fondo:           leer(f, "fondo") || "",
-                moneda:          leer(f, "moneda") || "",
-                region:          leer(f, "region") || "",
-                horizonte:       leer(f, "horizonte") || "",
-                varMes:          leer(f, "varMes"),
-                varAnio:         leer(f, "varAnio"),
-                varAnual:        leer(f, "varAnual"),
-                patrimonio:      leer(f, "patrimonio"),
-                socGerente:      leer(f, "socGerente") || "",
-                cafci:           leer(f, "cafci") || "",
-                valor:           leer(f, "valor"),
-                valorVarPct:     leer(f, "valorVarPct"),
+                cnv: leer(f, "cnv") || "",
+                fondo: leer(f, "fondo") || "",
+                moneda: leer(f, "moneda") || "",
+                region: leer(f, "region") || "",
+                horizonte: leer(f, "horizonte") || "",
+                varMes: leer(f, "varMes"),
+                varAnio: leer(f, "varAnio"),
+                varAnual: leer(f, "varAnual"),
+                patrimonio: leer(f, "patrimonio"),
+                socGerente: leer(f, "socGerente") || "",
+                cafci: leer(f, "cafci") || "",
+                valor: leer(f, "valor"),
+                valorVarPct: leer(f, "valorVarPct"),
                 // ── campos para el panel de detalle ──
-                socDepositaria:  leer(f, "socDepositaria") || "",
-                honSD:           leer(f, "honSD"),
-                honSG:           leer(f, "honSG"),
+                socDepositaria: leer(f, "socDepositaria") || "",
+                honSD: leer(f, "honSD"),
+                honSG: leer(f, "honSG"),
                 minimoInversion: leer(f, "minimoInversion"),
-                patrimonioAnt:   leer(f, "patrimonioAnt"),
-                valorAnt:        leer(f, "valorAnt"),
-                valorReexp:      leer(f, "valorReexp"),
-                clasificacion:   leer(f, "clasificacion"),
-                plazoLiq:        leer(f, "plazoLiq"),
+                patrimonioAnt: leer(f, "patrimonioAnt"),
+                valorAnt: leer(f, "valorAnt"),
+                valorReexp: leer(f, "valorReexp"),
+                clasificacion: leer(f, "clasificacion"),
+                plazoLiq: leer(f, "plazoLiq"),
                 categoria,
               });
             });
@@ -238,9 +238,8 @@ export function useFondos() {
           // Falló un pedido que ya fue reemplazado por otro: no corresponde avisar por este.
           if (id !== pedidoId.current) return;
           // Timeout/abort del fetch → mensaje entendible en vez de "signal timed out"
-          const msg = e.name === "TimeoutError" || e.name === "AbortError"
-            ? "La consulta tardó demasiado. Probá de nuevo con el botón Actualizar."
-            : e.message;
+          const msg =
+            e.name === "TimeoutError" || e.name === "AbortError" ? "La consulta tardó demasiado. Probá de nuevo con el botón Actualizar." : e.message;
           if (attempt === MAX) {
             setError(msg);
             setLoading(false);

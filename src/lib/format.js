@@ -46,8 +46,7 @@ export function moneda(v, mon, { absoluto = true, signo = false, dec = 2 } = {})
   if (isNaN(n)) return "—";
   const marca = signo && n !== 0 ? (n > 0 ? "+" : "-") : "";
   const valor = absoluto ? Math.abs(n) : n;
-  return marca + simboloMoneda(mon) +
-    valor.toLocaleString("es-AR", { minimumFractionDigits: dec, maximumFractionDigits: dec });
+  return marca + simboloMoneda(mon) + valor.toLocaleString("es-AR", { minimumFractionDigits: dec, maximumFractionDigits: dec });
 }
 
 /**
@@ -58,9 +57,7 @@ export function porcentaje(v, dec = 2, { signo = true, agrupado = false } = {}) 
   if (v === null || v === undefined || v === "") return "—";
   const n = typeof v === "number" ? v : parseFloat(v);
   if (isNaN(n)) return "—";
-  const texto = agrupado
-    ? n.toLocaleString("es-AR", { minimumFractionDigits: dec, maximumFractionDigits: dec })
-    : n.toFixed(dec);
+  const texto = agrupado ? n.toLocaleString("es-AR", { minimumFractionDigits: dec, maximumFractionDigits: dec }) : n.toFixed(dec);
   return (signo && n > 0 ? "+" : "") + texto + "%";
 }
 
@@ -81,7 +78,7 @@ export function colorVariacion(v) {
 /** "2026-10-26" → "26/10/26". Si no es ISO, devuelve el valor tal cual. */
 export function fechaCorta(iso) {
   const [y, m, d] = String(iso || "").split("-");
-  return d ? `${d}/${m}/${y.slice(2)}` : (iso || "");
+  return d ? `${d}/${m}/${y.slice(2)}` : iso || "";
 }
 
 /** ISO (2026-10-26) o DD/MM/AA o DD/MM/AAAA → "DD/MM/AAAA". */

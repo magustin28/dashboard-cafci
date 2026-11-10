@@ -7,6 +7,8 @@
     "dev": "vite",
     "build": "vite build && node scripts/pwa-precache.mjs",
     "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "test": "node --test",
     "check": "node scripts/check.mjs",
     "preview": "vite preview"
@@ -25,6 +27,7 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
+    "prettier": "^3.9.10",
     "vite": "^7.3.1"
   }
 }

@@ -162,7 +162,9 @@ header > .auth-wrap {
   border-radius: 4px;
   background: transparent;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
 }
 .meta-volver-hoy:hover {
   background: rgba(217, 119, 6, 0.1);
@@ -566,4 +568,3 @@ select option {
   flex-direction: column;
   gap: 28px;
 }
-

@@ -9,24 +9,18 @@
 //
 // Uso manual:  node scripts/pwa-precache.mjs      (requiere haber construido antes)
 
-import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
-import { createHash } from 'node:crypto';
-import { join, posix } from 'node:path';
+import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { join, posix } from "node:path";
 
-const DIST = 'dist';
-const SW = join(DIST, 'sw.js');
+const DIST = "dist";
+const SW = join(DIST, "sw.js");
 
 // Qué entra al precache: el shell de la app. Los iconos y el favicon van aparte porque el navegador
 // los pide al instalar la PWA y conviene que ya estén cacheados.
-const INCLUIR = [
-  /^index\.html$/,
-  /^favicon\.svg$/,
-  /^manifest\.webmanifest$/,
-  /^icons\/.*\.png$/,
-  /^assets\/.*\.(js|css)$/,
-];
+const INCLUIR = [/^index\.html$/, /^favicon\.svg$/, /^manifest\.webmanifest$/, /^icons\/.*\.png$/, /^assets\/.*\.(js|css)$/];
 
-function archivosDe(dir, prefijo = '') {
+function archivosDe(dir, prefijo = "") {
   return readdirSync(dir).flatMap((nombre) => {
     const ruta = join(dir, nombre);
     const rel = prefijo ? posix.join(prefijo, nombre) : nombre;
@@ -34,18 +28,20 @@ function archivosDe(dir, prefijo = '') {
   });
 }
 
-const incluidos = archivosDe(DIST).filter((rel) => INCLUIR.some((re) => re.test(rel))).sort();
+const incluidos = archivosDe(DIST)
+  .filter((rel) => INCLUIR.some((re) => re.test(rel)))
+  .sort();
 
 if (incluidos.length === 0) {
   console.error(`✖ pwa-precache: no se encontró nada para precachear en ${DIST}/ (¿corriste el build?)`);
   process.exit(1);
 }
 
-const sw = readFileSync(SW, 'utf8');
+const sw = readFileSync(SW, "utf8");
 // El hash va sobre la lista: si cambia cualquier archivo del build, cambia el nombre del caché.
-const version = 'cafci-' + createHash('sha1').update(incluidos.join('|')).digest('hex').slice(0, 8);
+const version = "cafci-" + createHash("sha1").update(incluidos.join("|")).digest("hex").slice(0, 8);
 
-const lista = '[' + incluidos.map((rel) => `"./${rel}"`).join(', ') + ']';
+const lista = "[" + incluidos.map((rel) => `"./${rel}"`).join(", ") + "]";
 const conLista = sw.replace(/\/\* __PRECACHE__ \*\/ \[[^\]]*\]/, `/* __PRECACHE__ */ ${lista}`);
 const conVersion = conLista.replace(/\/\* __CACHE__ \*\/ "[^"]*"/, `/* __CACHE__ */ "${version}"`);
 

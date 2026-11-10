@@ -33,46 +33,49 @@ export default function Tabs({ raw, activeTab, onSwitch, esFechaHistorica = fals
 
   return (
     <>
-    {/* El <select> va dentro de un envoltorio: la flecha del navegador no se puede estilizar (cada
+      {/* El <select> va dentro de un envoltorio: la flecha del navegador no se puede estilizar (cada
         navegador dibuja la suya y ninguna se parecía a la de "Filtros"), así que el select la esconde
         con appearance: none y la flecha de Lucide se dibuja acá. Ver utils.css. */}
-    <div className="tabs-select-wrap">
-      <select className="tabs-select" value={valor} onChange={(e) => onSwitch(e.target.value)} aria-label="Sección">
-        {opciones.map((o) => (
-          <option key={o.id} value={o.id}>
-            {o.label}{o.n !== null ? ` · ${o.n.toLocaleString("es-AR")}` : ""}
-          </option>
-        ))}
-      </select>
-      <span className="tabs-select-chev"><IconChevronDown size={12} /></span>
-    </div>
+      <div className="tabs-select-wrap">
+        <select className="tabs-select" value={valor} onChange={(e) => onSwitch(e.target.value)} aria-label="Sección">
+          {opciones.map((o) => (
+            <option key={o.id} value={o.id}>
+              {o.label}
+              {o.n !== null ? ` · ${o.n.toLocaleString("es-AR")}` : ""}
+            </option>
+          ))}
+        </select>
+        <span className="tabs-select-chev">
+          <IconChevronDown size={12} />
+        </span>
+      </div>
 
-    <div className="tabs-row">
-      {user && !esFechaHistorica && (
-        <button className={`tab tab-port${activeTab === "Mi Portfolio" ? " active" : ""}`} onClick={() => onSwitch("Mi Portfolio")}>
-          <IconChartColumn size={13} /> Mi Portfolio<span className="tab-n">{nPort}</span>
-        </button>
-      )}
-      <button className={`tab tab-fav${activeTab === "Favoritos" ? " active" : ""}`} onClick={() => onSwitch("Favoritos")}>
-        <IconStar size={13} /> Favoritos<span className="tab-n">{favs.length}</span>
-      </button>
-      <button className={`tab tab-top${activeTab === "Top 10" ? " active" : ""}`} onClick={() => onSwitch("Top 10")}>
-        <IconTrophy size={13} /> Top 10
-      </button>
-      <button className={`tab tab-soc${activeTab === "Sociedades" ? " active" : ""}`} onClick={() => onSwitch("Sociedades")}>
-        <IconBuilding2 size={13} /> Sociedades
-      </button>
-      {TAB_GROUPS.map((g) => {
-        // Mismo criterio que el selector del celular: contar FONDOS (grupos), no clases.
-        const n = contarFondos(g.id === "Todos" ? raw : raw.filter((r) => getTabGroup(r) === g.id));
-        return (
-          <button key={g.id} className={`tab${activeTab === g.id ? " active" : ""}`} onClick={() => onSwitch(g.id)}>
-            {g.label}
-            <span className="tab-n">{n.toLocaleString("es-AR")}</span>
+      <div className="tabs-row">
+        {user && !esFechaHistorica && (
+          <button className={`tab tab-port${activeTab === "Mi Portfolio" ? " active" : ""}`} onClick={() => onSwitch("Mi Portfolio")}>
+            <IconChartColumn size={13} /> Mi Portfolio<span className="tab-n">{nPort}</span>
           </button>
-        );
-      })}
-    </div>
+        )}
+        <button className={`tab tab-fav${activeTab === "Favoritos" ? " active" : ""}`} onClick={() => onSwitch("Favoritos")}>
+          <IconStar size={13} /> Favoritos<span className="tab-n">{favs.length}</span>
+        </button>
+        <button className={`tab tab-top${activeTab === "Top 10" ? " active" : ""}`} onClick={() => onSwitch("Top 10")}>
+          <IconTrophy size={13} /> Top 10
+        </button>
+        <button className={`tab tab-soc${activeTab === "Sociedades" ? " active" : ""}`} onClick={() => onSwitch("Sociedades")}>
+          <IconBuilding2 size={13} /> Sociedades
+        </button>
+        {TAB_GROUPS.map((g) => {
+          // Mismo criterio que el selector del celular: contar FONDOS (grupos), no clases.
+          const n = contarFondos(g.id === "Todos" ? raw : raw.filter((r) => getTabGroup(r) === g.id));
+          return (
+            <button key={g.id} className={`tab${activeTab === g.id ? " active" : ""}`} onClick={() => onSwitch(g.id)}>
+              {g.label}
+              <span className="tab-n">{n.toLocaleString("es-AR")}</span>
+            </button>
+          );
+        })}
+      </div>
     </>
   );
 }

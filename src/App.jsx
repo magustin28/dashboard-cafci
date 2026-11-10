@@ -1,24 +1,24 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
-import { useAuth } from './context/useAuth';
-import { useFondos } from './hooks/useFondos';
-import { getTabGroup, filterRows } from './lib/utils';
-import { fechaCompleta } from './lib/format';
-import { activarGuardian, desactivarGuardian, navegarUrl } from './lib/historial';
+import { useState, useEffect, useMemo, useRef } from "react";
+import { useAuth } from "./context/useAuth";
+import { useFondos } from "./hooks/useFondos";
+import { getTabGroup, filterRows } from "./lib/utils";
+import { fechaCompleta } from "./lib/format";
+import { activarGuardian, desactivarGuardian, navegarUrl } from "./lib/historial";
 
-import Header from './components/Header';
-import FilterBar from './components/FilterBar';
-import Tabs from './components/Tabs';
-import KPIs from './components/KPIs';
-import FondosTable from './components/FondosTable';
-import PortfolioTab from './components/PortfolioTab';
-import SuscripcionModal from './components/SuscripcionModal';
-import RescateModal from './components/RescateModal';
-import HistorialModal from './components/HistorialModal';
-import FondoPanel    from './components/FondoPanel';
-import TopTab        from './components/TopTab';
-import { LoaderOverlay, ErrorState, DataOverlay } from './components/EstadoPantalla';
-import SociedadesTab from './components/SociedadesTab';
-import { IconStar } from './components/Icons';
+import Header from "./components/Header";
+import FilterBar from "./components/FilterBar";
+import Tabs from "./components/Tabs";
+import KPIs from "./components/KPIs";
+import FondosTable from "./components/FondosTable";
+import PortfolioTab from "./components/PortfolioTab";
+import SuscripcionModal from "./components/SuscripcionModal";
+import RescateModal from "./components/RescateModal";
+import HistorialModal from "./components/HistorialModal";
+import FondoPanel from "./components/FondoPanel";
+import TopTab from "./components/TopTab";
+import { LoaderOverlay, ErrorState, DataOverlay } from "./components/EstadoPantalla";
+import SociedadesTab from "./components/SociedadesTab";
+import { IconStar } from "./components/Icons";
 
 // ── Gesto Atrás en el celular ──────────────────────────────────────────────────────────────────
 // Sólo se activa en el celular/PWA: en una pestaña de escritorio el Atrás tiene que seguir saliendo
@@ -26,9 +26,7 @@ import { IconStar } from './components/Icons';
 // la app instalada (que en iOS se reporta con navigator.standalone).
 function esCelular() {
   return (
-    window.matchMedia('(pointer: coarse)').matches ||
-    window.matchMedia('(display-mode: standalone)').matches ||
-    window.navigator.standalone === true
+    window.matchMedia("(pointer: coarse)").matches || window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true
   );
 }
 
@@ -51,44 +49,46 @@ export default function App() {
   // Al volver del login con Google la página se recarga y se pierde el dispatch de cafci:tab que
   // usaba el login por contraseña: AuthModal deja el tab destino en sessionStorage y acá se toma
   // como pestaña inicial (se limpia sola cuando el usuario cambia de pestaña, en switchTab).
-  const [activeTab, setActiveTab] = useState(() => sessionStorage.getItem('cafci_post_login_tab') || 'Todos');
+  const [activeTab, setActiveTab] = useState(() => sessionStorage.getItem("cafci_post_login_tab") || "Todos");
   const [fondoPanel, setFondoPanel] = useState(null);
-  const [q, setQ]                 = useState('');
-  const [moneda, setMoneda]       = useState('');
-  const [region, setRegion]       = useState('');
-  const [horizonte, setHorizonte] = useState('');
+  const [q, setQ] = useState("");
+  const [moneda, setMoneda] = useState("");
+  const [region, setRegion] = useState("");
+  const [horizonte, setHorizonte] = useState("");
 
   // Modals
-  const [suscModal,  setSuscModal]  = useState(null); // { fondo, moneda } | null
-  const [rescModal,  setRescModal]  = useState(null);
-  const [histModal,  setHistModal]  = useState(null); // fondoNombre | null
+  const [suscModal, setSuscModal] = useState(null); // { fondo, moneda } | null
+  const [rescModal, setRescModal] = useState(null);
+  const [histModal, setHistModal] = useState(null); // fondoNombre | null
 
   // La fecha pedida vive como ESTADO y no se lee window.location.search en cada render: así se
   // puede cambiar de día sin recargar (un pushState solo no re-renderiza).
   const [search, setSearch] = useState(window.location.search);
-  const fechaParam = new URLSearchParams(search).get('fecha');
+  const fechaParam = new URLSearchParams(search).get("fecha");
 
-  useEffect(() => { fetchData(fechaParam); }, [fechaParam, fetchData]);
+  useEffect(() => {
+    fetchData(fechaParam);
+  }, [fechaParam, fetchData]);
 
   // La URL que la app está mostrando ahora mismo. El guardián del Atrás la compara con la del evento
   // para distinguir un gesto que no cambia de vista (se consume y se intenta cerrar la app) de una
   // navegación real, como volver de una fecha histórica.
   const searchActual = useRef(search);
-  useEffect(() => { searchActual.current = search; }, [search]);
+  useEffect(() => {
+    searchActual.current = search;
+  }, [search]);
 
   // Título de la pestaña con el mismo formateador que el resto de la app (lib/format.js).
   useEffect(() => {
-    document.title = apiFecha ? `Dashboard CAFCI - ${fechaCompleta(apiFecha)}` : 'Dashboard CAFCI';
+    document.title = apiFecha ? `Dashboard CAFCI - ${fechaCompleta(apiFecha)}` : "Dashboard CAFCI";
   }, [apiFecha]);
 
   // Listen for tab switch events from Header
   useEffect(() => {
     const handler = (e) => setActiveTab(e.detail);
-    window.addEventListener('cafci:tab', handler);
-    return () => window.removeEventListener('cafci:tab', handler);
+    window.addEventListener("cafci:tab", handler);
+    return () => window.removeEventListener("cafci:tab", handler);
   }, []);
-
-
 
   // El tab "Mi Portfolio" existe sólo con sesión Y fuera del histórico (Tabs.jsx lo esconde en los
   // dos casos). Si la sesión se cae estando ahí (logout en otra pestaña, token vencido) o si se pasa
@@ -98,14 +98,13 @@ export default function App() {
   // actuales se restaura solo— en vez de resetear con un effect: el lint del proyecto no permite
   // setState dentro de un effect.
   const esHistorica = !!fechaParam;
-  const tabActual =
-    activeTab === 'Mi Portfolio' && (esHistorica || !user) ? 'Todos' : activeTab;
+  const tabActual = activeTab === "Mi Portfolio" && (esHistorica || !user) ? "Todos" : activeTab;
 
   const filtered = useMemo(() => {
     if (!raw.length) return [];
-    const rows = raw.filter(r => {
-      if (tabActual === 'Favoritos') return false; // se muestra con favFiltered
-      return tabActual === 'Todos' || getTabGroup(r) === tabActual;
+    const rows = raw.filter((r) => {
+      if (tabActual === "Favoritos") return false; // se muestra con favFiltered
+      return tabActual === "Todos" || getTabGroup(r) === tabActual;
     });
     return filterRows(rows, { q, moneda, region, horizonte });
   }, [raw, tabActual, q, moneda, region, horizonte]);
@@ -113,19 +112,28 @@ export default function App() {
   // Los favoritos pasan por la MISMA función de filtros que el resto de las pestañas: así el
   // buscador y los selects también los filtran.
   const favFiltered = useMemo(
-    () => filterRows(raw.filter(r => favs.includes(r.fondo)), { q, moneda, region, horizonte }),
-    [raw, favs, q, moneda, region, horizonte]
+    () =>
+      filterRows(
+        raw.filter((r) => favs.includes(r.fondo)),
+        { q, moneda, region, horizonte },
+      ),
+    [raw, favs, q, moneda, region, horizonte],
   );
 
-  const isPortfolio = tabActual === 'Mi Portfolio';
-  const isFavoritos = tabActual === 'Favoritos';
-  const isTop       = tabActual === 'Top 10';
-  const isSociedades = tabActual === 'Sociedades';
-  const hasFilters  = q || moneda || region || horizonte;
+  const isPortfolio = tabActual === "Mi Portfolio";
+  const isFavoritos = tabActual === "Favoritos";
+  const isTop = tabActual === "Top 10";
+  const isSociedades = tabActual === "Sociedades";
+  const hasFilters = q || moneda || region || horizonte;
 
-  const clearFilters = () => { setQ(''); setMoneda(''); setRegion(''); setHorizonte(''); };
+  const clearFilters = () => {
+    setQ("");
+    setMoneda("");
+    setRegion("");
+    setHorizonte("");
+  };
   const switchTab = (tab) => {
-    sessionStorage.removeItem('cafci_post_login_tab'); // ya se usó como pestaña inicial
+    sessionStorage.removeItem("cafci_post_login_tab"); // ya se usó como pestaña inicial
     setActiveTab(tab);
     clearFilters();
   };
@@ -136,7 +144,7 @@ export default function App() {
   // navegarUrl reemplaza en vez de apilar si el tope del historial es una capa nuestra (un modal
   // abierto): esa entrada se saca enseguida y quedaría huérfana atrás.
   const irA = (fecha) => {
-    const qs = fecha ? `?fecha=${fecha}` : '';
+    const qs = fecha ? `?fecha=${fecha}` : "";
     navegarUrl(qs || window.location.pathname);
     setSearch(qs);
     setFondoPanel(null);
@@ -150,9 +158,9 @@ export default function App() {
 
   // Al cerrar sesión, volver a la pestaña principal
   useEffect(() => {
-    const handler = () => setActiveTab('Todos');
-    window.addEventListener('cafci:logout', handler);
-    return () => window.removeEventListener('cafci:logout', handler);
+    const handler = () => setActiveTab("Todos");
+    window.addEventListener("cafci:logout", handler);
+    return () => window.removeEventListener("cafci:logout", handler);
   }, []);
 
   // El gesto Atrás cambia la URL sin avisar a React: sin esto, volver desde una fecha histórica
@@ -161,8 +169,8 @@ export default function App() {
   // no re-renderiza.
   useEffect(() => {
     const handler = () => setSearch(window.location.search);
-    window.addEventListener('popstate', handler);
-    return () => window.removeEventListener('popstate', handler);
+    window.addEventListener("popstate", handler);
+    return () => window.removeEventListener("popstate", handler);
   }, []);
 
   // Guardián del gesto Atrás en el celular con sesión. Volver del login de Google deja su página en
@@ -188,10 +196,8 @@ export default function App() {
   if (loading && raw.length === 0) {
     return (
       <LoaderOverlay
-        mensaje={fechaParam ? `Consultando los datos del ${fechaCompleta(fechaParam)}…` : 'Consultando la API…'}
-        sub={fechaParam
-          ? 'Consultando datos históricos de la API.'
-          : 'Esto puede tardar hasta 30 segundos si el servidor está iniciando.'}
+        mensaje={fechaParam ? `Consultando los datos del ${fechaCompleta(fechaParam)}…` : "Consultando la API…"}
+        sub={fechaParam ? "Consultando datos históricos de la API." : "Esto puede tardar hasta 30 segundos si el servidor está iniciando."}
       />
     );
   }
@@ -231,27 +237,40 @@ export default function App() {
           las tabs quedan afuera justamente para poder seguir usando "Histórico: … ✕" y cambiar de
           pestaña durante la consulta. */}
       <div className="data-region">
-        {!isPortfolio && !isTop && !isSociedades && (
-          <KPIs filtered={isFavoritos ? favFiltered : filtered} />
-        )}
+        {!isPortfolio && !isTop && !isSociedades && <KPIs filtered={isFavoritos ? favFiltered : filtered} />}
 
         {/* La barra vive en components/FilterBar.jsx: en el celular se pliega detrás del botón
             "Filtros" (una fila de 44px en lugar de las cuatro que ocupaba) y en escritorio se ve
             igual que antes. */}
         {!isPortfolio && !isTop && !isSociedades && (
           <FilterBar
-            q={q} setQ={setQ}
-            moneda={moneda} setMoneda={setMoneda}
-            region={region} setRegion={setRegion}
-            horizonte={horizonte} setHorizonte={setHorizonte}
-            hasFilters={hasFilters} clearFilters={clearFilters}
+            q={q}
+            setQ={setQ}
+            moneda={moneda}
+            setMoneda={setMoneda}
+            region={region}
+            setRegion={setRegion}
+            horizonte={horizonte}
+            setHorizonte={setHorizonte}
+            hasFilters={hasFilters}
+            clearFilters={clearFilters}
           />
         )}
 
         {isFavoritos && !user && (
           <div className="favs-banner">
-            <span><IconStar size={13} /> Tus favoritos se guardan sólo en este navegador.</span>
-            {' '}<a href="#" onClick={e => { e.preventDefault(); window.dispatchEvent(new CustomEvent('cafci:openauth')); }}>Iniciá sesión con Google</a>
+            <span>
+              <IconStar size={13} /> Tus favoritos se guardan sólo en este navegador.
+            </span>{" "}
+            <a
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                window.dispatchEvent(new CustomEvent("cafci:openauth"));
+              }}
+            >
+              Iniciá sesión con Google
+            </a>
             <span> para guardarlos en tu cuenta y acceder desde cualquier dispositivo.</span>
           </div>
         )}
@@ -271,14 +290,14 @@ export default function App() {
               raw={raw}
               apiFecha={apiFecha}
               refs={refs}
-              onOpenSuscripcion={(fondo, mon) => setSuscModal({ fondo: fondo || '', moneda: mon || 'ARS' })}
+              onOpenSuscripcion={(fondo, mon) => setSuscModal({ fondo: fondo || "", moneda: mon || "ARS" })}
               onOpenRescate={(fondo, mon) => setRescModal({ fondo, moneda: mon })}
-              onOpenHistorial={(fondo, mon) => setHistModal({ fondo, moneda: mon || 'ARS' })}
+              onOpenHistorial={(fondo, mon) => setHistModal({ fondo, moneda: mon || "ARS" })}
               onFondoClick={(row) => setFondoPanel(row)}
             />
             {/* FAB */}
             {user && (
-              <button className="fab-add" onClick={() => setSuscModal({ fondo: '', moneda: 'ARS' })} title="Agregar suscripción">
+              <button className="fab-add" onClick={() => setSuscModal({ fondo: "", moneda: "ARS" })} title="Agregar suscripción">
                 <span className="fab-icon">+</span>
               </button>
             )}
@@ -296,11 +315,7 @@ export default function App() {
         {/* Consulta de OTRA fecha en curso: se tapa la zona de datos (KPIs + filtros + tabla) y el
             header y las tabs quedan libres para volver con "Histórico: … ✕" o cambiar de pestaña. */}
         {consultando && (
-          <DataOverlay
-            mensaje={fechaParam
-              ? `Consultando los datos del ${fechaCompleta(fechaParam)}…`
-              : 'Volviendo a los datos actuales…'}
-          />
+          <DataOverlay mensaje={fechaParam ? `Consultando los datos del ${fechaCompleta(fechaParam)}…` : "Volviendo a los datos actuales…"} />
         )}
       </div>
 
@@ -310,32 +325,24 @@ export default function App() {
           fondoInicial={suscModal.fondo}
           monedaInicial={suscModal.moneda}
           raw={raw}
-          onClose={(refresh) => { setSuscModal(null); if (refresh) setActiveTab('Mi Portfolio'); }}
+          onClose={(refresh) => {
+            setSuscModal(null);
+            if (refresh) setActiveTab("Mi Portfolio");
+          }}
         />
       )}
       {rescModal && (
         <RescateModal
           fondoInicial={rescModal.fondo}
           monedaInicial={rescModal.moneda}
-          onClose={(refresh) => { setRescModal(null); if (refresh) setActiveTab('Mi Portfolio'); }}
+          onClose={(refresh) => {
+            setRescModal(null);
+            if (refresh) setActiveTab("Mi Portfolio");
+          }}
         />
       )}
-      {histModal && (
-        <HistorialModal
-          fondoNombre={histModal.fondo}
-          moneda={histModal.moneda}
-          raw={raw}
-          onClose={() => setHistModal(null)}
-        />
-      )}
-      {fondoPanel && (
-        <FondoPanel
-          fondo={fondoPanel}
-          refs={refs}
-          apiFecha={apiFecha}
-          onClose={() => setFondoPanel(null)}
-        />
-      )}
+      {histModal && <HistorialModal fondoNombre={histModal.fondo} moneda={histModal.moneda} raw={raw} onClose={() => setHistModal(null)} />}
+      {fondoPanel && <FondoPanel fondo={fondoPanel} refs={refs} apiFecha={apiFecha} onClose={() => setFondoPanel(null)} />}
     </div>
   );
 }

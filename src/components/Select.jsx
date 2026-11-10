@@ -23,7 +23,9 @@ export default function Select({ value, onChange, ariaLabel, children }) {
       <select value={value} onChange={onChange} aria-label={ariaLabel}>
         {children}
       </select>
-      <span className="sel-chev"><IconChevronDown size={12} /></span>
+      <span className="sel-chev">
+        <IconChevronDown size={12} />
+      </span>
     </span>
   );
 }

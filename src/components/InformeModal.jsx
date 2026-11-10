@@ -2,9 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../context/useAuth";
 import { sb } from "../lib/supabase";
 import { toast } from "../lib/utils";
-import {
-  fechaCompleta, cuotapartes, precioCuotaparte, moneda, porcentaje, hoyCompleta,
-} from "../lib/format";
+import { fechaCompleta, cuotapartes, precioCuotaparte, moneda, porcentaje, hoyCompleta } from "../lib/format";
 import { abrirInformePDF } from "../lib/informePdf";
 import { useModalClose } from "../hooks/useModalClose";
 import { IconX, IconFileText } from "./Icons";
@@ -110,9 +108,7 @@ export default function InformeModal({ enriched, apiFecha, onClose }) {
               </div>
               <div className="inf-kpi">
                 <div className="inf-kpi-label">Valor Actual ARS</div>
-                <div className={`inf-kpi-val ${vARS >= totalARS ? "pos" : "neg"}`}>
-                  {fmtMon(vARS, "ARS")}
-                </div>
+                <div className={`inf-kpi-val ${vARS >= totalARS ? "pos" : "neg"}`}>{fmtMon(vARS, "ARS")}</div>
               </div>
               <div className="inf-kpi">
                 <div className="inf-kpi-label">Rendimiento ARS</div>
@@ -131,9 +127,7 @@ export default function InformeModal({ enriched, apiFecha, onClose }) {
               </div>
               <div className="inf-kpi">
                 <div className="inf-kpi-label">Valor Actual USD</div>
-                <div className={`inf-kpi-val ${vUSD >= totalUSD ? "pos" : "neg"}`}>
-                  {fmtMon(vUSD, "USD")}
-                </div>
+                <div className={`inf-kpi-val ${vUSD >= totalUSD ? "pos" : "neg"}`}>{fmtMon(vUSD, "USD")}</div>
               </div>
               <div className="inf-kpi">
                 <div className="inf-kpi-label">Rendimiento USD</div>
@@ -215,9 +209,7 @@ export default function InformeModal({ enriched, apiFecha, onClose }) {
                         <td>{fmtCp(s.cantidad)}</td>
                         <td>{fmtPrecio(s.precio_compra)}</td>
                         <td>{fmtMon(parseFloat(s.cantidad) * parseFloat(s.precio_compra), item.moneda)}</td>
-                        <td className={parseFloat(s.cuotapartes_disponibles) > 0 ? "pos" : "zero"}>
-                          {fmtCp(s.cuotapartes_disponibles)}
-                        </td>
+                        <td className={parseFloat(s.cuotapartes_disponibles) > 0 ? "pos" : "zero"}>{fmtCp(s.cuotapartes_disponibles)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -227,9 +219,7 @@ export default function InformeModal({ enriched, apiFecha, onClose }) {
               {/* Rescates — solo si hay */}
               {fondoRescates.length > 0 && (
                 <>
-                  <div className="inf-sub-title lg">
-                    Rescates
-                  </div>
+                  <div className="inf-sub-title lg">Rescates</div>
                   <table className="inf-table">
                     <thead>
                       <tr>
@@ -294,7 +284,7 @@ export default function InformeModal({ enriched, apiFecha, onClose }) {
     <>
       <div
         className={`modal-overlay informe-overlay${closing ? " closing" : ""}`}
-       
+
         onClick={(e) => {
           if (e.target === e.currentTarget) requestClose();
         }}

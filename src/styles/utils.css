@@ -135,10 +135,33 @@
   background: var(--card);
   z-index: 1;
 }
-.fp-head-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
-.fp-title { font-size: 14px; font-weight: 700; line-height: 1.3; color: var(--text1); }
-.fp-close { background: none; border: none; color: var(--text2); cursor: pointer; font-size: 18px; padding: 4px; flex-shrink: 0; }
-.fp-body { padding: 14px 18px; display: flex; flex-direction: column; gap: 18px; }
+.fp-head-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+.fp-title {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--text1);
+}
+.fp-close {
+  background: none;
+  border: none;
+  color: var(--text2);
+  cursor: pointer;
+  font-size: 18px;
+  padding: 4px;
+  flex-shrink: 0;
+}
+.fp-body {
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
 .fp-section-title {
   font-size: 10px;
   font-weight: 700;
@@ -149,11 +172,30 @@
   padding-bottom: 5px;
   margin-bottom: 8px;
 }
-.fp-section-body { display: flex; flex-direction: column; gap: 6px; }
-.fp-row { display: flex; justify-content: space-between; gap: 12px; }
-.fp-row-label { font-size: 12px; color: var(--text2); flex-shrink: 0; }
-.fp-row-value { font-size: 12px; color: var(--text1); font-variant-numeric: tabular-nums; text-align: right; }
-.fw-700 { font-weight: 700; }
+.fp-section-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.fp-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.fp-row-label {
+  font-size: 12px;
+  color: var(--text2);
+  flex-shrink: 0;
+}
+.fp-row-value {
+  font-size: 12px;
+  color: var(--text1);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.fw-700 {
+  font-weight: 700;
+}
 .spinner {
   width: 36px;
   height: 36px;
@@ -575,7 +617,9 @@
     font-weight: 600;
     cursor: pointer;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-    transition: border-color 0.15s, color 0.15s;
+    transition:
+      border-color 0.15s,
+      color 0.15s;
   }
   .filtros-toggle.abierto {
     border-color: var(--accent);
@@ -635,4 +679,3 @@
     justify-content: center;
   }
 }
-

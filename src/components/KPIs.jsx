@@ -1,25 +1,25 @@
-import { fmtPat } from '../lib/utils';
+import { fmtPat } from "../lib/utils";
 
 export default function KPIs({ filtered }) {
-  const vd  = filtered.map(r => parseFloat(r.varMes)).filter(v => !isNaN(v));
-  const v12 = filtered.map(r => parseFloat(r.varAnual)).filter(v => !isNaN(v));
-  const pat = filtered.map(r => parseFloat(r.patrimonio)).filter(v => !isNaN(v) && v > 0);
+  const vd = filtered.map((r) => parseFloat(r.varMes)).filter((v) => !isNaN(v));
+  const v12 = filtered.map((r) => parseFloat(r.varAnual)).filter((v) => !isNaN(v));
+  const pat = filtered.map((r) => parseFloat(r.patrimonio)).filter((v) => !isNaN(v) && v > 0);
 
-  const avgVd  = vd.length  ? vd.reduce((a, b)  => a + b, 0) / vd.length  : null;
+  const avgVd = vd.length ? vd.reduce((a, b) => a + b, 0) / vd.length : null;
   const avgV12 = v12.length ? v12.reduce((a, b) => a + b, 0) / v12.length : null;
   const sumPat = pat.length ? pat.reduce((a, b) => a + b, 0) : null;
-  const posVd  = vd.filter(v => v > 0).length;
+  const posVd = vd.filter((v) => v > 0).length;
 
-  const pct = (v, d = 2) => v === null ? '—' : (v > 0 ? '+' : '') + v.toFixed(d) + '%';
-  const cls = (v) => v === null ? 'c' : v > 0 ? 'g' : v < 0 ? 'r' : 'y';
+  const pct = (v, d = 2) => (v === null ? "—" : (v > 0 ? "+" : "") + v.toFixed(d) + "%");
+  const cls = (v) => (v === null ? "c" : v > 0 ? "g" : v < 0 ? "r" : "y");
 
   return (
     <div className="kpis">
       <div className="kpi">
         <div className="kpi-bar c"></div>
         <div className="kpi-label">Fondos en filtro</div>
-        <div className="kpi-val c">{filtered.length.toLocaleString('es-AR')}</div>
-        <div className="kpi-sub">de {filtered.length.toLocaleString('es-AR')} totales</div>
+        <div className="kpi-val c">{filtered.length.toLocaleString("es-AR")}</div>
+        <div className="kpi-sub">de {filtered.length.toLocaleString("es-AR")} totales</div>
       </div>
       <div className="kpi">
         <div className={`kpi-bar ${cls(avgVd)}`}></div>

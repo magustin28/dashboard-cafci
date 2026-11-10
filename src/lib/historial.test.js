@@ -14,8 +14,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  abrirCapa, capaAbierta, capaEnElTope, sacarCapa, sacarEntradaDelHistorial,
-  navegarUrl, activarGuardian, desactivarGuardian,
+  abrirCapa,
+  capaAbierta,
+  capaEnElTope,
+  sacarCapa,
+  sacarEntradaDelHistorial,
+  navegarUrl,
+  activarGuardian,
+  desactivarGuardian,
 } from "./historial.js";
 
 // Misma clave que usa el módulo (history.state.cafciCapa).
@@ -27,8 +33,12 @@ function crearVentana(urlInicial = INICIO) {
   const oyentes = new Set();
   globalThis.window = {
     history: {
-      get state() { return pila[pila.length - 1].state; },
-      get length() { return pila.length; },
+      get state() {
+        return pila[pila.length - 1].state;
+      },
+      get length() {
+        return pila.length;
+      },
       pushState(state, _titulo, url) {
         pila.push({ state, url: url ?? pila[pila.length - 1].url });
       },
@@ -42,8 +52,12 @@ function crearVentana(urlInicial = INICIO) {
         }
       },
     },
-    addEventListener(tipo, fn) { if (tipo === "popstate") oyentes.add(fn); },
-    removeEventListener(tipo, fn) { if (tipo === "popstate") oyentes.delete(fn); },
+    addEventListener(tipo, fn) {
+      if (tipo === "popstate") oyentes.add(fn);
+    },
+    removeEventListener(tipo, fn) {
+      if (tipo === "popstate") oyentes.delete(fn);
+    },
   };
   return { pila, oyentes };
 }
@@ -51,17 +65,19 @@ function crearVentana(urlInicial = INICIO) {
 test("abrirCapa apila una entrada y el Atrás cierra la capa", () => {
   const { pila, oyentes } = crearVentana();
   let cerrada = 0;
-  const capa = abrirCapa(() => { cerrada += 1; });
+  const capa = abrirCapa(() => {
+    cerrada += 1;
+  });
   try {
-    assert.equal(pila.length, 2);                       // entrada de la capa arriba de la de la app
+    assert.equal(pila.length, 2); // entrada de la capa arriba de la de la app
     assert.equal(window.history.state[CLAVE], capa.token);
     assert.ok(capaAbierta(capa));
 
-    window.history.back();                              // gesto del usuario
-    assert.equal(cerrada, 1);                           // se llamó el cierre del modal
-    assert.equal(capa.consumida, true);                 // su cleanup no va a hacer otro back()
+    window.history.back(); // gesto del usuario
+    assert.equal(cerrada, 1); // se llamó el cierre del modal
+    assert.equal(capa.consumida, true); // su cleanup no va a hacer otro back()
     assert.equal(capaAbierta(capa), false);
-    assert.equal(oyentes.size, 0);                      // sin capas ni guardián, deja de escuchar
+    assert.equal(oyentes.size, 0); // sin capas ni guardián, deja de escuchar
   } finally {
     sacarCapa(capa);
     sacarEntradaDelHistorial(capa);
@@ -75,8 +91,8 @@ test("abrirCapa reusa la capa anterior si su entrada sigue en el tope (StrictMod
   sacarCapa(primera); // el cleanup la saca de la pila, pero su entrada sigue arriba
   const segunda = abrirCapa(() => {}, primera);
   try {
-    assert.equal(segunda, primera);                     // misma capa, no una nueva
-    assert.equal(pila.length, 2);                       // no se apiló una segunda entrada
+    assert.equal(segunda, primera); // misma capa, no una nueva
+    assert.equal(pila.length, 2); // no se apiló una segunda entrada
     assert.ok(capaAbierta(primera));
   } finally {
     sacarCapa(primera);
@@ -91,8 +107,8 @@ test("el cierre por ✕ saca la entrada del historial", () => {
   try {
     assert.equal(pila.length, 2);
     sacarCapa(capa);
-    sacarEntradaDelHistorial(capa);                     // como hace requestClose
-    assert.equal(pila.length, 1);                       // el back() se llevó la entrada
+    sacarEntradaDelHistorial(capa); // como hace requestClose
+    assert.equal(pila.length, 1); // el back() se llevó la entrada
     assert.equal(capa.consumida, true);
     assert.equal(oyentes.size, 0);
   } finally {
@@ -128,11 +144,11 @@ test("navegarUrl con una capa abierta reemplaza su entrada (no apila)", () => {
   const destino = `${INICIO}?fecha=2026-10-16`;
   try {
     navegarUrl(destino);
-    assert.equal(pila.length, 2);                       // sigue habiendo una sola entrada de más
+    assert.equal(pila.length, 2); // sigue habiendo una sola entrada de más
     assert.equal(pila[1].url, destino);
     assert.equal(window.history.state[CLAVE], undefined); // el replaceState borró la marca
     assert.equal(capaEnElTope(), null);
-    assert.equal(capa.consumida, true);                 // su limpieza ya no hace back()
+    assert.equal(capa.consumida, true); // su limpieza ya no hace back()
   } finally {
     sacarCapa(capa);
     sacarEntradaDelHistorial(capa);
@@ -154,17 +170,20 @@ test("el guardián consume el Atrás y repone el centinela", async () => {
   const { pila, oyentes } = crearVentana();
   let llamadas = 0;
   try {
-    activarGuardian(() => { llamadas += 1; return true; });
-    assert.equal(pila.length, 2);                       // centinela arriba de la app
+    activarGuardian(() => {
+      llamadas += 1;
+      return true;
+    });
+    assert.equal(pila.length, 2); // centinela arriba de la app
     assert.notEqual(capaEnElTope(), null);
 
-    window.history.back();                              // gesto en la pantalla principal
+    window.history.back(); // gesto en la pantalla principal
     assert.equal(llamadas, 1);
-    assert.equal(pila.length, 2);                       // pop + push: sigue habiendo centinela
+    assert.equal(pila.length, 2); // pop + push: sigue habiendo centinela
     assert.equal(oyentes.size, 1);
   } finally {
     desactivarGuardian();
-    await Promise.resolve();                            // deja correr el back() diferido
+    await Promise.resolve(); // deja correr el back() diferido
   }
 });
 
@@ -174,7 +193,7 @@ test("el guardián deja pasar una navegación real (volver de una fecha)", async
     activarGuardian(() => false);
     assert.equal(pila.length, 2);
     window.history.back();
-    assert.equal(pila.length, 1);                       // navegación real: no repuso el centinela
+    assert.equal(pila.length, 1); // navegación real: no repuso el centinela
   } finally {
     desactivarGuardian();
     await Promise.resolve();

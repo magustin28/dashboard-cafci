@@ -31,8 +31,8 @@ export function agruparCartera(portfolio) {
         ...item,
         _suscripciones: [],
         cuotapartes_disponibles: 0,
-        _cpPonderadoNum: 0,   // Σ (cuotapartes disponibles × precio) → ponderado de lo que TENÉS
-        _cantComprada: 0,     // Σ cantidad (lo comprado original: no baja con los rescates)
+        _cpPonderadoNum: 0, // Σ (cuotapartes disponibles × precio) → ponderado de lo que TENÉS
+        _cantComprada: 0, // Σ cantidad (lo comprado original: no baja con los rescates)
         _cantPonderadaNum: 0, // Σ (cantidad × precio) → ponderado de lo COMPRADO
         fecha_compra: null,
       };
@@ -82,9 +82,14 @@ export function enriquecerCartera(portfolio, raw, apiFecha) {
       const varDiariaPct = match ? parseFloat(match.valorVarPct) : null;
       const rendImporte = vActual !== null ? Math.round((vActual - costoTotal) * 100) / 100 : null;
       // TNA/TEM/TEA ponderadas por cuotapartes de cada suscripción individual
-      let tna = null, tem = null, tea = null;
+      let tna = null,
+        tem = null,
+        tea = null;
       if (vActual !== null && precioActual !== null && costoTotal > 0 && fechaAPI && item._suscripciones?.length) {
-        let sumCp = 0, sumTna = 0, sumTem = 0, sumTea = 0;
+        let sumCp = 0,
+          sumTna = 0,
+          sumTem = 0,
+          sumTea = 0;
         item._suscripciones.forEach((susc) => {
           const cp = parseFloat(susc.cuotapartes_disponibles);
           if (cp <= 0.000001 || !susc.fecha_compra) return;

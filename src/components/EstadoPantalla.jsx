@@ -4,10 +4,7 @@
 import { IconAlertTriangle, IconRefreshCw } from "./Icons";
 
 /** Pantalla completa de carga (primer arranque o espera de sesión). */
-export function LoaderOverlay({
-  mensaje = "Conectando con la API…",
-  sub = "Esto puede tardar hasta 30 segundos si el servidor está iniciando.",
-}) {
+export function LoaderOverlay({ mensaje = "Conectando con la API…", sub = "Esto puede tardar hasta 30 segundos si el servidor está iniciando." }) {
   return (
     <div id="loader-overlay">
       <div className="spinner"></div>
@@ -26,7 +23,11 @@ export function ErrorState({ error, onRetry }) {
           <div className="err-icon">
             <IconAlertTriangle size={32} strokeWidth={1.75} />
           </div>
-          <p>No se pudieron cargar los datos.<br /><small>{error}</small></p>
+          <p>
+            No se pudieron cargar los datos.
+            <br />
+            <small>{error}</small>
+          </p>
           <button className="btn-retry" onClick={onRetry}>
             <IconRefreshCw size={13} /> Reintentar
           </button>

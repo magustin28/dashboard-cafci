@@ -118,12 +118,22 @@
   animation: modalOut 0.24s ease forwards;
 }
 @keyframes overlayOut {
-  from { opacity: 1; }
-  to   { opacity: 0; }
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
 }
 @keyframes modalOut {
-  from { opacity: 1; transform: translateY(0)    scale(1); }
-  to   { opacity: 0; transform: translateY(18px) scale(0.94); }
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(18px) scale(0.94);
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .modal-overlay.closing,
@@ -418,4 +428,3 @@
 .subtab-n {
   opacity: 0.8;
 }
-

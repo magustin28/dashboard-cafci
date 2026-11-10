@@ -28,10 +28,10 @@
 // Clave que se guarda en history.state. El número identifica la capa: antes de sacar una entrada
 // se comprueba que el tope siga siendo el nuestro. Si en el medio se navegó a otra fecha, el tope
 // es otra entrada y hacer back() desharía esa navegación.
-const CLAVE = 'cafciCapa';
+const CLAVE = "cafciCapa";
 
-const capas = [];       // [{ token, consumida, cerrar }], de abajo hacia arriba
-let popsIgnorados = 0;  // popstates que vienen de un cierre nuestro, no del gesto del usuario
+const capas = []; // [{ token, consumida, cerrar }], de abajo hacia arriba
+let popsIgnorados = 0; // popstates que vienen de un cierre nuestro, no del gesto del usuario
 let tokenSeq = 0;
 let escuchando = false;
 // Guardián del gesto Atrás en la pantalla principal: callback registrado por App.jsx mientras hay
@@ -43,7 +43,7 @@ let centinela = null;
 /** Token de la capa que está en el tope del historial, o null si el tope no es nuestro. */
 export function capaEnElTope() {
   const token = window.history.state?.[CLAVE];
-  return typeof token === 'number' ? token : null;
+  return typeof token === "number" ? token : null;
 }
 
 /** true si la capa sigue abierta (en la pila). */
@@ -86,18 +86,18 @@ function alVolverAtras() {
   if (!guardian()) return;
   const token = ++tokenSeq;
   centinela = { token, consumida: false };
-  window.history.pushState({ ...(window.history.state || {}), [CLAVE]: token }, '');
+  window.history.pushState({ ...(window.history.state || {}), [CLAVE]: token }, "");
 }
 
 function empezarAEscuchar() {
   if (escuchando) return;
-  window.addEventListener('popstate', alVolverAtras);
+  window.addEventListener("popstate", alVolverAtras);
   escuchando = true;
 }
 
 function dejarDeEscuchar() {
   if (!escuchando) return;
-  window.removeEventListener('popstate', alVolverAtras);
+  window.removeEventListener("popstate", alVolverAtras);
   escuchando = false;
 }
 
@@ -121,7 +121,7 @@ export function abrirCapa(cerrar, previa) {
   const capa = { token: ++tokenSeq, consumida: false, cerrar };
   capas.push(capa);
   empezarAEscuchar();
-  window.history.pushState({ ...(window.history.state || {}), [CLAVE]: capa.token }, '');
+  window.history.pushState({ ...(window.history.state || {}), [CLAVE]: capa.token }, "");
   return capa;
 }
 
@@ -161,10 +161,10 @@ export function navegarUrl(url) {
     // El replaceState pisa también el estado: la entrada deja de tener la marca de la capa. Con
     // consumida = true su limpieza no hace back(), porque ya no hay marca que sacar.
     capa.consumida = true;
-    window.history.replaceState({}, '', url);
+    window.history.replaceState({}, "", url);
     return;
   }
-  window.history.pushState({}, '', url);
+  window.history.pushState({}, "", url);
 }
 
 /**
@@ -180,7 +180,7 @@ export function activarGuardian(consumirGesto) {
   if (centinela) return;
   const token = ++tokenSeq;
   centinela = { token, consumida: false };
-  window.history.pushState({ ...(window.history.state || {}), [CLAVE]: token }, '');
+  window.history.pushState({ ...(window.history.state || {}), [CLAVE]: token }, "");
 }
 
 /** Desactiva el guardián (al cerrar sesión o desmontar App) y saca su entrada si sigue en el tope. */

@@ -107,7 +107,9 @@ export default function RescateModal({ fondoInicial, monedaInicial, onClose }) {
                 con las 3 monedas que sólo se podía mirar y se prestaba a confundir pesos con fondos
                 en dólares. Queda como campo fijo, con el mismo estilo que el Fondo bloqueado, y
                 muestra el nombre largo de la lista ("ARS — Pesos") en vez del código suelto. */}
-            <label>Moneda <IconLock size={11} /></label>
+            <label>
+              Moneda <IconLock size={11} />
+            </label>
             <input type="text" value={nombreMoneda(moneda)} readOnly />
           </div>
           <div className="modal-field">

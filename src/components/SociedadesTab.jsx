@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { agruparPorGerente, agruparFondosPorPatrimonio, nombreClase, treemapSquarified, colorVariacion, fmtPat, fmtPatM } from '../lib/utils';
-import { IconBuilding2, IconX } from './Icons';
-import { useModalClose } from '../hooks/useModalClose';
+import { useEffect, useMemo, useRef, useState } from "react";
+import { agruparPorGerente, agruparFondosPorPatrimonio, nombreClase, treemapSquarified, colorVariacion, fmtPat, fmtPatM } from "../lib/utils";
+import { IconBuilding2, IconX } from "./Icons";
+import { useModalClose } from "../hooks/useModalClose";
 
 // Mide el contenedor para recalcular el treemap con el tamaño REAL en píxeles (responsive sin
 // trucos de CSS): así los bloques quedan bien tanto en escritorio como en el celular.
@@ -10,7 +10,7 @@ function useElementSize() {
   const [size, setSize] = useState({ w: 0, h: 0 });
   useEffect(() => {
     const el = ref.current;
-    if (!el || typeof ResizeObserver === 'undefined') return;
+    if (!el || typeof ResizeObserver === "undefined") return;
     const ro = new ResizeObserver((entries) => {
       const cr = entries[0].contentRect;
       setSize({ w: Math.round(cr.width), h: Math.round(cr.height) });
@@ -23,9 +23,9 @@ function useElementSize() {
 
 // Variación con signo y 2 decimales ("+0.12%" / "-0.96%" / "—" si no hay dato).
 function formatearPct(v) {
-  const n = typeof v === 'number' ? v : parseFloat(v);
-  if (v === null || v === undefined || v === '' || isNaN(n)) return '—';
-  return (n > 0 ? '+' : '') + n.toFixed(2) + '%';
+  const n = typeof v === "number" ? v : parseFloat(v);
+  if (v === null || v === undefined || v === "" || isNaN(n)) return "—";
+  return (n > 0 ? "+" : "") + n.toFixed(2) + "%";
 }
 
 // Un treemap por moneda: los bloques son las sociedades gerentes, con área = patrimonio sumado.
@@ -36,19 +36,10 @@ function TreemapGerentes({ rows, titulo, moneda }) {
   const [tip, setTip] = useState(null); // { x, y, g } del tooltip flotante
   const [abierto, setAbierto] = useState(null); // grupo (gerente) con el modal abierto
 
-  const gerentes = useMemo(
-    () => agruparPorGerente(rows).filter((g) => g.patrimonio > 0),
-    [rows]
-  );
-  const total = useMemo(
-    () => gerentes.reduce((s, g) => s + g.patrimonio, 0),
-    [gerentes]
-  );
+  const gerentes = useMemo(() => agruparPorGerente(rows).filter((g) => g.patrimonio > 0), [rows]);
+  const total = useMemo(() => gerentes.reduce((s, g) => s + g.patrimonio, 0), [gerentes]);
   // Máximo |variación| para escalar la intensidad del color de todos los bloques del panel.
-  const maxAbs = useMemo(
-    () => gerentes.reduce((m, g) => Math.max(m, Math.abs(g.varPct || 0)), 0),
-    [gerentes]
-  );
+  const maxAbs = useMemo(() => gerentes.reduce((m, g) => Math.max(m, Math.abs(g.varPct || 0)), 0), [gerentes]);
   const rects = useMemo(() => {
     if (size.w <= 0 || size.h <= 0) return [];
     return treemapSquarified(
@@ -61,7 +52,7 @@ function TreemapGerentes({ rows, titulo, moneda }) {
         g, // el grupo completo (con sus fondos) para el tooltip y el modal
       })),
       size.w,
-      size.h
+      size.h,
     );
   }, [gerentes, size.w, size.h]);
 
@@ -78,10 +69,12 @@ function TreemapGerentes({ rows, titulo, moneda }) {
     <>
       <div className="table-wrap">
         <div className="tm-head">
-          <span className="tm-title"><IconBuilding2 size={13} /> {titulo}</span>
-          <span className={`badge ${moneda === 'ARS' ? 'badge-ars' : 'badge-usd'}`}>{moneda}</span>
+          <span className="tm-title">
+            <IconBuilding2 size={13} /> {titulo}
+          </span>
+          <span className={`badge ${moneda === "ARS" ? "badge-ars" : "badge-usd"}`}>{moneda}</span>
           <span className="tm-total">
-            {gerentes.length.toLocaleString('es-AR')} gerentes · Total: <strong>{fmtPat(total, moneda)}</strong>
+            {gerentes.length.toLocaleString("es-AR")} gerentes · Total: <strong>{fmtPat(total, moneda)}</strong>
           </span>
         </div>
         <div className="tm-canvas" ref={ref}>
@@ -95,7 +88,7 @@ function TreemapGerentes({ rows, titulo, moneda }) {
                 <button
                   type="button"
                   key={i}
-                  className={`tm-block${chico ? ' tm-small' : ''}`}
+                  className={`tm-block${chico ? " tm-small" : ""}`}
                   style={{
                     left: `${r.x}px`,
                     top: `${r.y}px`,
@@ -103,7 +96,10 @@ function TreemapGerentes({ rows, titulo, moneda }) {
                     height: `${r.h}px`,
                     background: colorVariacion(r.varPct, maxAbs),
                   }}
-                  onClick={() => { setTip(null); setAbierto(r.g); }}
+                  onClick={() => {
+                    setTip(null);
+                    setAbierto(r.g);
+                  }}
                   onMouseEnter={(e) => moverTip(e, r.g)}
                   onMouseMove={(e) => moverTip(e, r.g)}
                   onMouseLeave={() => setTip(null)}
@@ -111,9 +107,7 @@ function TreemapGerentes({ rows, titulo, moneda }) {
                 >
                   <span className="tm-name">{r.gerente}</span>
                   {!chico && <span className="tm-val">{fmtPat(r.patrimonio, moneda)}</span>}
-                  {!chico && r.varPct != null && (
-                    <span className="tm-pct">{formatearPct(r.varPct)}</span>
-                  )}
+                  {!chico && r.varPct != null && <span className="tm-pct">{formatearPct(r.varPct)}</span>}
                 </button>
               );
             })
@@ -142,9 +136,7 @@ function TreemapGerentes({ rows, titulo, moneda }) {
         </div>
       )}
 
-      {abierto && (
-        <GerenteModal g={abierto} moneda={moneda} onClose={() => setAbierto(null)} />
-      )}
+      {abierto && <GerenteModal g={abierto} moneda={moneda} onClose={() => setAbierto(null)} />}
     </>
   );
 }
@@ -169,15 +161,12 @@ function GerenteModal({ g, moneda, onClose }) {
   const fondos = useMemo(() => agruparFondosPorPatrimonio(g.fondos || []), [g]);
 
   // Máximo |variación| de los fondos para colorear la variación de cada fila.
-  const maxAbs = useMemo(
-    () => fondos.reduce((m, f) => Math.max(m, Math.abs(f.varPct || 0)), 0),
-    [fondos]
-  );
+  const maxAbs = useMemo(() => fondos.reduce((m, f) => Math.max(m, Math.abs(f.varPct || 0)), 0), [fondos]);
 
   // Mide el alto del listado y calcula cuántos fondos caben (sin scroll).
   useEffect(() => {
     const el = listRef.current;
-    if (!el || typeof ResizeObserver === 'undefined') return;
+    if (!el || typeof ResizeObserver === "undefined") return;
     const ro = new ResizeObserver((entries) => {
       const h = Math.round(entries[0].contentRect.height);
       setN(Math.max(1, Math.floor(h / ROW_H)));
@@ -202,7 +191,7 @@ function GerenteModal({ g, moneda, onClose }) {
   const ocultos = Math.max(0, fondos.length - n);
 
   return (
-    <div className={`modal-overlay${closing ? ' closing' : ''}`} onClick={requestClose}>
+    <div className={`modal-overlay${closing ? " closing" : ""}`} onClick={requestClose}>
       <div className="modal modal-gerente" onClick={(e) => e.stopPropagation()}>
         <button className="modal-close" onClick={requestClose} aria-label="Cerrar">
           <IconX size={16} />
@@ -237,11 +226,8 @@ function GerenteModal({ g, moneda, onClose }) {
             const detalle =
               f.n > 1
                 ? f.clases
-                    .map(
-                      (c) =>
-                        `${nombreClase(c.fondo) || c.fondo} · ${fmtPatM(c.patrimonio, moneda)} · ${formatearPct(c.valorVarPct)}`
-                    )
-                    .join('\n')
+                    .map((c) => `${nombreClase(c.fondo) || c.fondo} · ${fmtPatM(c.patrimonio, moneda)} · ${formatearPct(c.valorVarPct)}`)
+                    .join("\n")
                 : nombre;
             return (
               <div
@@ -265,9 +251,7 @@ function GerenteModal({ g, moneda, onClose }) {
           })}
         </div>
         <div className="gm-note">
-          {ocultos > 0
-            ? `Mostrando ${n} de ${fondos.length} fondos (ordenados por patrimonio).`
-            : `${fondos.length} fondos.`}
+          {ocultos > 0 ? `Mostrando ${n} de ${fondos.length} fondos (ordenados por patrimonio).` : `${fondos.length} fondos.`}
         </div>
       </div>
 
@@ -278,9 +262,7 @@ function GerenteModal({ g, moneda, onClose }) {
       {hover && (
         <div className="tm-tip gm-tip" style={{ left: hover.x, top: hover.y }}>
           <div className="tm-tip-name">
-            {hover.f.n > 1
-              ? `${hover.f.nombre} · ${hover.f.n} clases`
-              : (hover.f.clases[0] && hover.f.clases[0].fondo) || hover.f.nombre}
+            {hover.f.n > 1 ? `${hover.f.nombre} · ${hover.f.n} clases` : (hover.f.clases[0] && hover.f.clases[0].fondo) || hover.f.nombre}
           </div>
           {hover.f.n > 1 && (
             <table className="gm-tip-table">
@@ -297,7 +279,7 @@ function GerenteModal({ g, moneda, onClose }) {
                   .map((c, i) => (
                     <tr key={i}>
                       <td className="gm-tip-fondo">
-                        <span className="gm-tip-rank">{i < 3 ? `${i + 1}.` : ''}</span>
+                        <span className="gm-tip-rank">{i < 3 ? `${i + 1}.` : ""}</span>
                         <span className="gm-tip-fondo-txt">{nombreClase(c.fondo) || c.fondo}</span>
                       </td>
                       <td className="gm-tip-pat">{fmtPatM(c.patrimonio, moneda)}</td>
@@ -325,11 +307,8 @@ function GerenteModal({ g, moneda, onClose }) {
 // Pestaña completa: un treemap para pesos y otro para dólares. El patrimonio no se suma entre
 // monedas porque ARS y USD son productos distintos (distinto valor de cuotaparte).
 export default function SociedadesTab({ raw }) {
-  const ars = useMemo(() => (raw || []).filter((r) => r.moneda === 'ARS'), [raw]);
-  const usd = useMemo(
-    () => (raw || []).filter((r) => r.moneda === 'USD' || r.moneda === 'USB'),
-    [raw]
-  );
+  const ars = useMemo(() => (raw || []).filter((r) => r.moneda === "ARS"), [raw]);
+  const usd = useMemo(() => (raw || []).filter((r) => r.moneda === "USD" || r.moneda === "USB"), [raw]);
   return (
     <div className="tab-stack">
       <TreemapGerentes rows={ars} titulo="Sociedades Gerentes — Pesos" moneda="ARS" />

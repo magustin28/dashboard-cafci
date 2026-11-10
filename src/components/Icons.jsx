@@ -8,7 +8,7 @@
 // :hover de los botones. El tamaño por defecto es 16px; se cambia con `size`.
 // Uso: <IconCalendar size={12} />   ·   <IconRefreshCw className="algo" />
 
-function Icon({ size = 16, strokeWidth = 2, className = '', title, children }) {
+function Icon({ size = 16, strokeWidth = 2, className = "", title, children }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -20,9 +20,9 @@ function Icon({ size = 16, strokeWidth = 2, className = '', title, children }) {
       strokeWidth={strokeWidth}
       strokeLinecap="round"
       strokeLinejoin="round"
-      className={className ? `icon ${className}` : 'icon'}
-      role={title ? 'img' : undefined}
-      aria-hidden={title ? undefined : 'true'}
+      className={className ? `icon ${className}` : "icon"}
+      role={title ? "img" : undefined}
+      aria-hidden={title ? undefined : "true"}
       focusable="false"
     >
       {title && <title>{title}</title>}

@@ -1,6 +1,6 @@
-import { diasDesdeFecha, diasHabilesDeAtraso, estadoFrescura } from '../lib/utils';
-import { fechaCorta, fechaCompleta } from '../lib/format';
-import { IconCalendar, IconX } from './Icons';
+import { diasDesdeFecha, diasHabilesDeAtraso, estadoFrescura } from "../lib/utils";
+import { fechaCorta, fechaCompleta } from "../lib/format";
+import { IconCalendar, IconX } from "./Icons";
 
 /**
  * Info de estado del header: semáforo de frescura + fecha del dato + total de fondos.
@@ -37,35 +37,31 @@ export default function HeaderMeta({ apiFecha, totalFondos, fechaParam, onVolver
   return (
     <>
       <div className="meta-item">
-        <span className={`meta-dot${estado ? ' ' + estado : ''}`}></span>
-        {fechaParam
-          ? (
-            /* Es un botón: es la única forma de volver a los datos actuales desde una fecha
+        <span className={`meta-dot${estado ? " " + estado : ""}`}></span>
+        {fechaParam ? (
+          /* Es un botón: es la única forma de volver a los datos actuales desde una fecha
                histórica (antes era un <span> y la salida era editar la URL o el botón Atrás). */
-            <button className="meta-historico meta-volver-hoy" onClick={onVolverHoy}
-              title="Volver a los datos actuales">
-              <IconCalendar size={12} /> Histórico: {fechaCompleta(fechaParam)} <IconX size={11} />
-            </button>
-          )
-          : (
-            <span>
-              {/* Dos formatos de la misma fecha: en escritorio la ISO de siempre y en el celular la
+          <button className="meta-historico meta-volver-hoy" onClick={onVolverHoy} title="Volver a los datos actuales">
+            <IconCalendar size={12} /> Histórico: {fechaCompleta(fechaParam)} <IconX size={11} />
+          </button>
+        ) : (
+          <span>
+            {/* Dos formatos de la misma fecha: en escritorio la ISO de siempre y en el celular la
                   corta, para que no se parta la fila. */}
-              <span className="meta-largo">Actualizado: {apiFecha || 'Cargando…'}</span>
-              <span className="meta-corto">Actualizado: {fechaCorta(apiFecha)}</span>
-              {/* El "hace N días" acompaña al semáforo: sólo aparece cuando el dato dejó de estar
+            <span className="meta-largo">Actualizado: {apiFecha || "Cargando…"}</span>
+            <span className="meta-corto">Actualizado: {fechaCorta(apiFecha)}</span>
+            {/* El "hace N días" acompaña al semáforo: sólo aparece cuando el dato dejó de estar
                   al día, así un lunes normal (verde) no muestra "hace 3 días". */}
-              {estado && estado !== 'al-dia' && dias !== null && <span className="meta-dias"> · hace {dias} días</span>}
-            </span>
-          )
-        }
+            {estado && estado !== "al-dia" && dias !== null && <span className="meta-dias"> · hace {dias} días</span>}
+          </span>
+        )}
       </div>
       {totalFondos > 0 && (
         <div className="meta-item">
           {/* "fondos totales" en escritorio y "fondos" en el celular: con la etiqueta larga la fila
               del meta se parte en dos líneas. */}
-          <span className="meta-largo">{totalFondos.toLocaleString('es-AR')} fondos totales</span>
-          <span className="meta-corto">{totalFondos.toLocaleString('es-AR')} fondos</span>
+          <span className="meta-largo">{totalFondos.toLocaleString("es-AR")} fondos totales</span>
+          <span className="meta-corto">{totalFondos.toLocaleString("es-AR")} fondos</span>
         </div>
       )}
     </>

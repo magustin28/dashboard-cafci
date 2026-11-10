@@ -1,4 +1,4 @@
-import { IconExternalLink } from './Icons';
+import { IconExternalLink } from "./Icons";
 
 /**
  * Marca del header: badge CAFCI (link al sitio oficial, abre en pestaña nueva) + título.
@@ -10,10 +10,16 @@ import { IconExternalLink } from './Icons';
 export default function Logo() {
   return (
     <div className="logo">
-      <a className="logo-badge" href="https://www.cafci.org.ar/" target="_blank" rel="noopener noreferrer"
+      <a
+        className="logo-badge"
+        href="https://www.cafci.org.ar/"
+        target="_blank"
+        rel="noopener noreferrer"
         title="Ir al sitio de CAFCI (abre en una pestaña nueva)"
-        aria-label="Ir al sitio de CAFCI (abre en una pestaña nueva)">
-        CAFCI<IconExternalLink size={10} className="icon-inline" />
+        aria-label="Ir al sitio de CAFCI (abre en una pestaña nueva)"
+      >
+        CAFCI
+        <IconExternalLink size={10} className="icon-inline" />
       </a>
       {/* Dos títulos: en escritorio el completo y en el celular el corto (.logo-titulo-corto), para
           que el badge CAFCI y el título entren en una sola fila. Ver @media de styles/utils.css. */}

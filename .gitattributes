@@ -1,0 +1,17 @@
+# Fin de línea (EOL) único para todo el repo: LF, sin importar el sistema operativo ni el editor.
+# - text=auto: git detecta solo qué es texto y qué es binario.
+# - eol=lf: al hacer checkout escribe LF en el working tree (pisa core.autocrlf=true, que en Windows
+#   escribía CRLF). Sin esto el working tree quedaba mezclado (medido el 09/11: 40 archivos en LF y
+#   25 en CRLF) y git avisaba en cada commit "LF will be replaced by CRLF".
+# Con esto, el repo y la carpeta local quedan siempre en LF: sin avisos y sin diffs fantasma por EOL.
+
+* text=auto eol=lf
+
+# Imágenes: binarias, para que git no intente convertirlas.
+*.png binary
+*.ico binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.pdf binary

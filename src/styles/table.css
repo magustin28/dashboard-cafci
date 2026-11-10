@@ -149,31 +149,70 @@ tbody td:nth-child(2) {
    Antes iban como style inline en los <th>. Estas .col-* van DESPUÉS de las reglas "thead th" para
    ganar los empates de especificidad (thead th:first-child/:nth-child(2) alinean a la izquierda).
    Lo que difiere por tabla se scopea con la clase del <table> (.tbl-fondos/.tbl-portfolio/.tbl-top). */
-.col-acciones { width: 64px; }
-thead th.col-acciones { text-align: center; }
-.col-fondo { min-width: 240px; }
-thead th.col-fondo { text-align: left; }
-.col-gerente { min-width: 180px; }
-.col-rank { width: 36px; }
-thead th.col-rank { text-align: center; }
+.col-acciones {
+  width: 64px;
+}
+thead th.col-acciones {
+  text-align: center;
+}
+.col-fondo {
+  min-width: 240px;
+}
+thead th.col-fondo {
+  text-align: left;
+}
+.col-gerente {
+  min-width: 180px;
+}
+.col-rank {
+  width: 36px;
+}
+thead th.col-rank {
+  text-align: center;
+}
 
 /* PortfolioTab: columnas propias / anchos distintos */
-.tbl-portfolio .col-fondo { min-width: 180px; max-width: 240px; }
-.tbl-portfolio .col-moneda { width: 70px; }
-.tbl-portfolio .col-cuotapartes { width: 100px; }
-.tbl-portfolio .col-pond { width: 110px; }
-.tbl-portfolio .col-importe { width: 110px; }
-.tbl-portfolio .col-vactual { width: 110px; }
-.tbl-portfolio .col-rend { width: 80px; }
-.tbl-portfolio .col-rendimp { width: 110px; }
-.tbl-portfolio .col-vardia { width: 80px; }
+.tbl-portfolio .col-fondo {
+  min-width: 180px;
+  max-width: 240px;
+}
+.tbl-portfolio .col-moneda {
+  width: 70px;
+}
+.tbl-portfolio .col-cuotapartes {
+  width: 100px;
+}
+.tbl-portfolio .col-pond {
+  width: 110px;
+}
+.tbl-portfolio .col-importe {
+  width: 110px;
+}
+.tbl-portfolio .col-vactual {
+  width: 110px;
+}
+.tbl-portfolio .col-rend {
+  width: 80px;
+}
+.tbl-portfolio .col-rendimp {
+  width: 110px;
+}
+.tbl-portfolio .col-vardia {
+  width: 80px;
+}
 .tbl-portfolio .col-tna,
 .tbl-portfolio .col-tem,
-.tbl-portfolio .col-tea { width: 72px; }
-.tbl-portfolio .col-cafci { width: 44px; }
+.tbl-portfolio .col-tea {
+  width: 72px;
+}
+.tbl-portfolio .col-cafci {
+  width: 44px;
+}
 
 /* TopTab: "Sociedad Gerente" es más angosta que en FondosTable */
-.tbl-top .col-gerente { min-width: 160px; }
+.tbl-top .col-gerente {
+  min-width: 160px;
+}
 
 /* Celda numérica repetida (HistorialModal): antes era style inline en ~10 <td>. */
 .td-num {
@@ -186,14 +225,20 @@ thead th.col-rank { text-align: center; }
 }
 
 /* ── Utilidades de celda/bloque compartidas (Lote 4) ── */
-.td-center { text-align: center; }
-.td-mid { vertical-align: middle; }
+.td-center {
+  text-align: center;
+}
+.td-mid {
+  vertical-align: middle;
+}
 .td-rank {
   text-align: center;
   font-weight: 700;
   font-size: 13px;
 }
-.ml-4 { margin-left: 4px; }
+.ml-4 {
+  margin-left: 4px;
+}
 .action-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -201,21 +246,43 @@ thead th.col-rank { text-align: center; }
   width: 52px;
   margin: 0 auto;
 }
-.col-span-2 { grid-column: span 2; }
-.action-grid.flush { margin: 0; }
+.col-span-2 {
+  grid-column: span 2;
+}
+.action-grid.flush {
+  margin: 0;
+}
 .tna-note {
   font-size: 9px;
   color: var(--text2);
   margin-top: 1px;
 }
 /* Utilidades varias (Lote 4) */
-.ml-auto { margin-left: auto; }
-.mt-14 { margin-top: 14px; }
-.kpi-val-lg { font-size: 18px; }
-.td-mono-sm { font-size: 11px; }
-.c-warn { color: var(--yellow); }
-.empty-favs.tight { padding: 32px 0; }
-.td-fondo-narrow { min-width: 160px; max-width: 220px; white-space: normal; word-break: break-word; line-height: 1.3; }
+.ml-auto {
+  margin-left: auto;
+}
+.mt-14 {
+  margin-top: 14px;
+}
+.kpi-val-lg {
+  font-size: 18px;
+}
+.td-mono-sm {
+  font-size: 11px;
+}
+.c-warn {
+  color: var(--yellow);
+}
+.empty-favs.tight {
+  padding: 32px 0;
+}
+.td-fondo-narrow {
+  min-width: 160px;
+  max-width: 220px;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.3;
+}
 /* Encabezado de bloque (TopTab, etc.): barra con título + subtítulo y borde inferior. */
 .block-head {
   padding: 10px 16px 8px;
@@ -426,4 +493,3 @@ tr.tr-clase td:first-child {
   padding-left: 10px;
   margin-left: 2px;
 }
-

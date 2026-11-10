@@ -1,18 +1,24 @@
-import { useState, useEffect, useCallback } from 'react';
-import AuthModal from './AuthModal';
-import UserMenu from './UserMenu';
-import DatePickerModal from './DatePickerModal';
-import Logo from './Logo';
-import HeaderMeta from './HeaderMeta';
-import { IconCalendar, IconRefreshCw, IconChevronDown } from './Icons';
+import { useState, useEffect, useCallback } from "react";
+import AuthModal from "./AuthModal";
+import UserMenu from "./UserMenu";
+import DatePickerModal from "./DatePickerModal";
+import Logo from "./Logo";
+import HeaderMeta from "./HeaderMeta";
+import { IconCalendar, IconRefreshCw, IconChevronDown } from "./Icons";
 
 export default function Header({
-  apiFecha, totalFondos, fechas, fechaParam,
-  onReload, loading = false, consultando = false,
-  onVolverHoy, onElegirFecha,
+  apiFecha,
+  totalFondos,
+  fechas,
+  fechaParam,
+  onReload,
+  loading = false,
+  consultando = false,
+  onVolverHoy,
+  onElegirFecha,
 }) {
-  const [showAuth, setShowAuth]       = useState(false);
-  const [pickerOpen, setPickerOpen]   = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
   // Cierre animado del modal de fechas: el hook vive adentro de DatePickerModal, acá sólo
   // hace falta un onClose estable. useCallback evita que el componente reciba una función nueva
   // en cada render del Header (eso re-registraría el listener de ESC del modal sin necesidad).
@@ -24,8 +30,8 @@ export default function Header({
   // va acá: es el mismo patrón de cafci:tab / cafci:logout.
   useEffect(() => {
     const handler = () => setShowAuth(true);
-    window.addEventListener('cafci:openauth', handler);
-    return () => window.removeEventListener('cafci:openauth', handler);
+    window.addEventListener("cafci:openauth", handler);
+    return () => window.removeEventListener("cafci:openauth", handler);
   }, []);
 
   return (
@@ -38,8 +44,7 @@ export default function Header({
             y el bloque del celular en styles/utils.css. El menú vive en components/UserMenu.jsx. */}
         <UserMenu onOpenAuth={() => setShowAuth(true)} />
         <div className="header-meta">
-          <HeaderMeta apiFecha={apiFecha} totalFondos={totalFondos} fechaParam={fechaParam}
-            onVolverHoy={onVolverHoy} />
+          <HeaderMeta apiFecha={apiFecha} totalFondos={totalFondos} fechaParam={fechaParam} onVolverHoy={onVolverHoy} />
 
           {/* Fecha y actualizar van juntos en .header-acciones para que en el celular ocupen una
               fila completa, en dos columnas iguales (ver @media de styles/utils.css). En escritorio
@@ -56,21 +61,35 @@ export default function Header({
                 y actualizar eran sólo ícono y la cuenta avatar + iniciales). El corto se oculta en
                 escritorio desde styles/layout.css y el aria-label repite el texto para lectores de
                 pantalla. */}
-            <button className="date-picker-btn" aria-label="Ver fecha anterior"
-              title="Ver datos de otra fecha" onClick={() => setPickerOpen(true)}>
-              <IconCalendar size={12} /> <span className="btn-label btn-label-largo">Ver fecha anterior</span><span className="btn-label btn-label-corto">Fecha</span>
-              <span className="date-arrow"><IconChevronDown size={12} /></span>
+            <button className="date-picker-btn" aria-label="Ver fecha anterior" title="Ver datos de otra fecha" onClick={() => setPickerOpen(true)}>
+              <IconCalendar size={12} /> <span className="btn-label btn-label-largo">Ver fecha anterior</span>
+              <span className="btn-label btn-label-corto">Fecha</span>
+              <span className="date-arrow">
+                <IconChevronDown size={12} />
+              </span>
             </button>
 
             {/* Mientras consulta la API el botón queda bloqueado y muestra el spinner: es el feedback
                 del refresco, que no desmonta la app. Si la consulta en curso es de OTRA fecha dice
                 "Consultando…" en vez de "Actualizando…": no es un refresco de lo que ya se ve. */}
-            <button className="btn-refresh" onClick={onReload} disabled={loading} aria-busy={loading}
-              aria-label={loading ? 'Consultando…' : 'Actualizar la API'}
-              title={loading ? 'Consultando la API…' : 'Volver a consultar la API'}>
-              {loading
-                ? <><span className="btn-spinner" aria-hidden="true"></span><span className="btn-label">{consultando ? 'Consultando…' : 'Actualizando…'}</span></>
-                : <><IconRefreshCw size={13} /> <span className="btn-label">Actualizar</span></>}
+            <button
+              className="btn-refresh"
+              onClick={onReload}
+              disabled={loading}
+              aria-busy={loading}
+              aria-label={loading ? "Consultando…" : "Actualizar la API"}
+              title={loading ? "Consultando la API…" : "Volver a consultar la API"}
+            >
+              {loading ? (
+                <>
+                  <span className="btn-spinner" aria-hidden="true"></span>
+                  <span className="btn-label">{consultando ? "Consultando…" : "Actualizando…"}</span>
+                </>
+              ) : (
+                <>
+                  <IconRefreshCw size={13} /> <span className="btn-label">Actualizar</span>
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -78,14 +97,7 @@ export default function Header({
 
       {/* Modal selector de fecha histórica: el componente vive en components/DatePickerModal.jsx.
           onElegirFecha cambia la fecha en esta misma pestaña (App actualiza la URL y el estado). */}
-      {pickerOpen && (
-        <DatePickerModal
-          fechas={fechas}
-          esHistorica={!!fechaParam}
-          onElegir={onElegirFecha}
-          onClose={cerrarPicker}
-        />
-      )}
+      {pickerOpen && <DatePickerModal fechas={fechas} esHistorica={!!fechaParam} onElegir={onElegirFecha} onClose={cerrarPicker} />}
 
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
     </>

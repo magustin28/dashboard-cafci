@@ -18,20 +18,16 @@ import { IconAlertTriangle } from "./Icons";
  *   onClose     desmonta el diálogo
  *   zIndex      por encima del modal que lo abrió (900 en HistorialModal)
  */
-export default function ConfirmDialog({
-  mensaje,
-  textoBoton = "Eliminar",
-  onConfirm,
-  onClose,
-  zIndex = 900,
-}) {
+export default function ConfirmDialog({ mensaje, textoBoton = "Eliminar", onConfirm, onClose, zIndex = 900 }) {
   const { closing, requestClose } = useModalClose(onClose);
 
   return (
     <div
       className={`modal-overlay${closing ? " closing" : ""}`}
       style={{ zIndex }}
-      onClick={(e) => { if (e.target === e.currentTarget) requestClose(); }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) requestClose();
+      }}
     >
       <div className="modal modal-confirm">
         <div className="confirm-icon">
@@ -44,7 +40,10 @@ export default function ConfirmDialog({
           </button>
           <button
             className="confirm-btn confirm-btn-danger"
-            onClick={async () => { await onConfirm?.(); requestClose(); }}
+            onClick={async () => {
+              await onConfirm?.();
+              requestClose();
+            }}
           >
             {textoBoton}
           </button>

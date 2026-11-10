@@ -27,13 +27,7 @@ import Select from "./Select";
  *   hasFilters                  true si hay algún filtro activo (deshabilita "Limpiar filtros")
  *   clearFilters                limpia los cuatro filtros
  */
-export default function FilterBar({
-  q, setQ,
-  moneda, setMoneda,
-  region, setRegion,
-  horizonte, setHorizonte,
-  hasFilters, clearFilters,
-}) {
+export default function FilterBar({ q, setQ, moneda, setMoneda, region, setRegion, horizonte, setHorizonte, hasFilters, clearFilters }) {
   // Arranca plegada: en el celular es el punto de partida que ahorra las tres filas. El estado
   // vive acá porque no lo necesita nadie más (App sólo guarda los valores de los filtros).
   const [abierto, setAbierto] = useState(false);
@@ -52,14 +46,17 @@ export default function FilterBar({
       >
         <IconSlidersHorizontal size={14} /> Filtros
         {activos > 0 && <span className="filtros-n">{activos}</span>}
-        <span className="filtros-chev"><IconChevronDown size={12} /></span>
+        <span className="filtros-chev">
+          <IconChevronDown size={12} />
+        </span>
       </button>
 
       <div id="filtros-panel" className={`filter-bar${abierto ? " abierto" : ""}`}>
         <div className="search-wrap">
-          <span className="search-icon"><IconSearch size={14} /></span>
-          <input type="search" placeholder="Buscar fondo o sociedad gerente…" autoComplete="off"
-            value={q} onChange={(e) => setQ(e.target.value)} />
+          <span className="search-icon">
+            <IconSearch size={14} />
+          </span>
+          <input type="search" placeholder="Buscar fondo o sociedad gerente…" autoComplete="off" value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
         {/* Los tres selects usan components/Select.jsx: la flecha nativa del navegador se oculta
             con appearance: none y se dibuja la de Lucide, igual que en el selector del celular. */}

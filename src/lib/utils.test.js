@@ -9,11 +9,30 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  getTabGroup, CLASIF_MAP, filterRows, cacheVencida, CACHE_TTL_MS,
-  parseFechaAPI, fmtMoney, fmtPat, fmtPatM, cnvLink, toast, formatPlazoLiq,
-  diasDesdeFecha, estadoFrescura, diasHabilesDeAtraso,
-  nombreBaseFondo, nombreClase, claveGrupoFondo, contarFondos, agruparFondos,
-  agruparPorGerente, agruparFondosPorPatrimonio, treemapSquarified, colorVariacion,
+  getTabGroup,
+  CLASIF_MAP,
+  filterRows,
+  cacheVencida,
+  CACHE_TTL_MS,
+  parseFechaAPI,
+  fmtMoney,
+  fmtPat,
+  fmtPatM,
+  cnvLink,
+  toast,
+  formatPlazoLiq,
+  diasDesdeFecha,
+  estadoFrescura,
+  diasHabilesDeAtraso,
+  nombreBaseFondo,
+  nombreClase,
+  claveGrupoFondo,
+  contarFondos,
+  agruparFondos,
+  agruparPorGerente,
+  agruparFondosPorPatrimonio,
+  treemapSquarified,
+  colorVariacion,
 } from "./utils.js";
 
 // Fila como la arma useFondos: objeto con nombres estables (categoria + clasificacion)
@@ -38,15 +57,19 @@ function capturandoWarn(fn) {
 
 test("getTabGroup: agrupa por Código de Clasificación (los 10 códigos de CAFCI)", () => {
   const esperado = {
-    1: "Renta Variable", 2: "Renta Fija", 3: "Mercado Dinero", 4: "Renta Mixta",
-    5: "PyME", 6: "Retorno Total", 7: "Otros", 8: "Otros", 9: "Otros", 10: "Otros",
+    1: "Renta Variable",
+    2: "Renta Fija",
+    3: "Mercado Dinero",
+    4: "Renta Mixta",
+    5: "PyME",
+    6: "Retorno Total",
+    7: "Otros",
+    8: "Otros",
+    9: "Otros",
+    10: "Otros",
   };
   for (const [codigo, grupo] of Object.entries(esperado)) {
-    assert.equal(
-      getTabGroup(fila("cualquier título", Number(codigo))),
-      grupo,
-      `código ${codigo}`
-    );
+    assert.equal(getTabGroup(fila("cualquier título", Number(codigo))), grupo, `código ${codigo}`);
   }
   // El mapa debe cubrir del 1 al 10 (si CAFCI agrega uno, este test obliga a revisarlo)
   for (let c = 1; c <= 10; c++) assert.ok(CLASIF_MAP[c], `falta el código ${c} en CLASIF_MAP`);
@@ -409,14 +432,8 @@ test("agruparFondos: si todas son 0 se queda la primera", () => {
 // fondos quedaban sin agrupar. Caso testigo: "1822 Raices Dólares Plus".
 
 test("nombreBaseFondo: corta aunque después de la clase venga texto legal", () => {
-  assert.equal(
-    nombreBaseFondo("1822 Raices Dólares Plus - Clase B Art. 11 Decreto 99/2019 y mod"),
-    "1822 Raices Dólares Plus"
-  );
-  assert.equal(
-    nombreBaseFondo("1822 Raices Dólares Plus - Clase B Ley N° 27.743"),
-    "1822 Raices Dólares Plus"
-  );
+  assert.equal(nombreBaseFondo("1822 Raices Dólares Plus - Clase B Art. 11 Decreto 99/2019 y mod"), "1822 Raices Dólares Plus");
+  assert.equal(nombreBaseFondo("1822 Raices Dólares Plus - Clase B Ley N° 27.743"), "1822 Raices Dólares Plus");
   assert.equal(nombreBaseFondo("SBS Acciones Brasil - Clase Ley N° 27.743"), "SBS Acciones Brasil");
   assert.equal(nombreBaseFondo("MEGAQM Acciones- Clase Ley Nº 27.743"), "MEGAQM Acciones", "sin espacio antes del guion");
 });
@@ -432,12 +449,9 @@ test("nombreClase: incluye el régimen legal pegado (dos clases D quedan disting
   assert.equal(
     nombreClase("Abierto Momentum Pymes - Clase D Ley N° 27.743"),
     "Clase D Ley N° 27.743",
-    "la extensión legal forma parte del nombre de la clase"
+    "la extensión legal forma parte del nombre de la clase",
   );
-  assert.notEqual(
-    nombreClase("Abierto Momentum Pymes - Clase D"),
-    nombreClase("Abierto Momentum Pymes - Clase D Ley N° 27.743")
-  );
+  assert.notEqual(nombreClase("Abierto Momentum Pymes - Clase D"), nombreClase("Abierto Momentum Pymes - Clase D Ley N° 27.743"));
   assert.equal(nombreClase("1822 Raices Dólares Plus - Clase B Art. 11 Decreto 99/2019 y mod"), "Clase B Art. 11 Decreto 99/2019 y mod");
   assert.equal(nombreClase("SBS Acciones Brasil - Clase Ley N° 27.743"), "Clase Ley N° 27.743");
 });
@@ -493,9 +507,7 @@ test("agruparFondosPorPatrimonio: lista vacía o nula devuelve []", () => {
 });
 
 test("agruparFondosPorPatrimonio: sin patrimonio válido deja varPct null", () => {
-  const g = agruparFondosPorPatrimonio([
-    { fondo: "Solo - Clase A", moneda: "ARS", patrimonio: "", valorVarPct: "1" },
-  ]);
+  const g = agruparFondosPorPatrimonio([{ fondo: "Solo - Clase A", moneda: "ARS", patrimonio: "", valorVarPct: "1" }]);
   assert.equal(g[0].patrimonio, 0);
   assert.equal(g[0].varPct, null);
 });
@@ -525,5 +537,3 @@ test("colorVariacion: verde si sube, rojo si baja y gris sin dato", () => {
   assert.ok(colorVariacion(-2, 4).startsWith("rgba(220,38,38"), "negativo → rojo");
   assert.ok(colorVariacion(null, 4).startsWith("rgba(115,115,115"), "sin dato → gris");
 });
-
-

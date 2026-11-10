@@ -49,22 +49,27 @@ export function useModalClose(onClose, { alEscape } = {}) {
   // Acepta argumentos a propósito: varios modales cierran con onClose(true) para avisarle al
   // padre que guardaron algo y hay que refrescar (p. ej. SuscripcionModal/RescateModal). Se
   // reenvían tal cual después de la animación, si no ese aviso se perdería.
-  const requestClose = useCallback((...args) => {
-    if (closingRef.current) return; // ignora el doble cierre (p. ej. ESC + clic en el fondo)
-    closingRef.current = true;
-    ultimoCierreMs = Date.now();
-    setClosing(true);
-    // La capa sale de la pila AHORA y su entrada del historial se saca YA: si se dejara para el
-    // desmontaje (240 ms después), el próximo Atrás del usuario gastaría un toque en una entrada
-    // que no hace nada visible. sacarEntradaDelHistorial es idempotente, así que si el cierre vino
-    // justamente del gesto Atrás (entrada ya consumida) no hace nada.
-    const capa = capaRef.current;
-    sacarCapa(capa);
-    sacarEntradaDelHistorial(capa);
-    timerRef.current = setTimeout(() => onClose(...args), MODAL_CLOSE_MS);
-  }, [onClose]);
+  const requestClose = useCallback(
+    (...args) => {
+      if (closingRef.current) return; // ignora el doble cierre (p. ej. ESC + clic en el fondo)
+      closingRef.current = true;
+      ultimoCierreMs = Date.now();
+      setClosing(true);
+      // La capa sale de la pila AHORA y su entrada del historial se saca YA: si se dejara para el
+      // desmontaje (240 ms después), el próximo Atrás del usuario gastaría un toque en una entrada
+      // que no hace nada visible. sacarEntradaDelHistorial es idempotente, así que si el cierre vino
+      // justamente del gesto Atrás (entrada ya consumida) no hace nada.
+      const capa = capaRef.current;
+      sacarCapa(capa);
+      sacarEntradaDelHistorial(capa);
+      timerRef.current = setTimeout(() => onClose(...args), MODAL_CLOSE_MS);
+    },
+    [onClose],
+  );
 
-  useEffect(() => { requestCloseRef.current = requestClose; }, [requestClose]);
+  useEffect(() => {
+    requestCloseRef.current = requestClose;
+  }, [requestClose]);
 
   // Alta en el historial: los modales se renderizan condicionalmente ({modal && <Modal …/>}), así
   // que montarse = estar abierto. El gesto Atrás cierra esta capa y con ella el modal.
@@ -87,7 +92,9 @@ export function useModalClose(onClose, { alEscape } = {}) {
     };
   }, []);
 
-  useEffect(() => { alEscapeRef.current = alEscape; }, [alEscape]);
+  useEffect(() => {
+    alEscapeRef.current = alEscape;
+  }, [alEscape]);
 
   // ESC: una sola vez por instancia. Con dos capas abiertas se ejecutan los dos listeners, pero el
   // de abajo se descarta porque capaSuperior() ya no es su capa.

@@ -11,8 +11,16 @@ export const HOR_MAP = { Cor: "Corto", Med: "Mediano", Lar: "Largo", Flex: "Flex
 // 16/10/2026: 1=Renta Variable, 2=Renta Fija, 3=Mercado de Dinero, 4=Renta Mixta, 5=PyME,
 // 6=Retorno Total; 7..10 (Infraestructura, Fondos Cerrados, ASG, RG900) → "Otros".
 export const CLASIF_MAP = {
-  1: "Renta Variable", 2: "Renta Fija", 3: "Mercado Dinero", 4: "Renta Mixta",
-  5: "PyME", 6: "Retorno Total", 7: "Otros", 8: "Otros", 9: "Otros", 10: "Otros",
+  1: "Renta Variable",
+  2: "Renta Fija",
+  3: "Mercado Dinero",
+  4: "Renta Mixta",
+  5: "PyME",
+  6: "Retorno Total",
+  7: "Otros",
+  8: "Otros",
+  9: "Otros",
+  10: "Otros",
 };
 
 export const TAB_GROUPS = [
@@ -257,7 +265,10 @@ export function treemapSquarified(items, width = 100, height = 100, ratio = 1) {
   if (!nodes.length || total <= 0) return [];
 
   const out = [];
-  let x0 = 0, y0 = 0, x1 = width, y1 = height;
+  let x0 = 0,
+    y0 = 0,
+    x1 = width,
+    y1 = height;
   let value = total;
   let i0 = 0;
   const n = nodes.length;
@@ -330,7 +341,7 @@ export function colorVariacion(v, maxAbs = 1) {
   const num = parseFloat(v);
   if (isNaN(num)) return "rgba(115,115,115,0.55)"; // sin dato → gris
   const t = Math.min(Math.abs(num) / (Math.abs(maxAbs) || 1), 1);
-  const alpha = (0.50 + t * 0.45).toFixed(2); // 0.50..0.95
+  const alpha = (0.5 + t * 0.45).toFixed(2); // 0.50..0.95
   return num >= 0 ? `rgba(5,150,105,${alpha})` : `rgba(220,38,38,${alpha})`;
 }
 
@@ -484,5 +495,7 @@ export function toast(msg) {
   el.textContent = msg;
   el.style.opacity = "1";
   clearTimeout(toast._t);
-  toast._t = setTimeout(() => { el.style.opacity = "0"; }, 6000);
+  toast._t = setTimeout(() => {
+    el.style.opacity = "0";
+  }, 6000);
 }

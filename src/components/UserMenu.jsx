@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
-import { useAuth } from '../context/useAuth';
-import { IconChevronDown, IconLogIn, IconLogOut, IconChartColumn } from './Icons';
+import { useState, useEffect, useRef } from "react";
+import { useAuth } from "../context/useAuth";
+import { IconChevronDown, IconLogIn, IconLogOut, IconChartColumn } from "./Icons";
 
 /**
  * Bloque de sesión del header: si hay usuario muestra el avatar + nombre con su menú
@@ -26,48 +26,71 @@ export default function UserMenu({ onOpenAuth }) {
       if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false);
     };
     const onKeyDown = (e) => {
-      if (e.key === 'Escape') setMenuOpen(false);
+      if (e.key === "Escape") setMenuOpen(false);
     };
-    document.addEventListener('mousedown', onMouseDown);
-    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener("mousedown", onMouseDown);
+    document.addEventListener("keydown", onKeyDown);
     return () => {
-      document.removeEventListener('mousedown', onMouseDown);
-      document.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener("mousedown", onMouseDown);
+      document.removeEventListener("keydown", onKeyDown);
     };
   }, []);
 
   // Nombre visible: el de Google si existe (user_metadata.full_name) y si no el del email.
-  const label = user?.nombre || user?.email?.split('@')[0] || '';
+  const label = user?.nombre || user?.email?.split("@")[0] || "";
 
   // Iniciales para el celular ("Augusto Martinez" → "AM"): ahí el botón ocupa un tercio de la fila
   // y no entra el nombre completo, así que se muestran avatar + iniciales. Ver styles/utils.css.
-  const iniciales = label.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0].toUpperCase()).join('');
+  const iniciales = label
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0].toUpperCase())
+    .join("");
 
   return (
     <div className="auth-wrap" ref={menuRef}>
       {user ? (
         <>
-          <button className="btn-auth logged-in" onClick={() => setMenuOpen(o => !o)}>
+          <button className="btn-auth logged-in" onClick={() => setMenuOpen((o) => !o)}>
             {/* Foto real de Google; si el proveedor no la manda, queda la inicial de siempre.
                 referrerPolicy="no-referrer": las URLs de lh3.googleusercontent.com no cargan
                 si el navegador manda el header Referer. */}
-            {user.avatar
-              ? <img className="auth-avatar" src={user.avatar} alt="" referrerPolicy="no-referrer" />
-              : <span className="auth-avatar">{label[0]?.toUpperCase()}</span>}
+            {user.avatar ? (
+              <img className="auth-avatar" src={user.avatar} alt="" referrerPolicy="no-referrer" />
+            ) : (
+              <span className="auth-avatar">{label[0]?.toUpperCase()}</span>
+            )}
             {/* Nombre completo en escritorio; en el celular sólo las iniciales (avatar + iniciales). */}
             <span className="auth-nombre">{label}</span>
             <span className="auth-iniciales">{iniciales}</span>
-            <span className="auth-arrow"><IconChevronDown size={11} /></span>
+            <span className="auth-arrow">
+              <IconChevronDown size={11} />
+            </span>
           </button>
           {menuOpen && (
             <div className="user-menu open">
               <div className="user-menu-header">
-                <strong>{label}</strong>{user.email}
+                <strong>{label}</strong>
+                {user.email}
               </div>
-              <button className="user-menu-item" onClick={() => { setMenuOpen(false); window.dispatchEvent(new CustomEvent('cafci:tab', { detail: 'Mi Portfolio' })); }}>
+              <button
+                className="user-menu-item"
+                onClick={() => {
+                  setMenuOpen(false);
+                  window.dispatchEvent(new CustomEvent("cafci:tab", { detail: "Mi Portfolio" }));
+                }}
+              >
                 <IconChartColumn size={13} /> Mi Portfolio
               </button>
-              <button className="user-menu-item danger" onClick={() => { setMenuOpen(false); logout(); window.dispatchEvent(new CustomEvent('cafci:logout')); }}>
+              <button
+                className="user-menu-item danger"
+                onClick={() => {
+                  setMenuOpen(false);
+                  logout();
+                  window.dispatchEvent(new CustomEvent("cafci:logout"));
+                }}
+              >
                 <IconLogOut size={13} /> Cerrar sesión
               </button>
             </div>

@@ -82,9 +82,10 @@ export default function FondosTable({ filtered, refs, activeTab, onOpenSuscripci
   // EXCEPCIÓN: Favoritos no se agrupa. El usuario guardó clases puntuales (el favorito es el nombre
   // de la clase, no del fondo base); agrupar le mostraría otra clase —la "mejor"— y le ocultaría
   // justo la que eligió. Cada favorito se dibuja como fila suelta con sus botones de acción.
-  const grupos = activeTab === "Favoritos"
-    ? filtered.map((r) => ({ key: `${r.fondo}|${r.moneda}`, nombre: r.fondo, moneda: r.moneda, clases: [r], mejor: r, n: 1 }))
-    : agruparFondos(filtered);
+  const grupos =
+    activeTab === "Favoritos"
+      ? filtered.map((r) => ({ key: `${r.fondo}|${r.moneda}`, nombre: r.fondo, moneda: r.moneda, clases: [r], mejor: r, n: 1 }))
+      : agruparFondos(filtered);
 
   // El orden se resuelve por el MEJOR de cada grupo: si el usuario ordena por Var. Diaria, un fondo
   // se ubica por su clase más rendidora. Ordenar por "fondo" usa el nombre base (sin la clase).
@@ -194,14 +195,14 @@ export default function FondosTable({ filtered, refs, activeTab, onOpenSuscripci
                         el fondo concreto (una clase), y eso vive en las filas de abajo.
                         Toda la fila abre/cierra el acordeón; el botón y el link a CAFCI frenan la
                         propagación para no dispararlo dos veces o sin querer. */}
-                    <tr
-                      className={`tr-grupo${estaAbierto ? " abierto" : ""}`}
-                      onClick={() => toggleAbierto(g.key)}
-                    >
+                    <tr className={`tr-grupo${estaAbierto ? " abierto" : ""}`} onClick={() => toggleAbierto(g.key)}>
                       <td className="td-center td-mid">
                         <button
                           className={`btn-expand${estaAbierto ? " on" : ""}`}
-                          onClick={(e) => { e.stopPropagation(); toggleAbierto(g.key); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleAbierto(g.key);
+                          }}
                           title={estaAbierto ? "Ocultar las demás clases" : `Ver las ${g.n} clases`}
                           aria-expanded={estaAbierto}
                         >
@@ -214,18 +215,28 @@ export default function FondosTable({ filtered, refs, activeTab, onOpenSuscripci
                           {clase || "Clase —"} · {g.n}
                         </span>
                       </td>
-                      <td><MonBadge m={g.mejor.moneda} /></td>
-                      <td><span className="badge badge-reg">{REG_MAP[g.mejor.region] || g.mejor.region || "—"}</span></td>
-                      <td><span className="badge badge-hor">{HOR_MAP[g.mejor.horizonte] || g.mejor.horizonte || "—"}</span></td>
+                      <td>
+                        <MonBadge m={g.mejor.moneda} />
+                      </td>
+                      <td>
+                        <span className="badge badge-reg">{REG_MAP[g.mejor.region] || g.mejor.region || "—"}</span>
+                      </td>
+                      <td>
+                        <span className="badge badge-hor">{HOR_MAP[g.mejor.horizonte] || g.mejor.horizonte || "—"}</span>
+                      </td>
                       <td className="td-center">
                         <PctCell v={g.mejor.valorVarPct} decimals={3} />
-                        {g.mejor.valorVarPct != null && (
-                          <div className="tna-note">~ {(parseFloat(g.mejor.valorVarPct) * 360).toFixed(2)}% TNA ~</div>
-                        )}
+                        {g.mejor.valorVarPct != null && <div className="tna-note">~ {(parseFloat(g.mejor.valorVarPct) * 360).toFixed(2)}% TNA ~</div>}
                       </td>
-                      <td className="td-center"><VarAnioCell r={g.mejor} refs={refs} /></td>
-                      <td><PctCell v={g.mejor.varAnual} decimals={3} /></td>
-                      <td><PatCell v={g.mejor.patrimonio} /></td>
+                      <td className="td-center">
+                        <VarAnioCell r={g.mejor} refs={refs} />
+                      </td>
+                      <td>
+                        <PctCell v={g.mejor.varAnual} decimals={3} />
+                      </td>
+                      <td>
+                        <PatCell v={g.mejor.patrimonio} />
+                      </td>
                       <td className="td-gerente">{g.mejor.socGerente || "—"}</td>
                       {/* Sin botón de CAFCI en la fila de resumen: la fila representa varias
                           clases y el botón llevaría a una sola (la "mejor"), lo que confunde.
@@ -234,9 +245,7 @@ export default function FondosTable({ filtered, refs, activeTab, onOpenSuscripci
                     </tr>
                     {/* Clases restantes: cada una es un fondo con su código CNV propio y sus
                         botones de acción. Sólo se dibujan con el grupo abierto. */}
-                    {estaAbierto && g.clases.map((r) => (
-                      <FilaClase key={`${g.key}|${r.cnv || r.fondo}`} r={r} {...filaProps} indentada />
-                    ))}
+                    {estaAbierto && g.clases.map((r) => <FilaClase key={`${g.key}|${r.cnv || r.fondo}`} r={r} {...filaProps} indentada />)}
                   </Fragment>
                 );
               })
@@ -260,7 +269,9 @@ export default function FondosTable({ filtered, refs, activeTab, onOpenSuscripci
               }
               return pages.map((p, i) =>
                 p === "…" ? (
-                  <span key={i} className="pg-dots">…</span>
+                  <span key={i} className="pg-dots">
+                    …
+                  </span>
                 ) : (
                   <button key={i} className={`pg${p === pagina ? " on" : ""}`} onClick={() => setPage(p)}>
                     {p}
@@ -332,28 +343,28 @@ function FilaClase({ r, refs, favs, user, toggleFav, onOpenSuscripcion, onFondoC
               onClick={() => toggleFav(r.fondo)}
               title={isFaved ? "Quitar de favoritos" : "Agregar a favoritos"}
               style={{ fontSize: 13 }}
-            ><IconStar size={13} /></button>
-            <button
-              className="btn-port-action btn-info"
-              onClick={() => onFondoClick && onFondoClick(r)}
-              title="Ver detalle del fondo"
-            ><IconInfo size={13} /></button>
+            >
+              <IconStar size={13} />
+            </button>
+            <button className="btn-port-action btn-info" onClick={() => onFondoClick && onFondoClick(r)} title="Ver detalle del fondo">
+              <IconInfo size={13} />
+            </button>
             {user ? (
               <button
                 className="btn-port-action btn-susc col-span-2"
                 onClick={() => onOpenSuscripcion(r.fondo, r.moneda)}
                 title="Agregar a mi portfolio"
-              ><IconPlus size={13} /></button>
-            ) : <span />}
+              >
+                <IconPlus size={13} />
+              </button>
+            ) : (
+              <span />
+            )}
           </div>
         )}
       </td>
       <td className={indentada ? "td-fondo td-fondo-clase" : "td-fondo"} title={indentada ? r.fondo : undefined}>
-        {indentada ? (
-          <span className="clase-etiqueta">{clase || "Clase —"}</span>
-        ) : (
-          r.fondo || "—"
-        )}
+        {indentada ? <span className="clase-etiqueta">{clase || "Clase —"}</span> : r.fondo || "—"}
       </td>
       <td>
         <MonBadge m={r.moneda} />
@@ -366,9 +377,7 @@ function FilaClase({ r, refs, favs, user, toggleFav, onOpenSuscripcion, onFondoC
       </td>
       <td className="td-center">
         <PctCell v={r.valorVarPct} decimals={3} />
-        {r.valorVarPct != null && (
-          <div className="tna-note">~ {(parseFloat(r.valorVarPct) * 360).toFixed(2)}% TNA ~</div>
-        )}
+        {r.valorVarPct != null && <div className="tna-note">~ {(parseFloat(r.valorVarPct) * 360).toFixed(2)}% TNA ~</div>}
       </td>
       <td className="td-center">
         <VarAnioCell r={r} refs={refs} />

@@ -3,9 +3,20 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  simboloMoneda, nombreMoneda, numero, cuotapartes, precioCuotaparte,
-  moneda, porcentaje, claseSigno, colorVariacion,
-  fechaCorta, fechaCompleta, hoyCompleta, VERDE, ROJO,
+  simboloMoneda,
+  nombreMoneda,
+  numero,
+  cuotapartes,
+  precioCuotaparte,
+  moneda,
+  porcentaje,
+  claseSigno,
+  colorVariacion,
+  fechaCorta,
+  fechaCompleta,
+  hoyCompleta,
+  VERDE,
+  ROJO,
 } from "./format.js";
 
 test("simboloMoneda: ARS y USD/USB con espacio final", () => {

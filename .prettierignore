@@ -1,0 +1,12 @@
+# Qué NO formatea Prettier (misma sintaxis que .gitignore). node_modules y .git ya se ignoran solos.
+
+# Generados
+dist/
+package-lock.json
+
+# Temporales y copias viejas (tampoco se versionan: ver .gitignore)
+tmp/
+verAnterior/
+
+# Nota: Prettier sólo toca las extensiones que conoce, así que .clinerules, .clineignore,
+# resumenProyecto.txt y usuariosPass.txt quedan afuera solos.

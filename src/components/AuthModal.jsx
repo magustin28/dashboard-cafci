@@ -40,26 +40,18 @@ export default function AuthModal({ onClose }) {
           <IconX size={16} />
         </button>
         <div className="modal-logo">
-          <span className="logo-badge">
-            CAFCI
-          </span>
+          <span className="logo-badge">CAFCI</span>
         </div>
         <h2 className="modal-title">Iniciar sesión</h2>
         <p className="modal-subtitle">Entrá con tu cuenta de Google para ver y guardar tu portafolio de FCI</p>
 
-        {error && (
-          <p className="modal-error">
-            {error}
-          </p>
-        )}
+        {error && <p className="modal-error">{error}</p>}
 
         <button className="modal-submit" onClick={conGoogle} disabled={loading}>
           {loading ? "Conectando con Google…" : "Continuar con Google"}
         </button>
 
-        <p className="modal-note">
-          Acceso privado. Tus favoritos y tu portafolio quedan asociados a tu cuenta de Google.
-        </p>
+        <p className="modal-note">Acceso privado. Tus favoritos y tu portafolio quedan asociados a tu cuenta de Google.</p>
       </div>
     </div>
   );

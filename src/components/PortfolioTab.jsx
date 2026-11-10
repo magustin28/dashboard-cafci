@@ -7,10 +7,7 @@ import { filtrarCartera, enriquecerCartera, dividirTenencias, resumenCartera } f
 import { PctCell, MonBadge, MoneyCell, VActualCell } from "./TableCells";
 import ConfirmDialog from "./ConfirmDialog";
 import Select from "./Select";
-import {
-  IconX, IconSearch, IconFileText, IconChartColumn,
-  IconInfo, IconTrash2, IconAlertTriangle,
-} from "./Icons";
+import { IconX, IconSearch, IconFileText, IconChartColumn, IconInfo, IconTrash2, IconAlertTriangle } from "./Icons";
 
 export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, onOpenRescate, onOpenHistorial, onFondoClick }) {
   const { portfolio, deleteSuscripcion } = useAuth();
@@ -35,8 +32,7 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
   const { actual: enrichedActual, historico: enrichedHistorico } = dividirTenencias(enriched);
   const enrichedView = subTab === "actual" ? enrichedActual : enrichedHistorico;
 
-  const { totalARS, totalUSD, vARS, vUSD, rendARS, rendUSD, rendARSpct, rendUSDpct, clsARS, clsUSD } =
-    resumenCartera(enrichedActual);
+  const { totalARS, totalUSD, vARS, vUSD, rendARS, rendUSD, rendARSpct, rendUSDpct, clsARS, clsUSD } = resumenCartera(enrichedActual);
 
   const confirmDelete = (item) => {
     const n = item._suscripciones?.length || 1;
@@ -67,9 +63,7 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
           <div className="kpi">
             <div className="kpi-bar c"></div>
             <div className="kpi-label">Invertido ARS</div>
-            <div className="kpi-val c kpi-val-lg">
-              {fmtMoney(totalARS, "ARS")}
-            </div>
+            <div className="kpi-val c kpi-val-lg">{fmtMoney(totalARS, "ARS")}</div>
             <div className="kpi-sub">costo de compra</div>
           </div>
         )}
@@ -88,9 +82,7 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
           <div className="kpi">
             <div className="kpi-bar c"></div>
             <div className="kpi-label">Invertido USD</div>
-            <div className="kpi-val c kpi-val-lg">
-              {fmtMoney(totalUSD, "USD")}
-            </div>
+            <div className="kpi-val c kpi-val-lg">{fmtMoney(totalUSD, "USD")}</div>
             <div className="kpi-sub">costo de compra</div>
           </div>
         )}
@@ -120,7 +112,9 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
       {/* Filter bar */}
       <div className="filter-bar">
         <div className="search-wrap">
-          <span className="search-icon"><IconSearch size={14} /></span>
+          <span className="search-icon">
+            <IconSearch size={14} />
+          </span>
           <input type="search" placeholder="Buscar fondo…" autoComplete="off" value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
         {/* Mismo Select que la barra de filtros principal (components/Select.jsx): flecha de Lucide
@@ -165,11 +159,7 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
                 </th>
                 <th className="col-vactual">
                   Valor Actual
-                  {apiFecha && (
-                    <div className="th-date">
-                      {fechaCorta(apiFecha)}
-                    </div>
-                  )}
+                  {apiFecha && <div className="th-date">{fechaCorta(apiFecha)}</div>}
                 </th>
                 <th className="col-rend">
                   Rend.
@@ -180,14 +170,7 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
                   <br />
                   Importe
                 </th>
-                <th className="col-vardia">
-                  Var. Diaria %
-                  {refs?.fechaAnterior && (
-                    <div className="th-date">
-                      {refs.fechaAnterior}
-                    </div>
-                  )}
-                </th>
+                <th className="col-vardia">Var. Diaria %{refs?.fechaAnterior && <div className="th-date">{refs.fechaAnterior}</div>}</th>
                 <th className="col-tna">TNA</th>
                 <th className="col-tem">TEM</th>
                 <th className="col-tea">TEA</th>
@@ -201,7 +184,9 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
                     <div className="empty-favs">
                       {subTab === "actual" ? (
                         <>
-                          <div className="empty-icon"><IconChartColumn size={32} strokeWidth={1.5} /></div>
+                          <div className="empty-icon">
+                            <IconChartColumn size={32} strokeWidth={1.5} />
+                          </div>
                           <p>
                             No tenés suscripciones activas.
                             <br />
@@ -212,7 +197,9 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
                         </>
                       ) : (
                         <>
-                          <div className="empty-icon"><IconFileText size={32} strokeWidth={1.5} /></div>
+                          <div className="empty-icon">
+                            <IconFileText size={32} strokeWidth={1.5} />
+                          </div>
                           <p>No hay fondos rescatados en tu historial.</p>
                         </>
                       )}
@@ -224,7 +211,10 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
                   const r = item.match;
                   const cpDisp = parseFloat(item.cuotapartes_disponibles);
                   const cantFmt = cpDisp.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 4 });
-                  const precFmt = parseFloat(item.precio_suscripcion ?? item.precio_compra).toLocaleString("es-AR", { minimumFractionDigits: 4, maximumFractionDigits: 6 });
+                  const precFmt = parseFloat(item.precio_suscripcion ?? item.precio_compra).toLocaleString("es-AR", {
+                    minimumFractionDigits: 4,
+                    maximumFractionDigits: 6,
+                  });
                   return (
                     <tr key={`${item.fondo_nombre}__${item.moneda}`}>
                       <td className="td-mid">
@@ -283,14 +273,10 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
                         <MonBadge m={item.moneda} />
                       </td>
                       <td>
-                        <span className="td-mono td-mono-sm">
-                          {cantFmt}
-                        </span>
+                        <span className="td-mono td-mono-sm">{cantFmt}</span>
                       </td>
                       <td>
-                        <span className="td-mono td-mono-sm">
-                          {precFmt}
-                        </span>
+                        <span className="td-mono td-mono-sm">{precFmt}</span>
                       </td>
                       <td>
                         <MoneyCell v={item.costoTotal} mon={item.moneda} />
@@ -333,13 +319,7 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
           </table>
         </div>
       </div>
-      {confirm && (
-        <ConfirmDialog
-          mensaje={confirm.mensaje}
-          onConfirm={confirm.onConfirm}
-          onClose={() => setConfirm(null)}
-        />
-      )}
+      {confirm && <ConfirmDialog mensaje={confirm.mensaje} onConfirm={confirm.onConfirm} onClose={() => setConfirm(null)} />}
       {showInforme && <InformeModal enriched={enriched} apiFecha={apiFecha} onClose={() => setShowInforme(false)} />}
     </>
   );
