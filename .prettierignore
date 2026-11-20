@@ -1,6 +1,12 @@
 # Qué NO formatea Prettier (misma sintaxis que .gitignore). node_modules y .git ya se ignoran solos.
 
 # Generados
+# Generados
+dist/
+package-lock.json
+# Mapa idClase -> idFondo de CAFCI: lo escribe scripts/generar-ids.mjs en una sola línea
+# (Prettier lo desplegaría en ~4.900 líneas y ensuciaría el diff en cada npm run ids).
+src/lib/cafciIds.js
 dist/
 package-lock.json
 

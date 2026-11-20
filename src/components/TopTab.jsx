@@ -1,6 +1,5 @@
 import { useAuth } from "../context/useAuth";
-import { cnvLink } from "../lib/utils";
-import { PctCell, PatCell } from "./TableCells";
+import { PctCell, PatCell, CnvCell } from "./TableCells";
 import { IconChartColumn, IconTrophy, IconInfo, IconPlus } from "./Icons";
 
 function TopTable({ rows, refs, onOpenSuscripcion, onFondoClick, moneda }) {
@@ -116,9 +115,7 @@ function TopTable({ rows, refs, onOpenSuscripcion, onFondoClick, moneda }) {
                 </td>
                 <td className="td-gerente">{r.socGerente || "—"}</td>
                 <td>
-                  <a className="btn-cnv" href={cnvLink(r.cafci || "", r.cnv || "")} target="_blank" rel="noopener" title="Ver en CAFCI">
-                    ↗
-                  </a>
+                  <CnvCell cafci={r.cafci} />
                 </td>
               </tr>
             );

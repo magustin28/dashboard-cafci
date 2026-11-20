@@ -1,8 +1,8 @@
 import { Fragment, useEffect, useState } from "react";
 import { useAuth } from "../context/useAuth";
-import { REG_MAP, HOR_MAP, cnvLink, parseFechaAPI, agruparFondos, nombreClase } from "../lib/utils";
+import { REG_MAP, HOR_MAP, parseFechaAPI, agruparFondos, nombreClase } from "../lib/utils";
 import { capaSuperior } from "../lib/historial";
-import { PctCell, PatCell, MonBadge } from "./TableCells";
+import { PctCell, PatCell, MonBadge, CnvCell } from "./TableCells";
 import { IconStar, IconInfo, IconPlus, IconChevronDown, IconChevronUp } from "./Icons";
 
 // ── Agrupación por clase ──────────────────────────────────────────────────────
@@ -390,9 +390,7 @@ function FilaClase({ r, refs, favs, user, toggleFav, onOpenSuscripcion, onFondoC
       </td>
       <td className="td-gerente">{r.socGerente || "—"}</td>
       <td>
-        <a className="btn-cnv" href={cnvLink(r.cafci || "", r.cnv || "")} target="_blank" rel="noopener" title="Ver en CAFCI">
-          ↗
-        </a>
+        <CnvCell cafci={r.cafci} />
       </td>
     </tr>
   );

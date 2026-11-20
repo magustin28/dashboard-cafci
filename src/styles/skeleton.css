@@ -248,8 +248,8 @@
   }
 }
 
-/* En el celular el header real se apila en tres filas: el logo arriba y el meta a lo ancho. */
-@media (max-width: 720px) {
+/* Mismo corte que el header real (utils.css): en el celular se apila en tres filas. */
+@media (max-width: 640px) {
   .sk-logo {
     width: 180px;
   }

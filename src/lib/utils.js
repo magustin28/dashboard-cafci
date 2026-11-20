@@ -1,3 +1,6 @@
+// Mapa idClase → idFondo de CAFCI (lo genera scripts/generar-ids.mjs con npm run ids).
+import CAFCI_IDS from "./cafciIds.js";
+
 export const API_BASE = "https://api-cafci-x8m6.onrender.com";
 export const API_URL = API_BASE + "/api/fondos";
 export const API_FECHAS = API_BASE + "/api/fechas";
@@ -82,10 +85,31 @@ export function filterRows(rows, { q, moneda, region, horizonte } = {}) {
   });
 }
 
-export function cnvLink(cnvCode, cafciCode) {
-  const q = encodeURIComponent(cafciCode);
-  const w = encodeURIComponent(cnvCode);
+// ── Link a la ficha del fondo en CAFCI ────────────────────────────────────────
+// El sitio nuevo arma la ficha con DOS ids internos: /fondos/{idFondo}?clase={idClase}.
+// La planilla diaria trae el "Código CAFCI" de la CLASE (ese es el ?clase=), pero el id del
+// FONDO no: sale del mapa que genera scripts/generar-ids.mjs desde el propio sitio (cafciIds.js).
+// Sin ese id el link se armaba con el código CNV en el lugar del idFondo y abría otro fondo:
+// "1810 Ahorro" (CNV 394) caía en "Delta Pesos" (idFondo 394) en vez de su ficha real
+// (/fondos/304?clase=308).
+export function idFondoCafci(idClase) {
+  const id = CAFCI_IDS[String(idClase)];
+  return id == null ? null : id;
+}
+
+export function cnvLink(idClase, idFondo) {
+  if (idClase == null || idClase === "" || idFondo == null) return null;
+  const q = encodeURIComponent(idFondo);
+  const w = encodeURIComponent(idClase);
   return `https://estadisticas.cafci.org.ar/fondos/${q}?clase=${w}`;
+}
+
+// Link listo para una fila: resuelve el idFondo desde el código de la clase. Devuelve null si
+// la clase no está en el mapa (fondo nuevo o dado de baja): la UI oculta el botón en vez de
+// mandar a otro fondo.
+export function fondoLink(idClase) {
+  const idFondo = idFondoCafci(idClase);
+  return idFondo == null ? null : cnvLink(idClase, idFondo);
 }
 
 // ── Agrupación por clase ──────────────────────────────────────────────────────

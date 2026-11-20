@@ -2,7 +2,7 @@
 // diferencias mínimas (decimales por defecto y escalas de patrimonio). Una sola versión evita
 // que la misma columna se vea distinta según la pestaña.
 import { claseSigno, simboloMoneda } from "../lib/format";
-import { fmtPat } from "../lib/utils";
+import { fmtPat, fondoLink } from "../lib/utils";
 
 /** Porcentaje con signo y color. `decimals` = 2 por defecto (FondosTable y TopTab usan 3). */
 export function PctCell({ v, decimals = 2 }) {
@@ -23,6 +23,26 @@ export function PatCell({ v }) {
   const texto = fmtPat(v);
   if (texto === "—") return <span className="td-mono zero">—</span>;
   return <span className="td-mono">{texto}</span>;
+}
+
+/**
+ * Botón ↗ a la ficha del fondo en CAFCI. El link necesita el id interno del FONDO, que la
+ * planilla no trae: se resuelve con el mapa cafciIds.js (ver fondoLink en lib/utils). Si la
+ * clase no está en el mapa se muestra "—" en vez de un link que abriría otro fondo.
+ */
+export function CnvCell({ cafci }) {
+  const href = fondoLink(cafci);
+  if (!href)
+    return (
+      <span className="td-mono zero" title="CAFCI no publica la ficha de este fondo">
+        —
+      </span>
+    );
+  return (
+    <a className="btn-cnv" href={href} target="_blank" rel="noopener" title="Ver en CAFCI">
+      ↗
+    </a>
+  );
 }
 
 /** Badge de la moneda del fondo. */

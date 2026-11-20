@@ -19,6 +19,8 @@ import {
   fmtPat,
   fmtPatM,
   cnvLink,
+  idFondoCafci,
+  fondoLink,
   toast,
   formatPlazoLiq,
   diasDesdeFecha,
@@ -226,9 +228,29 @@ test("diasHabilesDeAtraso: entradas inválidas → null", () => {
   assert.equal(diasHabilesDeAtraso("no es fecha"), null);
 });
 
-test("cnvLink: arma el link a CAFCI con los códigos codificados", () => {
+test("cnvLink: arma el link a CAFCI con los ids codificados", () => {
+  // Firma: cnvLink(idClase, idFondo) → /fondos/{idFondo}?clase={idClase}
   assert.equal(cnvLink(1901, "6419"), "https://estadisticas.cafci.org.ar/fondos/6419?clase=1901");
   assert.equal(cnvLink("19 1", "64/19"), "https://estadisticas.cafci.org.ar/fondos/64%2F19?clase=19%201");
+  // Sin alguno de los dos ids no hay link (antes se armaba con el código CNV y abría otro fondo).
+  assert.equal(cnvLink(null, 304), null);
+  assert.equal(cnvLink(308, null), null);
+});
+
+test("idFondoCafci: resuelve el id del FONDO a partir del Código CAFCI (id de clase)", () => {
+  // Casos verificados contra https://estadisticas.cafci.org.ar/fondos/<id>?clase=<clase>:
+  // 1810 Ahorro → clase 308 → fondo 304; Delta Pesos → clase 715 → fondo 394.
+  assert.equal(idFondoCafci(308), 304);
+  assert.equal(idFondoCafci("275"), 275);
+  assert.equal(idFondoCafci(715), 394);
+  // Una clase que no está en el mapa no tiene id de fondo (no se inventa).
+  assert.equal(idFondoCafci(999999), null);
+  assert.equal(idFondoCafci(""), null);
+});
+
+test("fondoLink: arma el link completo de la ficha o null si falta el id de fondo", () => {
+  assert.equal(fondoLink(308), "https://estadisticas.cafci.org.ar/fondos/304?clase=308");
+  assert.equal(fondoLink(999999), null);
 });
 
 test("toast: fuera del navegador no rompe", () => {

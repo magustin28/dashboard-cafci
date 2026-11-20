@@ -1,10 +1,10 @@
 import { useState } from "react";
 import InformeModal from "./InformeModal";
 import { useAuth } from "../context/useAuth";
-import { fmtMoney, cnvLink } from "../lib/utils";
+import { fmtMoney } from "../lib/utils";
 import { fechaCorta } from "../lib/format";
 import { filtrarCartera, enriquecerCartera, dividirTenencias, resumenCartera } from "../lib/portfolio";
-import { PctCell, MonBadge, MoneyCell, VActualCell } from "./TableCells";
+import { PctCell, MonBadge, MoneyCell, VActualCell, CnvCell } from "./TableCells";
 import ConfirmDialog from "./ConfirmDialog";
 import Select from "./Select";
 import { IconX, IconSearch, IconFileText, IconChartColumn, IconInfo, IconTrash2, IconAlertTriangle } from "./Icons";
@@ -302,15 +302,7 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
                       <td>
                         <PctCell v={item.tea} />
                       </td>
-                      <td>
-                        {r ? (
-                          <a className="btn-cnv" href={cnvLink(r.cafci || "", r.cnv || "")} target="_blank" rel="noopener" title="Ver en CAFCI">
-                            ↗
-                          </a>
-                        ) : (
-                          "—"
-                        )}
-                      </td>
+                      <td>{r ? <CnvCell cafci={r.cafci} /> : "—"}</td>
                     </tr>
                   );
                 })
