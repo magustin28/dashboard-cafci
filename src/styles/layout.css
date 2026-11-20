@@ -548,7 +548,7 @@ select option {
   border: 1px solid var(--border2);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
 }
-/* Spinner chico para el aviso: el de #loader-overlay (36px) queda enorme en la píldora. */
+/* Spinner chico para el aviso: el base de utils.css (36px) queda enorme en la píldora. */
 .data-overlay-box .spinner {
   width: 18px;
   height: 18px;

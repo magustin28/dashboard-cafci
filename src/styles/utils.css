@@ -90,32 +90,6 @@
   color: var(--accent);
 }
 
-#loader-overlay {
-  /* Sólo lo renderiza React (EstadoPantalla.LoaderOverlay) con return temprano en App.jsx, así que
-     está visible siempre que existe: no hace falta ocultarlo y mostrarlo con un style inline. */
-  display: flex;
-  position: fixed;
-  inset: 0;
-  background: rgba(240, 240, 238, 0.92);
-  backdrop-filter: blur(4px);
-  z-index: 999;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-}
-#loader-msg {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text);
-}
-#loader-sub {
-  font-size: 12px;
-  color: var(--muted);
-  max-width: 320px;
-  text-align: center;
-  line-height: 1.6;
-}
 /* Pantalla de error (EstadoPantalla.ErrorState): antes era style inline. */
 .err-box {
   text-align: center;
@@ -210,21 +184,7 @@
   }
 }
 
-/* ── Skeleton ── */
-.skeleton {
-  display: inline-block;
-  width: 80px;
-  height: 28px;
-  background: linear-gradient(90deg, var(--bg2) 25%, var(--border) 50%, var(--bg2) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.4s infinite;
-  border-radius: 4px;
-}
-@keyframes shimmer {
-  to {
-    background-position: -200% 0;
-  }
-}
+/* El bloque Skeleton se mudó a styles/skeleton.css junto con la pantalla de carga. */
 
 /* ── Error ── */
 .error-wrap {

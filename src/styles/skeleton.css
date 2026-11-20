@@ -1,0 +1,270 @@
+/* ── Pantalla de carga con skeleton ──
+   Reemplaza al spinner de pantalla completa del primer arranque (components/SkeletonPantalla.jsx).
+   Dibuja la estructura real —header, tabs, KPIs, filtros y tabla— con cajas grises animadas: al
+   llegar los datos no hay salto de layout, porque cada caja ya ocupa el lugar del contenido.
+   Las medidas siguen a layout.css y table.css (mismos paddings, gaps y radios). */
+
+/* Base de cada caja: la misma que .skeleton (que vivía en utils.css y no se usaba en ningún
+   componente) más el shimmer. */
+.skeleton {
+  display: inline-block;
+  width: 80px;
+  height: 28px;
+}
+.skeleton,
+.sk {
+  background: linear-gradient(90deg, var(--bg2) 25%, var(--border) 50%, var(--bg2) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+  border-radius: 4px;
+}
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* ── Header ── */
+.sk-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 0 18px;
+  border-bottom: 1px solid var(--border2);
+  flex-wrap: wrap;
+}
+.sk-logo {
+  width: 300px;
+  height: 26px;
+  border-radius: 6px;
+}
+.sk-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1 1 240px;
+}
+.sk-line {
+  height: 12px;
+  width: 45%;
+  max-width: 260px;
+}
+.sk-line-corta {
+  width: 30%;
+  max-width: 170px;
+}
+.sk-acciones {
+  display: flex;
+  gap: 8px;
+}
+.sk-btn {
+  width: 130px;
+  height: 34px;
+  border-radius: 8px;
+}
+.sk-btn-sesion {
+  width: 110px;
+}
+
+/* ── Aviso de estado (texto real, no skeleton) ── */
+.sk-aviso {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  font-size: 12px;
+  line-height: 1.5;
+  flex-wrap: wrap;
+}
+.sk-punto {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent2);
+  animation: pulse 1.6s ease-in-out infinite;
+  flex-shrink: 0;
+}
+.sk-aviso-msg {
+  font-weight: 600;
+  color: var(--text2);
+}
+.sk-aviso-sub {
+  color: var(--muted2);
+  font-size: 11px;
+}
+
+/* ── Tabs ── */
+.sk-tabs {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding-top: 12px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border2);
+  overflow: hidden;
+}
+.sk-tab {
+  width: 90px;
+  height: 30px;
+  border-radius: 6px 6px 0 0;
+  flex-shrink: 0;
+}
+.sk-tab:nth-child(2) {
+  width: 76px;
+}
+.sk-tab:nth-child(3) {
+  width: 64px;
+}
+.sk-tab:nth-child(4) {
+  width: 104px;
+}
+.sk-tab:nth-child(5) {
+  width: 92px;
+}
+.sk-tab:nth-child(6) {
+  width: 72px;
+}
+
+/* ── KPIs ── */
+.sk-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin: 24px 0;
+}
+.sk-kpi {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sk-kpi-label {
+  height: 10px;
+  width: 62%;
+}
+.sk-kpi-val {
+  height: 20px;
+  width: 45%;
+}
+.sk-kpi-sub {
+  height: 10px;
+  width: 34%;
+}
+
+/* ── Filtros ── */
+.sk-filtros {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.sk-buscador {
+  flex: 1 1 220px;
+  height: 36px;
+  border-radius: 6px;
+}
+.sk-select {
+  width: 120px;
+  height: 36px;
+  border-radius: 6px;
+}
+
+/* ── Tabla ── */
+.sk-tabla {
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+.sk-thead,
+.sk-fila {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+}
+.sk-thead {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border2);
+}
+.sk-fila {
+  border-bottom: 1px solid var(--border);
+}
+.sk-fila:last-child {
+  border-bottom: none;
+}
+.sk-th {
+  height: 10px;
+  flex: 1;
+}
+.sk-td {
+  height: 12px;
+  flex: 1;
+}
+/* Anchos desparejos por columna, como la tabla real (la primera es el nombre del fondo). */
+.sk-thead .sk-th:nth-child(1),
+.sk-fila .sk-td:nth-child(1) {
+  flex: 2.4;
+}
+.sk-thead .sk-th:nth-child(2),
+.sk-fila .sk-td:nth-child(2) {
+  flex: 1.4;
+}
+.sk-thead .sk-th:nth-child(3),
+.sk-fila .sk-td:nth-child(3) {
+  flex: 1.2;
+}
+.sk-thead .sk-th:nth-child(4),
+.sk-fila .sk-td:nth-child(4) {
+  flex: 1.6;
+}
+.sk-thead .sk-th:nth-child(5),
+.sk-fila .sk-td:nth-child(5) {
+  flex: 1.3;
+}
+.sk-thead .sk-th:nth-child(6),
+.sk-fila .sk-td:nth-child(6) {
+  flex: 2;
+}
+.sk-thead .sk-th:nth-child(7),
+.sk-fila .sk-td:nth-child(7) {
+  flex: 1.1;
+}
+.sk-thead .sk-th:nth-child(8),
+.sk-fila .sk-td:nth-child(8) {
+  flex: 0.7;
+}
+
+/* Quien pidió menos movimiento ve las cajas quietas, pero con la estructura completa. */
+@media (prefers-reduced-motion: reduce) {
+  .sk,
+  .sk-punto {
+    animation: none;
+  }
+}
+
+/* En el celular el header real se apila en tres filas: el logo arriba y el meta a lo ancho. */
+@media (max-width: 720px) {
+  .sk-logo {
+    width: 180px;
+  }
+  .sk-meta {
+    flex: 1 1 100%;
+    order: 2;
+  }
+  .sk-acciones {
+    flex: 1 1 100%;
+    order: 3;
+  }
+  .sk-btn {
+    flex: 1;
+  }
+  .sk-tab:nth-child(n + 5) {
+    display: none;
+  }
+}

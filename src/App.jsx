@@ -16,7 +16,8 @@ import RescateModal from "./components/RescateModal";
 import HistorialModal from "./components/HistorialModal";
 import FondoPanel from "./components/FondoPanel";
 import TopTab from "./components/TopTab";
-import { LoaderOverlay, ErrorState, DataOverlay } from "./components/EstadoPantalla";
+import { ErrorState, DataOverlay } from "./components/EstadoPantalla";
+import SkeletonPantalla from "./components/SkeletonPantalla";
 import SociedadesTab from "./components/SociedadesTab";
 import { IconStar } from "./components/Icons";
 
@@ -189,13 +190,15 @@ export default function App() {
     return () => desactivarGuardian();
   }, [authReady, user]);
 
-  // Pantalla completa SÓLO cuando todavía no hay ningún dato que mostrar (primera carga). Si ya hay
-  // datos, una consulta de OTRA fecha se avisa tapando únicamente la zona de datos (ver el overlay
-  // del final): antes cualquier consulta histórica reemplazaba la app entera por un spinner y no se
+  // Pantalla completa SÓLO cuando todavía no hay ningún dato que mostrar (primera carga). En vez
+  // del spinner centrado va un SKELETON con la estructura de la app (header, tabs, KPIs, filtros y
+  // tabla): así se ve de inmediato qué va a aparecer y no hay salto de layout al llegar los datos.
+  // Si ya hay datos, una consulta de OTRA fecha se avisa tapando únicamente la zona de datos (ver
+  // el overlay del final): antes cualquier consulta histórica reemplazaba la app entera y no se
   // podía volver atrás hasta que terminara.
   if (loading && raw.length === 0) {
     return (
-      <LoaderOverlay
+      <SkeletonPantalla
         mensaje={fechaParam ? `Consultando los datos del ${fechaCompleta(fechaParam)}…` : "Consultando la API…"}
         sub={fechaParam ? "Consultando datos históricos de la API." : "Esto puede tardar hasta 30 segundos si el servidor está iniciando."}
       />
@@ -203,7 +206,7 @@ export default function App() {
   }
 
   if (!authReady) {
-    return <LoaderOverlay mensaje="Conectando con la API…" />;
+    return <SkeletonPantalla mensaje="Conectando con la API…" />;
   }
 
   if (error) {

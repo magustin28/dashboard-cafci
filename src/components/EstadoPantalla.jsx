@@ -1,18 +1,7 @@
-// Estados de pantalla que App.jsx armaba inline: carga a pantalla completa, error con reintento y
-// el overlay que tapa sólo la zona de datos mientras se consulta otra fecha. Eran tres bloques
-// casi iguales dentro del render; acá quedan separados y con el texto como prop.
+// Estados de pantalla que App.jsx armaba inline: error con reintento y el overlay que tapa sólo
+// la zona de datos mientras se consulta otra fecha. La carga del primer arranque pasó a
+// components/SkeletonPantalla.jsx (estructura de la app con cajas grises en vez de un spinner).
 import { IconAlertTriangle, IconRefreshCw } from "./Icons";
-
-/** Pantalla completa de carga (primer arranque o espera de sesión). */
-export function LoaderOverlay({ mensaje = "Conectando con la API…", sub = "Esto puede tardar hasta 30 segundos si el servidor está iniciando." }) {
-  return (
-    <div id="loader-overlay">
-      <div className="spinner"></div>
-      <span id="loader-msg">{mensaje}</span>
-      {sub && <span id="loader-sub">{sub}</span>}
-    </div>
-  );
-}
 
 /** Error de carga con botón para reintentar. */
 export function ErrorState({ error, onRetry }) {

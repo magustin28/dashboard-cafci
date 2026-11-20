@@ -12,7 +12,8 @@ import "./styles/modals.css"; // historial, rescate, FAB, modal base
 import "./styles/portfolio.css"; // portfolio table
 import "./styles/table.css"; // table, badges, fav, cnv, empty
 import "./styles/pagination.css"; // paginación
-import "./styles/utils.css"; // animaciones, date picker, skeleton, error
+import "./styles/utils.css"; // animaciones, date picker, spinner, error
+import "./styles/skeleton.css"; // pantalla de carga con skeleton y su shimmer
 import "./styles/informe.css"; // informe modal / PDF
 import "./styles/sociedades.css"; // treemap de sociedades gerentes
 
