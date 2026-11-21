@@ -106,7 +106,7 @@ export function useFondos() {
     async (fechaParam = null) => {
       const MAX = 7;
       const id = ++pedidoId.current;
-      // ?fields=slim → 22 campos con nombres estables (ver README de la API)
+      // ?fields=slim → 22 campos con nombres estables + idFondo (ver README de la API)
       const url = fechaParam ? `${API_BASE}/api/fondos/${fechaParam}?fields=slim` : `${API_URL}?fields=slim`;
 
       // Use cache on reload (only for main page, not historical)
@@ -192,8 +192,11 @@ export function useFondos() {
           setRefs(newRefs);
           setApiFecha(data.fecha || null);
 
-          // Las filas son OBJETOS con nombres estables (los mismos 22 del payload slim + la
+          // Las filas son OBJETOS con nombres estables (los 22 del payload slim + idFondo y la
           // categoría). Así ninguna parte de la UI depende de posiciones ni del Excel.
+          // idFondo lo agrega la API al final del slim (mapa idClase → idFondo de CAFCI); si la
+          // respuesta no lo trae (API vieja o mapa sin refrescar), queda "" y el link usa el
+          // mapa local de cafciIds.js como respaldo.
           const rows = [];
           (data.datos.listado_fondos || []).forEach((cat) => {
             const categoria = cat.categoria_fondo || "";
@@ -210,6 +213,7 @@ export function useFondos() {
                 patrimonio: leer(f, "patrimonio"),
                 socGerente: leer(f, "socGerente") || "",
                 cafci: leer(f, "cafci") || "",
+                idFondo: leer(f, "idFondo") || "",
                 valor: leer(f, "valor"),
                 valorVarPct: leer(f, "valorVarPct"),
                 // ── campos para el panel de detalle ──

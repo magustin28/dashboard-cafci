@@ -248,9 +248,17 @@ test("idFondoCafci: resuelve el id del FONDO a partir del Código CAFCI (id de c
   assert.equal(idFondoCafci(""), null);
 });
 
-test("fondoLink: arma el link completo de la ficha o null si falta el id de fondo", () => {
+test("fondoLink: usa el idFondo del payload y cae al mapa local si no viene", () => {
+  // Sin idFondo en el payload: lo resuelve el mapa local (cafciIds.js).
   assert.equal(fondoLink(308), "https://estadisticas.cafci.org.ar/fondos/304?clase=308");
+  // Con idFondo en el payload: manda el de la API, aunque la clase no esté en el mapa local.
+  assert.equal(fondoLink(308, 304), "https://estadisticas.cafci.org.ar/fondos/304?clase=308");
+  assert.equal(fondoLink(999999, 123), "https://estadisticas.cafci.org.ar/fondos/123?clase=999999");
+  // Un idFondo vacío ("") no cuenta como válido: cae al mapa local.
+  assert.equal(fondoLink(308, ""), "https://estadisticas.cafci.org.ar/fondos/304?clase=308");
+  // Sin id en ningún lado, no hay link.
   assert.equal(fondoLink(999999), null);
+  assert.equal(fondoLink(999999, ""), null);
 });
 
 test("toast: fuera del navegador no rompe", () => {

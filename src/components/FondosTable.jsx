@@ -390,7 +390,7 @@ function FilaClase({ r, refs, favs, user, toggleFav, onOpenSuscripcion, onFondoC
       </td>
       <td className="td-gerente">{r.socGerente || "—"}</td>
       <td>
-        <CnvCell cafci={r.cafci} />
+        <CnvCell cafci={r.cafci} idFondo={r.idFondo} />
       </td>
     </tr>
   );

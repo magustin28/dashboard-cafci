@@ -104,12 +104,12 @@ export function cnvLink(idClase, idFondo) {
   return `https://estadisticas.cafci.org.ar/fondos/${q}?clase=${w}`;
 }
 
-// Link listo para una fila: resuelve el idFondo desde el código de la clase. Devuelve null si
-// la clase no está en el mapa (fondo nuevo o dado de baja): la UI oculta el botón en vez de
-// mandar a otro fondo.
-export function fondoLink(idClase) {
-  const idFondo = idFondoCafci(idClase);
-  return idFondo == null ? null : cnvLink(idClase, idFondo);
+// Link listo para una fila. Usa el idFondo que manda la API en el payload (campo `idFondo`,
+// enriquecido desde el mapa de CAFCI) y, si no viene, cae al mapa local de cafciIds.js. Devuelve
+// null si no hay id: la UI oculta el botón en vez de mandar a otro fondo.
+export function fondoLink(idClase, idFondo) {
+  const id = idFondo || idFondoCafci(idClase);
+  return id == null ? null : cnvLink(idClase, id);
 }
 
 // ── Agrupación por clase ──────────────────────────────────────────────────────

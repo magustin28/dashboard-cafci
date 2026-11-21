@@ -27,11 +27,12 @@ export function PatCell({ v }) {
 
 /**
  * Botón ↗ a la ficha del fondo en CAFCI. El link necesita el id interno del FONDO, que la
- * planilla no trae: se resuelve con el mapa cafciIds.js (ver fondoLink en lib/utils). Si la
- * clase no está en el mapa se muestra "—" en vez de un link que abriría otro fondo.
+ * planilla no trae: lo manda la API en el campo `idFondo` del payload slim y, si no viene, se
+ * resuelve con el mapa local cafciIds.js (ver fondoLink en lib/utils). Si no hay id se muestra
+ * "—" en vez de un link que abriría otro fondo.
  */
-export function CnvCell({ cafci }) {
-  const href = fondoLink(cafci);
+export function CnvCell({ cafci, idFondo }) {
+  const href = fondoLink(cafci, idFondo);
   if (!href)
     return (
       <span className="td-mono zero" title="CAFCI no publica la ficha de este fondo">

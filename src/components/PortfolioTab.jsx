@@ -302,7 +302,7 @@ export default function PortfolioTab({ raw, apiFecha, refs, onOpenSuscripcion, o
                       <td>
                         <PctCell v={item.tea} />
                       </td>
-                      <td>{r ? <CnvCell cafci={r.cafci} /> : "—"}</td>
+                      <td>{r ? <CnvCell cafci={r.cafci} idFondo={r.idFondo} /> : "—"}</td>
                     </tr>
                   );
                 })
