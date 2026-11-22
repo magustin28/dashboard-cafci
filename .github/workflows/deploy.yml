@@ -32,8 +32,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build
-        run: npm run build
+      - name: Validar y buildear (npm run check)
+        # npm run check corre lint, prettier --check, node --test y el build completo (vite build +
+        # precache de la PWA). Así un push con lint, formato o tests rotos no llega a publicar.
+        # Reemplaza al paso "Build" suelto, que hacía el mismo build por duplicado.
+        run: npm run check
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
