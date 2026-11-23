@@ -15,6 +15,7 @@ import SuscripcionModal from "./components/SuscripcionModal";
 import RescateModal from "./components/RescateModal";
 import HistorialModal from "./components/HistorialModal";
 import FondoPanel from "./components/FondoPanel";
+import EvolucionModal from "./components/EvolucionModal";
 import TopTab from "./components/TopTab";
 import { ErrorState, DataOverlay } from "./components/EstadoPantalla";
 import SkeletonPantalla from "./components/SkeletonPantalla";
@@ -52,6 +53,7 @@ export default function App() {
   // como pestaña inicial (se limpia sola cuando el usuario cambia de pestaña, en switchTab).
   const [activeTab, setActiveTab] = useState(() => sessionStorage.getItem("cafci_post_login_tab") || "Todos");
   const [fondoPanel, setFondoPanel] = useState(null);
+  const [evolucion, setEvolucion] = useState(null);
   const [q, setQ] = useState("");
   const [moneda, setMoneda] = useState("");
   const [region, setRegion] = useState("");
@@ -345,7 +347,10 @@ export default function App() {
         />
       )}
       {histModal && <HistorialModal fondoNombre={histModal.fondo} moneda={histModal.moneda} raw={raw} onClose={() => setHistModal(null)} />}
-      {fondoPanel && <FondoPanel fondo={fondoPanel} refs={refs} apiFecha={apiFecha} onClose={() => setFondoPanel(null)} />}
+      {fondoPanel && (
+        <FondoPanel fondo={fondoPanel} refs={refs} apiFecha={apiFecha} onClose={() => setFondoPanel(null)} onVerEvolucion={(f) => setEvolucion(f)} />
+      )}
+      {evolucion && <EvolucionModal fondo={evolucion} onClose={() => setEvolucion(null)} />}
     </div>
   );
 }

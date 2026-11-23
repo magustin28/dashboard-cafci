@@ -2,8 +2,9 @@ import { REG_MAP, HOR_MAP, formatPlazoLiq } from "../lib/utils";
 import { numero, porcentaje, moneda, colorVariacion, fechaCompleta } from "../lib/format";
 import { useModalClose } from "../hooks/useModalClose";
 import { IconX } from "./Icons";
+import SerieChart from "./SerieChart";
 
-export default function FondoPanel({ fondo, refs, apiFecha, onClose }) {
+export default function FondoPanel({ fondo, refs, apiFecha, onClose, onVerEvolucion }) {
   // Cierre animado (hooks/useModalClose.js): el panel se desliza hacia la derecha y el fondo se
   // desvanece antes de desmontarse.
   const { closing, requestClose } = useModalClose(onClose);
@@ -31,6 +32,24 @@ export default function FondoPanel({ fondo, refs, apiFecha, onClose }) {
   const fecha1 = refs?.fecha1 ? fechaCompleta(refs.fecha1) : null;
   const fecha2 = refs?.fecha2 ? fechaCompleta(refs.fecha2) : null;
   const fecha3 = refs?.fecha3 ? fechaCompleta(refs.fecha3) : null;
+
+  // Sparkline con los puntos que ya trae el payload (sin pedir la serie al servidor).
+  // Las variaciones son % contra el valor actual: se despeja el valor del período.
+  const puntosSpark = (() => {
+    const pts = [];
+    const actual = Number(fondo.valor);
+    const agregar = (fecha, valor) => {
+      const n = Number(valor);
+      if (fecha && Number.isFinite(n) && n > 0) pts.push({ fecha, valor: n });
+    };
+    const despejar = (pct) => (Number.isFinite(Number(pct)) ? actual / (1 + Number(pct) / 100) : null);
+    agregar(refs?.fecha3, despejar(var3));
+    agregar(refs?.fecha2, despejar(var2));
+    agregar(refs?.fecha1, despejar(var1));
+    agregar(refs?.fechaAnterior, fondo.valorAnt);
+    agregar(apiFecha, actual);
+    return pts;
+  })();
 
   return (
     <>
@@ -149,6 +168,16 @@ export default function FondoPanel({ fondo, refs, apiFecha, onClose }) {
             <Row label="Adm. Sociedad Depositaria" value={fondo.honSD != null ? fmtNum(fondo.honSD, 2) + "%" : "—"} />
             <Row label="Adm. Sociedad Gerente" value={fondo.honSG != null ? fmtNum(fondo.honSG, 2) + "%" : "—"} />
           </Section>
+
+          {/* 6. Evolución: sparkline con los datos del payload + vista completa */}
+          {puntosSpark.length >= 2 && (
+            <Section title="Evolución del valor">
+              <button type="button" className="fp-spark" onClick={() => onVerEvolucion?.(fondo)} aria-label="Ver evolución completa">
+                <SerieChart puntos={puntosSpark} compact />
+                <span className="fp-spark-hint">Ver evolución completa</span>
+              </button>
+            </Section>
+          )}
         </div>
       </div>
 

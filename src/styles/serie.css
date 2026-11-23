@@ -1,0 +1,135 @@
+/* ── Gráfico de evolución (SerieChart.jsx) ── */
+.serie-chart {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.serie-chart.compact {
+  height: 44px;
+}
+.serie-grid {
+  stroke: var(--border);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+}
+.serie-label {
+  font-size: 11px;
+  fill: var(--muted);
+  font-family: "JetBrains Mono", monospace;
+}
+
+/* ── Vista de evolución (EvolucionModal.jsx) ── */
+.serie-modal {
+  overflow-y: auto;
+}
+.serie-close {
+  border: none;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  flex: 0 0 auto;
+}
+.serie-close:hover {
+  background: var(--bg);
+  color: var(--text);
+}
+.serie-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.serie-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+.serie-sub {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.serie-rangos {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.serie-rango {
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border2);
+  background: none;
+  color: var(--text2);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.serie-rango.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.serie-tabla-wrap {
+  max-height: 260px;
+  overflow-y: auto;
+  margin-top: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.serie-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.serie-tabla th {
+  position: sticky;
+  top: 0;
+  background: var(--card);
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+.serie-tabla td {
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text2);
+}
+.serie-tabla td.num {
+  text-align: right;
+  font-family: "JetBrains Mono", monospace;
+}
+.serie-tabla tr:last-child td {
+  border-bottom: none;
+}
+.serie-estado {
+  padding: 28px 8px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* ── Sparkline dentro del panel de detalle ── */
+.fp-spark {
+  margin-top: 8px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0;
+  width: 100%;
+  text-align: left;
+}
+.fp-spark-hint {
+  font-size: 11px;
+  color: var(--accent);
+  font-weight: 600;
+  margin-top: 2px;
+}

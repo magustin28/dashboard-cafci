@@ -16,6 +16,7 @@ import "./styles/utils.css"; // animaciones, date picker, spinner, error
 import "./styles/skeleton.css"; // pantalla de carga con skeleton y su shimmer
 import "./styles/informe.css"; // informe modal / PDF
 import "./styles/sociedades.css"; // treemap de sociedades gerentes
+import "./styles/serie.css"; // gráfico de evolución (sparkline + vista)
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
